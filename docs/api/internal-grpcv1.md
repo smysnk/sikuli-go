@@ -11,7 +11,7 @@
 
 Legend: <span class="api-type">Type</span>, <span class="api-func">Function</span>, <span class="api-method">Method</span>
 
-Package: `package grpcv1 // import "github.com/sikulix/portgo/internal/grpcv1"`
+Package: `package grpcv1 // import "github.com/smysnk/sikuligo/internal/grpcv1"`
 
 ## Symbol Index
 
@@ -211,7 +211,7 @@ Package: `package grpcv1 // import "github.com/sikulix/portgo/internal/grpcv1"`
 ## Raw Package Doc
 
 ```text
-package grpcv1 // import "github.com/sikulix/portgo/internal/grpcv1"
+package grpcv1 // import "github.com/smysnk/sikuligo/internal/grpcv1"
 
 
 FUNCTIONS

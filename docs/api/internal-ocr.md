@@ -11,7 +11,7 @@
 
 Legend: <span class="api-type">Type</span>, <span class="api-func">Function</span>, <span class="api-method">Method</span>
 
-Package: `package ocr // import "github.com/sikulix/portgo/internal/ocr"`
+Package: `package ocr // import "github.com/smysnk/sikuligo/internal/ocr"`
 
 ## Symbol Index
 
@@ -38,7 +38,7 @@ Package: `package ocr // import "github.com/sikulix/portgo/internal/ocr"`
 ## Raw Package Doc
 
 ```text
-package ocr // import "github.com/sikulix/portgo/internal/ocr"
+package ocr // import "github.com/smysnk/sikuligo/internal/ocr"
 
 
 FUNCTIONS

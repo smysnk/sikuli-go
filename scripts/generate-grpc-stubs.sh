@@ -23,7 +23,7 @@ cd "$ROOT_DIR"
 protoc \
   --proto_path=proto \
   --go_out=. \
-  --go_opt=module=github.com/sikulix/portgo \
+  --go_opt=module=github.com/smysnk/sikuligo \
   --go-grpc_out=. \
-  --go-grpc_opt=module=github.com/sikulix/portgo \
+  --go-grpc_opt=module=github.com/smysnk/sikuligo \
   "$PROTO_FILE"

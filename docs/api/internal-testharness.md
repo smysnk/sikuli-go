@@ -11,7 +11,7 @@
 
 Legend: <span class="api-type">Type</span>, <span class="api-func">Function</span>, <span class="api-method">Method</span>
 
-Package: `package testharness // import "github.com/sikulix/portgo/internal/testharness"`
+Package: `package testharness // import "github.com/smysnk/sikuligo/internal/testharness"`
 
 ## Symbol Index
 
@@ -71,7 +71,7 @@ Package: `package testharness // import "github.com/sikulix/portgo/internal/test
 ## Raw Package Doc
 
 ```text
-package testharness // import "github.com/sikulix/portgo/internal/testharness"
+package testharness // import "github.com/smysnk/sikuligo/internal/testharness"
 
 
 FUNCTIONS

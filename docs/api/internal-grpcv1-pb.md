@@ -11,7 +11,7 @@
 
 Legend: <span class="api-type">Type</span>, <span class="api-func">Function</span>, <span class="api-method">Method</span>
 
-Package: `package sikuliv1 // import "github.com/sikulix/portgo/internal/grpcv1/pb"`
+Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1/pb"`
 
 ## Symbol Index
 
@@ -1780,7 +1780,7 @@ Package: `package sikuliv1 // import "github.com/sikulix/portgo/internal/grpcv1/
 ## Raw Package Doc
 
 ```text
-package sikuliv1 // import "github.com/sikulix/portgo/internal/grpcv1/pb"
+package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1/pb"
 
 
 CONSTANTS

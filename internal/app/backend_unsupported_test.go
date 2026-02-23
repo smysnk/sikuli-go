@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/sikulix/portgo/internal/core"
+	"github.com/smysnk/sikuligo/internal/core"
 )
 
 func TestUnsupportedAppBackend(t *testing.T) {

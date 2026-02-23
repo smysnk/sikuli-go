@@ -5,8 +5,8 @@ import (
 	"image"
 	"testing"
 
-	pb "github.com/sikulix/portgo/internal/grpcv1/pb"
-	"github.com/sikulix/portgo/pkg/sikuli"
+	pb "github.com/smysnk/sikuligo/internal/grpcv1/pb"
+	"github.com/smysnk/sikuligo/pkg/sikuli"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

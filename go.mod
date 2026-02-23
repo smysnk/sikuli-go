@@ -1,4 +1,4 @@
-module github.com/sikulix/portgo
+module github.com/smysnk/sikuligo
 
 go 1.24.0
 

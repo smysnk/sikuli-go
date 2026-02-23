@@ -2,7 +2,7 @@
 
 package cv
 
-import "github.com/sikulix/portgo/internal/core"
+import "github.com/smysnk/sikuligo/internal/core"
 
 func newDefaultMatcher() core.Matcher {
 	return NewNCCMatcher()

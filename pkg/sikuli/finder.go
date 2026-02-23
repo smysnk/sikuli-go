@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sikulix/portgo/internal/core"
-	"github.com/sikulix/portgo/internal/cv"
-	ocrbackend "github.com/sikulix/portgo/internal/ocr"
+	"github.com/smysnk/sikuligo/internal/core"
+	"github.com/smysnk/sikuligo/internal/cv"
+	ocrbackend "github.com/smysnk/sikuligo/internal/ocr"
 )
 
 type Finder struct {

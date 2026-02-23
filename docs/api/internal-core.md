@@ -11,7 +11,7 @@
 
 Legend: <span class="api-type">Type</span>, <span class="api-func">Function</span>, <span class="api-method">Method</span>
 
-Package: `package core // import "github.com/sikulix/portgo/internal/core"`
+Package: `package core // import "github.com/smysnk/sikuligo/internal/core"`
 
 ## Symbol Index
 
@@ -160,7 +160,7 @@ Package: `package core // import "github.com/sikulix/portgo/internal/core"`
 ## Raw Package Doc
 
 ```text
-package core // import "github.com/sikulix/portgo/internal/core"
+package core // import "github.com/smysnk/sikuligo/internal/core"
 
 
 VARIABLES

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sikulix/portgo/internal/app"
-	"github.com/sikulix/portgo/internal/core"
+	"github.com/smysnk/sikuligo/internal/app"
+	"github.com/smysnk/sikuligo/internal/core"
 )
 
 type AppOptions struct {

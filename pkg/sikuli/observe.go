@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sikulix/portgo/internal/core"
-	observebackend "github.com/sikulix/portgo/internal/observe"
+	"github.com/smysnk/sikuligo/internal/core"
+	observebackend "github.com/smysnk/sikuligo/internal/observe"
 )
 
 type ObserveOptions struct {

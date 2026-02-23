@@ -5,7 +5,7 @@ package grpcv1
 import (
 	"fmt"
 
-	"github.com/sikulix/portgo/pkg/sikuli"
+	"github.com/smysnk/sikuligo/pkg/sikuli"
 )
 
 func captureScreenImage(name string) (*sikuli.Image, error) {

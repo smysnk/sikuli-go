@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/sikulix/portgo/internal/cv"
+	"github.com/smysnk/sikuligo/internal/cv"
 )
 
 func TestFinderMapsOpenCVUnsupportedToBackendUnsupported(t *testing.T) {

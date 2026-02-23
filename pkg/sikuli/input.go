@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sikulix/portgo/internal/core"
-	inputbackend "github.com/sikulix/portgo/internal/input"
+	"github.com/smysnk/sikuligo/internal/core"
+	inputbackend "github.com/smysnk/sikuligo/internal/input"
 )
 
 type MouseButton string

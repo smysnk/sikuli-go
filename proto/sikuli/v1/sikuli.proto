@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package sikuli.v1;
 
-option go_package = "github.com/sikulix/portgo/internal/grpcv1/pb;sikuliv1";
+option go_package = "github.com/smysnk/sikuligo/internal/grpcv1/pb;sikuliv1";
 
 message GrayImage {
   string name = 1;

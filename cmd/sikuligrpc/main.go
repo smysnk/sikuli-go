@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sikulix/portgo/internal/grpcv1"
-	pb "github.com/sikulix/portgo/internal/grpcv1/pb"
+	"github.com/smysnk/sikuligo/internal/grpcv1"
+	pb "github.com/smysnk/sikuligo/internal/grpcv1/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

@@ -11,7 +11,7 @@
 
 Legend: <span class="api-type">Type</span>, <span class="api-func">Function</span>, <span class="api-method">Method</span>
 
-Package: `package observe // import "github.com/sikulix/portgo/internal/observe"`
+Package: `package observe // import "github.com/smysnk/sikuligo/internal/observe"`
 
 ## Symbol Index
 
@@ -38,7 +38,7 @@ Package: `package observe // import "github.com/sikulix/portgo/internal/observe"
 ## Raw Package Doc
 
 ```text
-package observe // import "github.com/sikulix/portgo/internal/observe"
+package observe // import "github.com/smysnk/sikuligo/internal/observe"
 
 
 FUNCTIONS

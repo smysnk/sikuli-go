@@ -9,7 +9,7 @@ import (
 
 	"gocv.io/x/gocv"
 
-	"github.com/sikulix/portgo/internal/core"
+	"github.com/smysnk/sikuligo/internal/core"
 )
 
 type OpenCVMatcher struct{}

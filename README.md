@@ -62,7 +62,7 @@ finally:
     screen.close()
 ```
 
-## Example: Dashboard
+## API Dashboard
 
 ![SikuliGO Dashboard Demo](docs/images/dashboard.png)
 

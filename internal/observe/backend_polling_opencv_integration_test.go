@@ -8,8 +8,8 @@ import (
 	"image/color"
 	"testing"
 
-	"github.com/sikulix/portgo/internal/core"
-	"github.com/sikulix/portgo/internal/cv"
+	"github.com/smysnk/sikuligo/internal/core"
+	"github.com/smysnk/sikuligo/internal/cv"
 )
 
 func TestPollingBackendMapsOpenCVUnsupportedToObserveUnsupported(t *testing.T) {

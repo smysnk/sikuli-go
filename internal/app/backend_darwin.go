@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/sikulix/portgo/internal/core"
+	"github.com/smysnk/sikuligo/internal/core"
 )
 
 type darwinBackend struct {

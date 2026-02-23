@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/sikulix/portgo/internal/core"
-	"github.com/sikulix/portgo/internal/cv"
+	"github.com/smysnk/sikuligo/internal/core"
+	"github.com/smysnk/sikuligo/internal/cv"
 )
 
 const (

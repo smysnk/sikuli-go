@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/otiai10/gosseract/v2"
-	"github.com/sikulix/portgo/internal/core"
+	"github.com/smysnk/sikuligo/internal/core"
 )
 
 var (

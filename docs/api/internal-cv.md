@@ -11,7 +11,7 @@
 
 Legend: <span class="api-type">Type</span>, <span class="api-func">Function</span>, <span class="api-method">Method</span>
 
-Package: `package cv // import "github.com/sikulix/portgo/internal/cv"`
+Package: `package cv // import "github.com/smysnk/sikuligo/internal/cv"`
 
 ## Symbol Index
 
@@ -89,7 +89,7 @@ Package: `package cv // import "github.com/sikulix/portgo/internal/cv"`
 ## Raw Package Doc
 
 ```text
-package cv // import "github.com/sikulix/portgo/internal/cv"
+package cv // import "github.com/smysnk/sikuligo/internal/cv"
 
 
 FUNCTIONS

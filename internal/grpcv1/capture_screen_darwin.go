@@ -11,7 +11,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/sikulix/portgo/pkg/sikuli"
+	"github.com/smysnk/sikuligo/pkg/sikuli"
 )
 
 func captureScreenImage(name string) (*sikuli.Image, error) {

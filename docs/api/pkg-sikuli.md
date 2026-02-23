@@ -11,7 +11,7 @@
 
 Legend: <span class="api-type">Type</span>, <span class="api-func">Function</span>, <span class="api-method">Method</span>
 
-Package: `package sikuli // import "github.com/sikulix/portgo/pkg/sikuli"`
+Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 
 ## Symbol Index
 
@@ -871,7 +871,7 @@ Package: `package sikuli // import "github.com/sikulix/portgo/pkg/sikuli"`
 ## Raw Package Doc
 
 ```text
-package sikuli // import "github.com/sikulix/portgo/pkg/sikuli"
+package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"
 
 
 CONSTANTS
