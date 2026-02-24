@@ -34,7 +34,7 @@ Runs:
 ```js
 import { Screen, Pattern } from "../src";
 
-const screen = await Screen.start();
+const screen = await Screen.auto();
 try {
   const match = await screen.click(new Pattern("assets/pattern.png").exact());
   console.log(`clicked match target at (${match.targetX}, ${match.targetY})`);
@@ -54,7 +54,7 @@ Runs:
 ```python
 from sikuligo import Pattern, Screen
 
-screen = Screen.start()
+screen = Screen.auto()
 try:
     match = screen.click(Pattern("assets/pattern.png").exact())
     print(f"clicked match target at ({match.target_x}, {match.target_y})")
@@ -122,14 +122,14 @@ go test ./...
 Build a local `sikuligo` binary:
 
 ```bash
-go build -trimpath -ldflags="-s -w" -o sikuligo ./cmd/sikuligrpc
+go build -tags "gosseract opencv" -trimpath -ldflags="-s -w" -o sikuligo ./cmd/sikuligrpc
 ./sikuligo -listen 127.0.0.1:50051
 ```
 
 Build the dashboard/session viewer monitor binary (used with ad-hoc client-spawned API sessions):
 
 ```bash
-go build -trimpath -ldflags="-s -w" -o sikuligo-monitor ./cmd/sikuligo-monitor
+go build -tags "gosseract opencv" -trimpath -ldflags="-s -w" -o sikuligo-monitor ./cmd/sikuligo-monitor
 ./sikuligo-monitor -listen :8080 -sqlite-path ./sikuligo.db
 ```
 
