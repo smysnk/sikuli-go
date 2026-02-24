@@ -12,6 +12,11 @@ PYTHON ?= python3
 NPM_INSTALL ?= 1
 PYTHON_INSTALL ?= 1
 
+# macOS Homebrew OCR/OpenCV build flags (requested fixed versions)
+OS_NAME := $(shell uname -s)
+MACOS_CGO_CXXFLAGS := -I/opt/homebrew/Cellar/leptonica/1.87.0/include -I/opt/homebrew/Cellar/tesseract/5.5.2/include
+MACOS_CGO_LDFLAGS := -L/opt/homebrew/Cellar/leptonica/1.87.0/lib -L/opt/homebrew/Cellar/tesseract/5.5.2/lib
+
 .PHONY: help build build-all build-go build-go-api build-go-monitor build-stubs \
 	build-grpc-stubs build-node-stubs build-python-stubs build-lua-descriptor \
 	build-node build-node-binaries build-node-client build-python clean
@@ -37,10 +42,12 @@ build-go: build-go-api build-go-monitor
 
 build-go-api:
 	cd "$(ROOT_DIR)" && \
+	$(if $(filter Darwin,$(OS_NAME)),CGO_CXXFLAGS='$(MACOS_CGO_CXXFLAGS)' CGO_LDFLAGS='$(MACOS_CGO_LDFLAGS)',) \
 	$(GO) build -tags "gosseract opencv gocv_specific_modules" -trimpath -ldflags="-s -w" -o sikuligo ./cmd/sikuligrpc
 
 build-go-monitor:
 	cd "$(ROOT_DIR)" && \
+	$(if $(filter Darwin,$(OS_NAME)),CGO_CXXFLAGS='$(MACOS_CGO_CXXFLAGS)' CGO_LDFLAGS='$(MACOS_CGO_LDFLAGS)',) \
 	$(GO) build -trimpath -ldflags="-s -w" -o sikuligo-monitor ./cmd/sikuligo-monitor
 
 build-stubs: build-grpc-stubs build-node-stubs build-python-stubs build-lua-descriptor
