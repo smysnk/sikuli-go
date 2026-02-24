@@ -25,9 +25,9 @@ npm run example:workflow:connect
 import { Screen, Pattern } from "../src";
 
 async function main() {
-  const screen = await Screen.auto();
+  const screen = await Screen();
   try {
-    const match = await screen.click(new Pattern("assets/pattern.png").exact());
+    const match = await screen.click(Pattern("assets/pattern.png").exact());
     console.log(`clicked match target at (${match.targetX}, ${match.targetY})`);
   } finally {
     await screen.close();
@@ -35,7 +35,7 @@ async function main() {
 }
 ```
 
-`npm run example:workflow:auto` uses the same constructor pattern (`connect -> launch`):
+`npm run example:workflow:auto` uses the same primary constructor pattern (`connect -> spawn` fallback handled by `Screen()`):
 
 ```bash
 cd clients/node
@@ -48,9 +48,9 @@ npm run example:workflow:auto
 import { Screen, Pattern } from "../src";
 
 async function main() {
-  const screen = await Screen.auto();
+  const screen = await Screen();
   try {
-    const match = await screen.click(new Pattern("assets/pattern.png").exact());
+    const match = await screen.click(Pattern("assets/pattern.png").exact());
     console.log(`clicked match target at (${match.targetX}, ${match.targetY})`);
   } finally {
     await screen.close();
@@ -75,8 +75,13 @@ npm run doctor
 
 ## Environment
 - `SIKULIGO_BINARY_PATH` (optional explicit path to `sikuligo`)
-- `SIKULI_GRPC_ADDR` (optional address used by `auto` probe/connect; default probe `127.0.0.1:50051`)
+- `SIKULI_GRPC_ADDR` (optional address used by `start/launch` probe/connect; default probe `127.0.0.1:50051`)
 - `SIKULI_GRPC_AUTH_TOKEN` (optional; sent as `x-api-key` for spawned/connected sessions)
 - `SIKULI_DEBUG` (optional; set to `1` to log launcher and per-RPC timing details; spawned `sikuligo` logs are shown too)
 - `SIKULIGO_SQLITE_PATH` (optional sqlite path for spawned server sessions; default `sikuligo.db`)
 - `SIKULI_APP_NAME` (optional; used by `examples/app.js`)
+
+Primary constructors:
+- `Screen()` / `Sikuli()` = connect to default address first (1s), else spawn
+- `Screen.connect()` / `Sikuli.connect()` = connect only
+- `Screen.spawn()` / `Sikuli.spawn()` = spawn only

@@ -1,9 +1,9 @@
 import { Screen, Pattern } from "../src";
 
 async function main() {
-  const screen = await Screen.auto();
+  const screen = await Screen();
   try {
-    const pattern = new Pattern("assets/pattern.png").exact();
+    const pattern = Pattern("assets/pattern.png").exact();
     const match = await screen.click(pattern);
     console.log(`clicked match target at (${match.targetX}, ${match.targetY})`);
   } finally {

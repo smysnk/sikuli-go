@@ -37,7 +37,7 @@ python3 examples/workflow_connect.py
 from __future__ import annotations
 from sikuligo import Pattern, Screen
 
-screen = Screen.auto()
+screen = Screen()
 try:
     match = screen.click(Pattern("assets/pattern.png").exact())
     print(f"clicked match target at ({match.target_x}, {match.target_y})")
@@ -45,7 +45,7 @@ finally:
     screen.close()
 ```
 
-`python3 examples/workflow_auto_launch.py` uses the same constructor pattern (`connect -> launch`):
+`python3 examples/workflow_auto_launch.py` uses the same primary constructor pattern (`connect -> spawn` fallback handled by `Screen()`):
 
 ```bash
 cd clients/python
@@ -55,7 +55,7 @@ python3 examples/workflow_auto_launch.py
 from __future__ import annotations
 from sikuligo import Pattern, Screen
 
-screen = Screen.auto()
+screen = Screen()
 try:
     match = screen.click(Pattern("assets/pattern.png").exact())
     print(f"clicked match target at ({match.target_x}, {match.target_y})")
@@ -65,9 +65,14 @@ finally:
 
 ## Environment
 
-- `SIKULI_GRPC_ADDR` (optional address used by `auto` probe/connect; default probe `127.0.0.1:50051`)
+- `SIKULI_GRPC_ADDR` (optional address used by `Screen()` probe/connect; default probe `127.0.0.1:50051`)
 - `SIKULI_GRPC_AUTH_TOKEN` (optional; sent as `x-api-key`)
 - `SIKULIGO_SQLITE_PATH` (optional sqlite path for spawned server sessions; default `sikuligo.db`)
+
+Primary constructors:
+- `Screen()` = connect to default address first (1s), else spawn
+- `Screen.connect()` = connect only
+- `Screen.spawn()` = spawn only
 
 ## Run Additional Examples
 

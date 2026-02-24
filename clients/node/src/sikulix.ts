@@ -167,18 +167,23 @@ export class Screen extends Region {
     super(session);
   }
 
+  static async spawn(opts: LaunchOptions = {}): Promise<Screen> {
+    const session = await Sikuli.spawn(opts);
+    return new Screen(session);
+  }
+
   static async start(opts: LaunchOptions = {}): Promise<Screen> {
     const session = await Sikuli.launch(opts);
     return new Screen(session);
   }
 
-  static async connect(opts: LaunchOptions = {}): Promise<Screen> {
-    const session = await Sikuli.connect(opts);
+  static async auto(opts: LaunchOptions = {}): Promise<Screen> {
+    const session = await Sikuli.auto(opts);
     return new Screen(session);
   }
 
-  static async auto(opts: LaunchOptions = {}): Promise<Screen> {
-    const session = await Sikuli.auto(opts);
+  static async connect(opts: LaunchOptions = {}): Promise<Screen> {
+    const session = await Sikuli.connect(opts);
     return new Screen(session);
   }
 

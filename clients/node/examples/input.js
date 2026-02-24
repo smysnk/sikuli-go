@@ -1,7 +1,7 @@
 import { Sikuli } from "../src";
 
 async function main() {
-  const client = await Sikuli.auto();
+  const client = await Sikuli();
   try {
     await client.moveMouse({
       x: 200,

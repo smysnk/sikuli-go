@@ -3,7 +3,7 @@ from sikuligo import Screen
 
 
 def main() -> int:
-    screen = Screen.auto()
+    screen = Screen()
     client = screen.client
     app_name = "Calculator"
     try:

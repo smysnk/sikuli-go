@@ -283,7 +283,7 @@ class Screen(Region):
         return self._session
 
     @classmethod
-    def start(
+    def spawn(
         cls,
         *,
         address: str | None = None,
@@ -348,6 +348,36 @@ class Screen(Region):
         )
 
     @classmethod
+    def start(
+        cls,
+        *,
+        address: str | None = None,
+        auth_token: str | None = None,
+        trace_id: str | None = None,
+        timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+        secure: bool = False,
+        startup_timeout_seconds: float = DEFAULT_STARTUP_TIMEOUT_SECONDS,
+        binary_path: str | None = None,
+        admin_listen: str = "",
+        sqlite_path: str | None = None,
+        server_args: Sequence[str] | None = None,
+        stdio: Literal["ignore", "pipe", "inherit"] = "ignore",
+    ) -> Screen:
+        return cls.auto(
+            address=address,
+            auth_token=auth_token,
+            trace_id=trace_id,
+            timeout_seconds=timeout_seconds,
+            secure=secure,
+            startup_timeout_seconds=startup_timeout_seconds,
+            binary_path=binary_path,
+            admin_listen=admin_listen,
+            sqlite_path=sqlite_path,
+            server_args=server_args,
+            stdio=stdio,
+        )
+
+    @classmethod
     def connect(
         cls,
         *,
@@ -401,7 +431,7 @@ class Screen(Region):
                 startup_timeout_seconds=1.0,
             )
         except Exception:
-            return cls.start(
+            return cls.spawn(
                 address=address,
                 auth_token=auth_token,
                 trace_id=trace_id,

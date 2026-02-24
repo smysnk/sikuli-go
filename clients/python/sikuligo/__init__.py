@@ -6,7 +6,17 @@ from .client import (
     pattern_from_png,
     screen_query_options,
 )
-from .sikulix import LaunchMeta, Match, Pattern, Region, Screen
+from .sikulix import LaunchMeta, Match, Pattern, Region, Screen as _Screen
+
+
+def Screen(**kwargs):
+    return _Screen.start(**kwargs)
+
+
+Screen.start = _Screen.start
+Screen.connect = _Screen.connect
+Screen.spawn = _Screen.spawn
+Screen.auto = _Screen.auto
 
 __all__ = [
     "Sikuli",

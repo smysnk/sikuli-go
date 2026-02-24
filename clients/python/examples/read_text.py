@@ -4,7 +4,7 @@ from sikuligo.client import gray_image_from_rows
 
 
 def main() -> int:
-    screen = Screen.auto()
+    screen = Screen()
     client = screen.client
     try:
         source = gray_image_from_rows(

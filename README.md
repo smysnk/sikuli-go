@@ -34,9 +34,9 @@ Runs:
 ```js
 import { Screen, Pattern } from "../src";
 
-const screen = await Screen.auto();
+const screen = await Screen();
 try {
-  const match = await screen.click(new Pattern("assets/pattern.png").exact());
+  const match = await screen.click(Pattern("assets/pattern.png").exact());
   console.log(`clicked match target at (${match.targetX}, ${match.targetY})`);
 } finally {
   await screen.close();
@@ -54,7 +54,7 @@ Runs:
 ```python
 from sikuligo import Pattern, Screen
 
-screen = Screen.auto()
+screen = Screen()
 try:
     match = screen.click(Pattern("assets/pattern.png").exact())
     print(f"clicked match target at ({match.target_x}, {match.target_y})")

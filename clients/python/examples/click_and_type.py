@@ -3,7 +3,7 @@ from sikuligo import Screen
 
 
 def main() -> int:
-    screen = Screen.auto()
+    screen = Screen()
     client = screen.client
     try:
         client.move_mouse(pb.MoveMouseRequest(x=200, y=180, opts=pb.InputOptions(delay_millis=30)))

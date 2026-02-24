@@ -1,9 +1,9 @@
 import { Screen, Pattern } from "../src";
 
 async function main() {
-  const screen = await Screen.auto();
+  const screen = await Screen();
   try {
-    const pattern = new Pattern("assets/pattern.png").exact();
+    const pattern = Pattern("assets/pattern.png").exact();
     const match = await screen.find(pattern);
     console.log(`found rect=(${match.x},${match.y},${match.w},${match.h}) target=(${match.targetX},${match.targetY})`);
   } finally {

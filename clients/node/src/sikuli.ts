@@ -43,13 +43,17 @@ export class Sikuli {
     this.meta = meta;
   }
 
-  static async launch(opts: LaunchOptions = {}): Promise<Sikuli> {
+  static async spawn(opts: LaunchOptions = {}): Promise<Sikuli> {
     const result = await launchSikuli({ ...opts, spawnServer: opts.spawnServer ?? true });
     return new Sikuli(result.client, result.child, {
       address: result.address,
       authToken: result.authToken,
       spawnedServer: result.spawnedServer
     });
+  }
+
+  static async launch(opts: LaunchOptions = {}): Promise<Sikuli> {
+    return await Sikuli.auto(opts);
   }
 
   static async connect(opts: LaunchOptions = {}): Promise<Sikuli> {
@@ -70,7 +74,7 @@ export class Sikuli {
         startupTimeoutMs: 1_000
       });
     } catch {
-      return await Sikuli.launch(opts);
+      return await Sikuli.spawn(opts);
     }
   }
 
