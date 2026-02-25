@@ -41,6 +41,7 @@ export type {
 } from "./sikuli";
 export type {
   RpcMessage,
+  MatcherEngine,
   SikuliOptions,
   UnaryCallOptions
 } from "./client";

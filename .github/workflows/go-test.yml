@@ -302,7 +302,11 @@ jobs:
           SIKULIGO_BINARY_PATH: ${{ github.workspace }}/sikuligo
         run: |
           cd sikuli-framework
-          python -m pytest -q -m integration
+          python -m pytest -q -m integration -rA | tee .test-results-integration.txt
+          if grep -q " skipped" .test-results-integration.txt || grep -q "SKIPPED" .test-results-integration.txt; then
+            echo "Integration gate failed: one or more integration tests were skipped."
+            exit 1
+          fi
 
   tagged-backend-build:
     name: Tagged Backend Build (gosseract+opencv)

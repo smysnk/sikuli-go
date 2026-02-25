@@ -6,6 +6,9 @@ import * as protoLoader from "@grpc/proto-loader";
 const DEFAULT_ADDR = "127.0.0.1:50051";
 const DEFAULT_TIMEOUT_MS = 5000;
 const TRACE_HEADER = "x-trace-id";
+const MATCHER_ENGINE_HEADER = "x-sikuligo-engine";
+
+export type MatcherEngine = "template" | "orb" | "hybrid";
 
 export type RpcMessage = Record<string, unknown>;
 
@@ -14,12 +17,14 @@ export interface SikuliOptions {
   authToken?: string;
   traceId?: string;
   timeoutMs?: number;
+  matcherEngine?: MatcherEngine;
   protoPath?: string;
   credentials?: grpc.ChannelCredentials;
 }
 
 export interface UnaryCallOptions {
   timeoutMs?: number;
+  matcherEngine?: MatcherEngine;
   metadata?: Record<string, string>;
 }
 
@@ -68,12 +73,21 @@ function serviceConstructorFromProto(protoPath: string): grpc.ServiceClientConst
   return serviceCtor as grpc.ServiceClientConstructor;
 }
 
+function normalizeMatcherEngine(raw: string | undefined): MatcherEngine {
+  const normalized = String(raw ?? "").trim().toLowerCase();
+  if (normalized === "orb" || normalized === "hybrid") {
+    return normalized;
+  }
+  return "template";
+}
+
 export class Sikuli {
   private readonly client: grpc.Client & Record<string, unknown>;
   private readonly address: string;
   private readonly authToken: string;
   private readonly traceId: string;
   private readonly defaultTimeoutMs: number;
+  private readonly matcherEngine: MatcherEngine;
   private readonly debugEnabled: boolean;
 
   constructor(opts: SikuliOptions = {}) {
@@ -82,6 +96,7 @@ export class Sikuli {
     this.authToken = opts.authToken ?? process.env.SIKULI_GRPC_AUTH_TOKEN ?? "";
     this.traceId = opts.traceId ?? "";
     this.defaultTimeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.matcherEngine = normalizeMatcherEngine(opts.matcherEngine ?? process.env.SIKULI_MATCHER_ENGINE);
     this.debugEnabled = /^(1|true|yes|on)$/i.test(process.env.SIKULI_DEBUG ?? "");
 
     const protoPath = opts.protoPath ?? resolveDefaultProtoPath();
@@ -133,7 +148,7 @@ export class Sikuli {
     });
   }
 
-  private buildMetadata(extra: Record<string, string> = {}): grpc.Metadata {
+  private buildMetadata(extra: Record<string, string> = {}, matcherEngine?: MatcherEngine): grpc.Metadata {
     const md = new grpc.Metadata();
     if (this.authToken) {
       md.set("x-api-key", this.authToken);
@@ -141,6 +156,7 @@ export class Sikuli {
     if (this.traceId) {
       md.set(TRACE_HEADER, this.traceId);
     }
+    md.set(MATCHER_ENGINE_HEADER, normalizeMatcherEngine(matcherEngine ?? this.matcherEngine));
     for (const [k, v] of Object.entries(extra)) {
       if (v) {
         md.set(k, v);
@@ -182,11 +198,13 @@ export class Sikuli {
     const timeoutMs = opts.timeoutMs ?? this.defaultTimeoutMs;
     const startedAt = Date.now();
     const deadline = new Date(Date.now() + timeoutMs);
-    const metadata = this.buildMetadata(opts.metadata);
+    const matcherEngine = normalizeMatcherEngine(opts.matcherEngine ?? this.matcherEngine);
+    const metadata = this.buildMetadata(opts.metadata, matcherEngine);
     this.debugLog("rpc.start", {
       method: methodName,
       address: this.address,
-      timeout_ms: timeoutMs
+      timeout_ms: timeoutMs,
+      matcher_engine: matcherEngine
     });
 
     return new Promise((resolve, reject) => {
@@ -202,18 +220,20 @@ export class Sikuli {
               address: this.address,
               timeout_ms: timeoutMs,
               duration_ms: Date.now() - startedAt,
+              matcher_engine: matcherEngine,
               grpc_code: err.code,
               details: err.details || err.message
             });
             reject(this.clientError(methodName, err, timeoutMs));
             return;
           }
-          this.debugLog("rpc.ok", {
-            method: methodName,
-            address: this.address,
-            duration_ms: Date.now() - startedAt
-          });
-          resolve(response);
+            this.debugLog("rpc.ok", {
+              method: methodName,
+              address: this.address,
+              duration_ms: Date.now() - startedAt,
+              matcher_engine: matcherEngine
+            });
+            resolve(response);
         }
       );
     });

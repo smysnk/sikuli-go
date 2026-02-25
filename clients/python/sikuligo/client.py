@@ -4,7 +4,7 @@ import inspect
 import os
 import zlib
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
+from typing import Iterable, Literal, Mapping, Sequence
 
 import grpc
 
@@ -20,11 +20,20 @@ except ImportError as exc:  # pragma: no cover - runtime setup validation
 DEFAULT_ADDR = "127.0.0.1:50051"
 DEFAULT_TIMEOUT_SECONDS = 5.0
 TRACE_HEADER = "x-trace-id"
+MATCHER_ENGINE_HEADER = "x-sikuligo-engine"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 ImageInput = str | bytes | bytearray | memoryview
 RegionInput = tuple[int, int, int, int]
 PointInput = tuple[int, int]
+MatcherEngine = Literal["template", "orb", "hybrid"]
+
+
+def _normalize_matcher_engine(raw: str | None) -> MatcherEngine:
+    normalized = str(raw or "").strip().lower()
+    if normalized in ("orb", "hybrid"):
+        return normalized  # type: ignore[return-value]
+    return "template"
 
 
 class SikuliError(RuntimeError):
@@ -45,11 +54,13 @@ class Sikuli:
         trace_id: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         secure: bool = False,
+        matcher_engine: str | None = None,
     ) -> None:
         self._address = address or os.getenv("SIKULI_GRPC_ADDR", DEFAULT_ADDR)
         self._auth_token = auth_token if auth_token is not None else os.getenv("SIKULI_GRPC_AUTH_TOKEN", "")
         self._trace_id = trace_id
         self._timeout_seconds = timeout_seconds
+        self._matcher_engine = _normalize_matcher_engine(matcher_engine or os.getenv("SIKULI_MATCHER_ENGINE"))
         self._channel = (
             grpc.secure_channel(self._address, grpc.ssl_channel_credentials())
             if secure
@@ -74,12 +85,17 @@ class Sikuli:
         except grpc.FutureTimeoutError as exc:
             raise TimeoutError(f"timeout waiting for Sikuli server at {self._address}") from exc
 
-    def _metadata(self, extra: Mapping[str, str] | None = None) -> Sequence[tuple[str, str]]:
+    def _metadata(
+        self,
+        extra: Mapping[str, str] | None = None,
+        matcher_engine: str | None = None,
+    ) -> Sequence[tuple[str, str]]:
         out: list[tuple[str, str]] = []
         if self._auth_token:
             out.append(("x-api-key", self._auth_token))
         if self._trace_id:
             out.append((TRACE_HEADER, self._trace_id))
+        out.append((MATCHER_ENGINE_HEADER, _normalize_matcher_engine(matcher_engine or self._matcher_engine)))
         if extra:
             out.extend((k, v) for k, v in extra.items() if v)
         return out
@@ -105,13 +121,14 @@ class Sikuli:
         *,
         timeout_seconds: float | None = None,
         metadata: Mapping[str, str] | None = None,
+        matcher_engine: str | None = None,
     ):
         method = getattr(self._stub, method_name)
         try:
             return method(
                 request,
                 timeout=timeout_seconds if timeout_seconds is not None else self._timeout_seconds,
-                metadata=self._metadata(metadata),
+                metadata=self._metadata(metadata, matcher_engine=matcher_engine),
             )
         except grpc.RpcError as err:
             raise SikuliError(err.code(), err.details() or "", self._trace_id_from_error(err)) from err
@@ -129,6 +146,7 @@ class Sikuli:
         timeout_millis: int | None = None,
         interval_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ):
         req = pb.FindOnScreenRequest(
             pattern=pattern_from_png(
@@ -145,7 +163,7 @@ class Sikuli:
                 interval_millis=interval_millis,
             ),
         )
-        return self._call("FindOnScreen", req, timeout_seconds=timeout_seconds)
+        return self._call("FindOnScreen", req, timeout_seconds=timeout_seconds, matcher_engine=engine)
 
     def exists_on_screen(
         self,
@@ -160,6 +178,7 @@ class Sikuli:
         timeout_millis: int | None = None,
         interval_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ):
         req = pb.ExistsOnScreenRequest(
             pattern=pattern_from_png(
@@ -176,7 +195,7 @@ class Sikuli:
                 interval_millis=interval_millis,
             ),
         )
-        return self._call("ExistsOnScreen", req, timeout_seconds=timeout_seconds)
+        return self._call("ExistsOnScreen", req, timeout_seconds=timeout_seconds, matcher_engine=engine)
 
     def wait_on_screen(
         self,
@@ -191,6 +210,7 @@ class Sikuli:
         timeout_millis: int | None = None,
         interval_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ):
         req = pb.WaitOnScreenRequest(
             pattern=pattern_from_png(
@@ -207,7 +227,7 @@ class Sikuli:
                 interval_millis=interval_millis,
             ),
         )
-        return self._call("WaitOnScreen", req, timeout_seconds=timeout_seconds)
+        return self._call("WaitOnScreen", req, timeout_seconds=timeout_seconds, matcher_engine=engine)
 
     def click_on_screen(
         self,
@@ -224,6 +244,7 @@ class Sikuli:
         button: str | None = None,
         delay_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ):
         click_opts = pb.InputOptions()
         if button:
@@ -246,7 +267,7 @@ class Sikuli:
             ),
             click_opts=click_opts,
         )
-        return self._call("ClickOnScreen", req, timeout_seconds=timeout_seconds)
+        return self._call("ClickOnScreen", req, timeout_seconds=timeout_seconds, matcher_engine=engine)
 
     def read_text(self, request: pb.ReadTextRequest, *, timeout_seconds: float | None = None):
         return self._call("ReadText", request, timeout_seconds=timeout_seconds)

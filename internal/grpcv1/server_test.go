@@ -5,9 +5,11 @@ import (
 	"image"
 	"testing"
 
+	"github.com/smysnk/sikuligo/internal/cv"
 	pb "github.com/smysnk/sikuligo/internal/grpcv1/pb"
 	"github.com/smysnk/sikuligo/pkg/sikuli"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -309,6 +311,58 @@ func TestClickOnScreenInvokesClickBackend(t *testing.T) {
 	}
 	if clicked.x != int(res.GetMatch().GetTarget().GetX()) || clicked.y != int(res.GetMatch().GetTarget().GetY()) {
 		t.Fatalf("clicked coordinates mismatch clicked=(%d,%d) target=(%d,%d)", clicked.x, clicked.y, res.GetMatch().GetTarget().GetX(), res.GetMatch().GetTarget().GetY())
+	}
+}
+
+func TestFindInvalidMatcherEngineMapsToInvalidArgument(t *testing.T) {
+	srv := NewServer()
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(matcherEngineHeader, "not-a-real-engine"))
+	req := &pb.FindRequest{
+		Source: grayImage("source", [][]uint8{
+			{10, 10, 10},
+			{10, 10, 10},
+			{10, 10, 10},
+		}),
+		Pattern: &pb.Pattern{
+			Image: grayImage("needle", [][]uint8{
+				{10},
+			}),
+			Exact: boolPtr(true),
+		},
+	}
+	_, err := srv.Find(ctx, req)
+	if err == nil {
+		t.Fatalf("expected invalid argument error")
+	}
+	if code := status.Code(err); code != codes.InvalidArgument {
+		t.Fatalf("expected invalid argument code, got %s", code)
+	}
+}
+
+func TestFindHybridMatcherViaMetadata(t *testing.T) {
+	srv := NewServer()
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(matcherEngineHeader, string(cv.MatcherEngineHybrid)))
+	req := &pb.FindRequest{
+		Source: grayImage("source", [][]uint8{
+			{10, 10, 10, 10},
+			{10, 0, 255, 10},
+			{10, 255, 0, 10},
+			{10, 10, 10, 10},
+		}),
+		Pattern: &pb.Pattern{
+			Image: grayImage("needle", [][]uint8{
+				{0, 255},
+				{255, 0},
+			}),
+			Exact: boolPtr(true),
+		},
+	}
+	res, err := srv.Find(ctx, req)
+	if err != nil {
+		t.Fatalf("find failed: %v", err)
+	}
+	if res.GetMatch() == nil {
+		t.Fatalf("expected match in response")
 	}
 }
 

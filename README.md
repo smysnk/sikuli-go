@@ -1,4 +1,4 @@
-# SikuliGO [![GoLang Tests](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml/badge.svg)](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml) [![PyPI version](https://img.shields.io/pypi/v/sikuligo)](https://pypi.org/project/sikuligo/) [![npm version](https://img.shields.io/npm/v/%40sikuligo%2Fsikuligo)](https://www.npmjs.com/package/@sikuligo/sikuligo)
+# SikuliGO [![GoLang Tests](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml/badge.svg)](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml) [![Testing Gate](https://img.shields.io/github/actions/workflow/status/smysnk/SikuliGO/go-test.yml?branch=master&label=testing%20gate)](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml) [![PyPI version](https://img.shields.io/pypi/v/sikuligo)](https://pypi.org/project/sikuligo/) [![npm version](https://img.shields.io/npm/v/%40sikuligo%2Fsikuligo)](https://www.npmjs.com/package/@sikuligo/sikuligo)
 
 ![SikuliX Logo](docs/images/logo.png)
 
@@ -88,6 +88,7 @@ finally:
 - [Port](https://smysnk.github.io/SikuliGO/port-strategy)
 - [gRPC](https://smysnk.github.io/SikuliGO/grpc-strategy)
 - [Client](https://smysnk.github.io/SikuliGO/client-strategy)
+- [ORB Search Delivery](https://smysnk.github.io/SikuliGO/orb-search-delivery)
 
 ## Integration & Implementation
 - [API Reference](https://smysnk.github.io/SikuliGO/api/)

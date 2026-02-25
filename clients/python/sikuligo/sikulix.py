@@ -162,6 +162,7 @@ class Region:
         timeout_millis: int | None = None,
         interval_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ) -> Match:
         pattern = _to_pattern(target)
         out = self._session.find_on_screen(
@@ -170,6 +171,7 @@ class Region:
             timeout_millis=timeout_millis,
             interval_millis=interval_millis,
             timeout_seconds=timeout_seconds,
+            engine=engine,
         )
         if not out.match:
             raise RuntimeError("match not found")
@@ -182,6 +184,7 @@ class Region:
         *,
         interval_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ) -> Match | None:
         pattern = _to_pattern(target)
         out = self._session.exists_on_screen(
@@ -190,6 +193,7 @@ class Region:
             timeout_millis=timeout_millis,
             interval_millis=interval_millis,
             timeout_seconds=timeout_seconds,
+            engine=engine,
         )
         if not out.exists or not out.match:
             return None
@@ -202,6 +206,7 @@ class Region:
         *,
         interval_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ) -> Match:
         pattern = _to_pattern(target)
         out = self._session.wait_on_screen(
@@ -210,6 +215,7 @@ class Region:
             timeout_millis=timeout_millis,
             interval_millis=interval_millis,
             timeout_seconds=timeout_seconds,
+            engine=engine,
         )
         if not out.match:
             if timeout_millis <= 0:
@@ -226,6 +232,7 @@ class Region:
         button: str | None = None,
         delay_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ) -> Match:
         pattern = _to_pattern(target)
         out = self._session.click_on_screen(
@@ -236,6 +243,7 @@ class Region:
             button=button,
             delay_millis=delay_millis,
             timeout_seconds=timeout_seconds,
+            engine=engine,
         )
         if not out.match:
             raise RuntimeError("match not found")
@@ -248,12 +256,14 @@ class Region:
         timeout_millis: int | None = None,
         interval_millis: int | None = None,
         timeout_seconds: float | None = None,
+        engine: str | None = None,
     ) -> Match:
         match = self.find(
             target,
             timeout_millis=timeout_millis,
             interval_millis=interval_millis,
             timeout_seconds=timeout_seconds,
+            engine=engine,
         )
         self._session.move_mouse(
             pb.MoveMouseRequest(x=match.target_x, y=match.target_y),
@@ -291,6 +301,7 @@ class Screen(Region):
         trace_id: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         secure: bool = False,
+        matcher_engine: str | None = None,
         startup_timeout_seconds: float = DEFAULT_STARTUP_TIMEOUT_SECONDS,
         binary_path: str | None = None,
         admin_listen: str = "",
@@ -333,6 +344,7 @@ class Screen(Region):
             trace_id=trace_id,
             timeout_seconds=timeout_seconds,
             secure=secure,
+            matcher_engine=matcher_engine,
         )
         try:
             _wait_for_startup(session, child, startup_timeout_seconds)
@@ -356,6 +368,7 @@ class Screen(Region):
         trace_id: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         secure: bool = False,
+        matcher_engine: str | None = None,
         startup_timeout_seconds: float = DEFAULT_STARTUP_TIMEOUT_SECONDS,
         binary_path: str | None = None,
         admin_listen: str = "",
@@ -369,6 +382,7 @@ class Screen(Region):
             trace_id=trace_id,
             timeout_seconds=timeout_seconds,
             secure=secure,
+            matcher_engine=matcher_engine,
             startup_timeout_seconds=startup_timeout_seconds,
             binary_path=binary_path,
             admin_listen=admin_listen,
@@ -386,6 +400,7 @@ class Screen(Region):
         trace_id: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         secure: bool = False,
+        matcher_engine: str | None = None,
         startup_timeout_seconds: float = DEFAULT_STARTUP_TIMEOUT_SECONDS,
     ) -> Screen:
         resolved_address = address or os.getenv("SIKULI_GRPC_ADDR", DEFAULT_ADDR)
@@ -396,6 +411,7 @@ class Screen(Region):
             trace_id=trace_id,
             timeout_seconds=timeout_seconds,
             secure=secure,
+            matcher_engine=matcher_engine,
         )
         session.wait_for_ready(timeout_seconds=startup_timeout_seconds)
         return cls(
@@ -413,6 +429,7 @@ class Screen(Region):
         trace_id: str | None = None,
         timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
         secure: bool = False,
+        matcher_engine: str | None = None,
         startup_timeout_seconds: float = DEFAULT_STARTUP_TIMEOUT_SECONDS,
         binary_path: str | None = None,
         admin_listen: str = "",
@@ -428,6 +445,7 @@ class Screen(Region):
                 trace_id=trace_id,
                 timeout_seconds=timeout_seconds,
                 secure=secure,
+                matcher_engine=matcher_engine,
                 startup_timeout_seconds=1.0,
             )
         except Exception:
@@ -437,6 +455,7 @@ class Screen(Region):
                 trace_id=trace_id,
                 timeout_seconds=timeout_seconds,
                 secure=secure,
+                matcher_engine=matcher_engine,
                 startup_timeout_seconds=startup_timeout_seconds,
                 binary_path=binary_path,
                 admin_listen=admin_listen,

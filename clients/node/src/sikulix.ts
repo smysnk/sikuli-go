@@ -1,6 +1,7 @@
 import { LaunchOptions } from "./launcher";
 import { Sikuli } from "./sikuli";
 import { Image, ImageInput, loadGrayImage } from "./image";
+import type { MatcherEngine, UnaryCallOptions } from "./client";
 
 type ProtoPoint = { x?: number; y?: number };
 type ProtoRect = { x?: number; y?: number; w?: number; h?: number };
@@ -95,36 +96,36 @@ export class Region {
     this.bounds = bounds;
   }
 
-  async find(target: ImageInput | Image | Pattern): Promise<Match> {
+  async find(target: ImageInput | Image | Pattern, engine?: MatcherEngine): Promise<Match> {
     const pattern = toPattern(target);
     const out = (await this.session.findOnScreen({
       pattern: pattern.toRequestPattern(),
       opts: this.toScreenQueryOptions()
-    })) as { match?: ProtoMatch };
+    }, this.toUnaryOptions(engine))) as { match?: ProtoMatch };
     if (!out.match) {
       throw new Error("match not found");
     }
     return new Match(out.match);
   }
 
-  async exists(target: ImageInput | Image | Pattern, timeoutMs = 0): Promise<Match | null> {
+  async exists(target: ImageInput | Image | Pattern, timeoutMs = 0, engine?: MatcherEngine): Promise<Match | null> {
     const pattern = toPattern(target);
     const out = (await this.session.existsOnScreen({
       pattern: pattern.toRequestPattern(),
       opts: this.toScreenQueryOptions(timeoutMs)
-    })) as { exists?: boolean; match?: ProtoMatch };
+    }, this.toUnaryOptions(engine))) as { exists?: boolean; match?: ProtoMatch };
     if (!out.exists || !out.match) {
       return null;
     }
     return new Match(out.match);
   }
 
-  async wait(target: ImageInput | Image | Pattern, timeoutMs = 3000): Promise<Match> {
+  async wait(target: ImageInput | Image | Pattern, timeoutMs = 3000, engine?: MatcherEngine): Promise<Match> {
     const pattern = toPattern(target);
     const out = (await this.session.waitOnScreen({
       pattern: pattern.toRequestPattern(),
       opts: this.toScreenQueryOptions(timeoutMs)
-    })) as { match?: ProtoMatch };
+    }, this.toUnaryOptions(engine))) as { match?: ProtoMatch };
     if (!out.match) {
       const msg = timeoutMs <= 0 ? "wait timeout" : `wait timeout after ${timeoutMs}ms`;
       throw new Error(msg);
@@ -132,22 +133,29 @@ export class Region {
     return new Match(out.match);
   }
 
-  async click(target: ImageInput | Image | Pattern): Promise<Match> {
+  async click(target: ImageInput | Image | Pattern, engine?: MatcherEngine): Promise<Match> {
     const pattern = toPattern(target);
     const out = (await this.session.clickOnScreen({
       pattern: pattern.toRequestPattern(),
       opts: this.toScreenQueryOptions()
-    })) as { match?: ProtoMatch };
+    }, this.toUnaryOptions(engine))) as { match?: ProtoMatch };
     if (!out.match) {
       throw new Error("match not found");
     }
     return new Match(out.match);
   }
 
-  async hover(target: ImageInput | Image | Pattern): Promise<Match> {
-    const match = await this.find(target);
+  async hover(target: ImageInput | Image | Pattern, engine?: MatcherEngine): Promise<Match> {
+    const match = await this.find(target, engine);
     await this.session.moveMouse({ x: match.targetX, y: match.targetY });
     return match;
+  }
+
+  private toUnaryOptions(engine?: MatcherEngine): UnaryCallOptions | undefined {
+    if (!engine) {
+      return undefined;
+    }
+    return { matcherEngine: engine };
   }
 
   private toScreenQueryOptions(timeoutMs?: number): ScreenQueryOptions {

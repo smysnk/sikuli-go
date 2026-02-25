@@ -11,6 +11,7 @@ API reference pages are generated from source using `go doc` and validated with 
 - [Port Strategy](https://smysnk.github.io/SikuliGO/port-strategy)
 - [gRPC Strategy](https://smysnk.github.io/SikuliGO/grpc-strategy)
 - [Client Strategy](https://smysnk.github.io/SikuliGO/client-strategy)
+- [ORB Search Delivery](https://smysnk.github.io/SikuliGO/orb-search-delivery)
 
 ## Integration & Implementation
 

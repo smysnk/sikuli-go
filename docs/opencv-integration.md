@@ -1,6 +1,6 @@
 # OpenCV Integration
 
-SikuliGO now includes an OpenCV matcher backend for image search.
+SikuliGO includes OpenCV-backed matcher backends for image search.
 
 ## Backend Selection
 
@@ -10,6 +10,7 @@ SikuliGO now includes an OpenCV matcher backend for image search.
 The OpenCV backend is wired through:
 
 - `internal/cv/opencv_matcher_opencv.go`
+- `internal/cv/orb_matcher_opencv.go`
 - `internal/cv/default_matcher_opencv.go`
 - `pkg/sikuli/finder.go`
 - `internal/observe/backend_polling.go`
@@ -38,3 +39,5 @@ export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
 
 - When `-tags "opencv gocv_specific_modules"` is enabled, `Finder` and observe polling automatically use the OpenCV matcher backend.
 - Existing pure-Go matchers (`NCC`, `SAD`) remain available.
+- Matcher engine can be selected via `x-sikuligo-engine` metadata (`template`, `orb`, `hybrid`).
+- Node/Python clients expose this as session defaults (`matcherEngine` / `matcher_engine`) and per-call overrides.

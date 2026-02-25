@@ -67,12 +67,39 @@ finally:
 
 - `SIKULI_GRPC_ADDR` (optional address used by `Screen()` probe/connect; default probe `127.0.0.1:50051`)
 - `SIKULI_GRPC_AUTH_TOKEN` (optional; sent as `x-api-key`)
+- `SIKULI_MATCHER_ENGINE` (optional default matcher engine: `template`, `orb`, `hybrid`)
 - `SIKULIGO_SQLITE_PATH` (optional sqlite path for spawned server sessions; default `sikuligo.db`)
 
 Primary constructors:
 - `Screen()` = connect to default address first (1s), else spawn
 - `Screen.connect()` = connect only
 - `Screen.spawn()` = spawn only
+
+## Matcher Engine Selection
+
+Set matcher engine per session:
+
+```python
+from sikuligo import Pattern, Screen
+
+screen = Screen(matcher_engine="hybrid")
+try:
+    match = screen.click(Pattern("assets/pattern.png").exact())
+finally:
+    screen.close()
+```
+
+Override matcher engine per call (ad-hoc):
+
+```python
+from sikuligo import Pattern, Screen
+
+screen = Screen(matcher_engine="template")
+try:
+    match = screen.click(Pattern("assets/pattern.png").exact(), engine="orb")
+finally:
+    screen.close()
+```
 
 ## Run Additional Examples
 
