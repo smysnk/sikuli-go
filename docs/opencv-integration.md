@@ -39,5 +39,8 @@ export PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH"
 
 - When `-tags "opencv gocv_specific_modules"` is enabled, `Finder` and observe polling automatically use the OpenCV matcher backend.
 - Existing pure-Go matchers (`NCC`, `SAD`) remain available.
-- Matcher engine can be selected via `x-sikuligo-engine` metadata (`template`, `orb`, `hybrid`).
+- Matcher engine is selected via proto fields:
+  - `FindRequest.matcher_engine`
+  - `ScreenQueryOptions.matcher_engine`
+  values: `TEMPLATE`, `ORB`, `HYBRID`.
 - Node/Python clients expose this as session defaults (`matcherEngine` / `matcher_engine`) and per-call overrides.

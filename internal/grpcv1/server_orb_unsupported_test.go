@@ -8,13 +8,11 @@ import (
 
 	pb "github.com/smysnk/sikuligo/internal/grpcv1/pb"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
 func TestFindORBWithoutOpenCVMapsToUnimplemented(t *testing.T) {
 	srv := NewServer()
-	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(matcherEngineHeader, "orb"))
 	req := &pb.FindRequest{
 		Source: grayImage("source", [][]uint8{
 			{10, 10, 10, 10},
@@ -29,8 +27,9 @@ func TestFindORBWithoutOpenCVMapsToUnimplemented(t *testing.T) {
 			}),
 			Exact: boolPtr(true),
 		},
+		MatcherEngine: pb.MatcherEngine_MATCHER_ENGINE_ORB,
 	}
-	_, err := srv.Find(ctx, req)
+	_, err := srv.Find(context.Background(), req)
 	if err == nil {
 		t.Fatalf("expected unimplemented error")
 	}

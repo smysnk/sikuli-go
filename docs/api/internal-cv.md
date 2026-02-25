@@ -17,20 +17,29 @@ Package: `package cv // import "github.com/smysnk/sikuligo/internal/cv"`
 
 ### Types
 
+- <span class="api-type">[`HybridMatcher`](#type-hybridmatcher)</span>
+- <span class="api-type">[`MatcherEngine`](#type-matcherengine)</span>
 - <span class="api-type">[`NCCMatcher`](#type-nccmatcher)</span>
+- <span class="api-type">[`ORBMatcher`](#type-orbmatcher)</span>
 - <span class="api-type">[`OpenCVMatcher`](#type-opencvmatcher)</span>
 - <span class="api-type">[`SADMatcher`](#type-sadmatcher)</span>
 
 ### Functions
 
 - <span class="api-func">[`NewDefaultMatcher`](#func-newdefaultmatcher)</span>
+- <span class="api-func">[`NewMatcherForEngine`](#func-newmatcherforengine)</span>
+- <span class="api-func">[`NewHybridMatcher`](#func-newhybridmatcher)</span>
+- <span class="api-func">[`ParseMatcherEngine`](#func-parsematcherengine)</span>
 - <span class="api-func">[`NewNCCMatcher`](#func-newnccmatcher)</span>
+- <span class="api-func">[`NewORBMatcher`](#func-neworbmatcher)</span>
 - <span class="api-func">[`NewOpenCVMatcher`](#func-newopencvmatcher)</span>
 - <span class="api-func">[`NewSADMatcher`](#func-newsadmatcher)</span>
 
 ### Methods
 
+- <span class="api-method">[`HybridMatcher.Find`](#method-hybridmatcher-find)</span>
 - <span class="api-method">[`NCCMatcher.Find`](#method-nccmatcher-find)</span>
+- <span class="api-method">[`ORBMatcher.Find`](#method-orbmatcher-find)</span>
 - <span class="api-method">[`OpenCVMatcher.Find`](#method-opencvmatcher-find)</span>
 - <span class="api-method">[`SADMatcher.Find`](#method-sadmatcher-find)</span>
 
@@ -38,9 +47,21 @@ Package: `package cv // import "github.com/smysnk/sikuligo/internal/cv"`
 
 ### Types
 
+#### <a id="type-hybridmatcher"></a><span class="api-type">Type</span> `HybridMatcher`
+
+- Signature: <span class="api-signature">`type HybridMatcher struct {`</span>
+
+#### <a id="type-matcherengine"></a><span class="api-type">Type</span> `MatcherEngine`
+
+- Signature: <span class="api-signature">`type MatcherEngine string`</span>
+
 #### <a id="type-nccmatcher"></a><span class="api-type">Type</span> `NCCMatcher`
 
 - Signature: <span class="api-signature">`type NCCMatcher struct{}`</span>
+
+#### <a id="type-orbmatcher"></a><span class="api-type">Type</span> `ORBMatcher`
+
+- Signature: <span class="api-signature">`type ORBMatcher struct{}`</span>
 
 #### <a id="type-opencvmatcher"></a><span class="api-type">Type</span> `OpenCVMatcher`
 
@@ -57,10 +78,30 @@ Package: `package cv // import "github.com/smysnk/sikuligo/internal/cv"`
 - Signature: <span class="api-signature">`func NewDefaultMatcher() core.Matcher`</span>
 - Notes: NewDefaultMatcher returns the matcher backend used by default in Sikuli flows.
 
+#### <a id="func-newmatcherforengine"></a><span class="api-func">Function</span> `NewMatcherForEngine`
+
+- Signature: <span class="api-signature">`func NewMatcherForEngine(engine MatcherEngine) (core.Matcher, error)`</span>
+- Uses: [`MatcherEngine`](#type-matcherengine)
+
+#### <a id="func-newhybridmatcher"></a><span class="api-func">Function</span> `NewHybridMatcher`
+
+- Signature: <span class="api-signature">`func NewHybridMatcher(primary, fallback core.Matcher) *HybridMatcher`</span>
+- Uses: [`HybridMatcher`](#type-hybridmatcher)
+
+#### <a id="func-parsematcherengine"></a><span class="api-func">Function</span> `ParseMatcherEngine`
+
+- Signature: <span class="api-signature">`func ParseMatcherEngine(raw string) (MatcherEngine, error)`</span>
+- Uses: [`MatcherEngine`](#type-matcherengine)
+
 #### <a id="func-newnccmatcher"></a><span class="api-func">Function</span> `NewNCCMatcher`
 
 - Signature: <span class="api-signature">`func NewNCCMatcher() *NCCMatcher`</span>
 - Uses: [`NCCMatcher`](#type-nccmatcher)
+
+#### <a id="func-neworbmatcher"></a><span class="api-func">Function</span> `NewORBMatcher`
+
+- Signature: <span class="api-signature">`func NewORBMatcher() *ORBMatcher`</span>
+- Uses: [`ORBMatcher`](#type-orbmatcher)
 
 #### <a id="func-newopencvmatcher"></a><span class="api-func">Function</span> `NewOpenCVMatcher`
 
@@ -74,9 +115,17 @@ Package: `package cv // import "github.com/smysnk/sikuligo/internal/cv"`
 
 ### Methods
 
+#### <a id="method-hybridmatcher-find"></a><span class="api-method">Method</span> `HybridMatcher.Find`
+
+- Signature: <span class="api-signature">`func (m *HybridMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)`</span>
+
 #### <a id="method-nccmatcher-find"></a><span class="api-method">Method</span> `NCCMatcher.Find`
 
 - Signature: <span class="api-signature">`func (m *NCCMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)`</span>
+
+#### <a id="method-orbmatcher-find"></a><span class="api-method">Method</span> `ORBMatcher.Find`
+
+- Signature: <span class="api-signature">`func (m *ORBMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)`</span>
 
 #### <a id="method-opencvmatcher-find"></a><span class="api-method">Method</span> `OpenCVMatcher.Find`
 
@@ -98,14 +147,38 @@ func NewDefaultMatcher() core.Matcher
     NewDefaultMatcher returns the matcher backend used by default in Sikuli
     flows.
 
+func NewMatcherForEngine(engine MatcherEngine) (core.Matcher, error)
 
 TYPES
+
+type HybridMatcher struct {
+	// Has unexported fields.
+}
+
+func NewHybridMatcher(primary, fallback core.Matcher) *HybridMatcher
+
+func (m *HybridMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)
+
+type MatcherEngine string
+
+const (
+	MatcherEngineTemplate MatcherEngine = "template"
+	MatcherEngineORB      MatcherEngine = "orb"
+	MatcherEngineHybrid   MatcherEngine = "hybrid"
+)
+func ParseMatcherEngine(raw string) (MatcherEngine, error)
 
 type NCCMatcher struct{}
 
 func NewNCCMatcher() *NCCMatcher
 
 func (m *NCCMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)
+
+type ORBMatcher struct{}
+
+func NewORBMatcher() *ORBMatcher
+
+func (m *ORBMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)
 
 type OpenCVMatcher struct{}
 

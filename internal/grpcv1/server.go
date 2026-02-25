@@ -57,7 +57,7 @@ func (s *Server) Find(ctx context.Context, req *pb.FindRequest) (*pb.FindRespons
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
-	engine, err := matcherEngineFromContext(ctx)
+	engine, err := matcherEngineFromFindRequest(ctx, req)
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
@@ -77,7 +77,7 @@ func (s *Server) FindAll(ctx context.Context, req *pb.FindRequest) (*pb.FindAllR
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
-	engine, err := matcherEngineFromContext(ctx)
+	engine, err := matcherEngineFromFindRequest(ctx, req)
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
@@ -96,7 +96,7 @@ func (s *Server) FindOnScreen(ctx context.Context, req *pb.FindOnScreenRequest) 
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
-	engine, err := matcherEngineFromContext(ctx)
+	engine, err := matcherEngineFromScreenOptions(ctx, req.GetOpts())
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
@@ -111,7 +111,7 @@ func (s *Server) ExistsOnScreen(ctx context.Context, req *pb.ExistsOnScreenReque
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
-	engine, err := matcherEngineFromContext(ctx)
+	engine, err := matcherEngineFromScreenOptions(ctx, req.GetOpts())
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
@@ -147,7 +147,7 @@ func (s *Server) WaitOnScreen(ctx context.Context, req *pb.WaitOnScreenRequest) 
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is nil")
 	}
-	engine, err := matcherEngineFromContext(ctx)
+	engine, err := matcherEngineFromScreenOptions(ctx, req.GetOpts())
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
@@ -261,6 +261,33 @@ func waitInterval(interval time.Duration, deadline time.Time) time.Duration {
 		return remaining
 	}
 	return interval
+}
+
+func matcherEngineFromFindRequest(ctx context.Context, req *pb.FindRequest) (cv.MatcherEngine, error) {
+	if req != nil && req.GetMatcherEngine() != pb.MatcherEngine_MATCHER_ENGINE_UNSPECIFIED {
+		return matcherEngineFromProto(req.GetMatcherEngine())
+	}
+	return matcherEngineFromContext(ctx)
+}
+
+func matcherEngineFromScreenOptions(ctx context.Context, opts *pb.ScreenQueryOptions) (cv.MatcherEngine, error) {
+	if opts != nil && opts.GetMatcherEngine() != pb.MatcherEngine_MATCHER_ENGINE_UNSPECIFIED {
+		return matcherEngineFromProto(opts.GetMatcherEngine())
+	}
+	return matcherEngineFromContext(ctx)
+}
+
+func matcherEngineFromProto(in pb.MatcherEngine) (cv.MatcherEngine, error) {
+	switch in {
+	case pb.MatcherEngine_MATCHER_ENGINE_UNSPECIFIED, pb.MatcherEngine_MATCHER_ENGINE_TEMPLATE:
+		return cv.MatcherEngineTemplate, nil
+	case pb.MatcherEngine_MATCHER_ENGINE_ORB:
+		return cv.MatcherEngineORB, nil
+	case pb.MatcherEngine_MATCHER_ENGINE_HYBRID:
+		return cv.MatcherEngineHybrid, nil
+	default:
+		return "", fmt.Errorf("%w: unsupported matcher engine enum value=%d", sikuli.ErrInvalidTarget, in)
+	}
 }
 
 func matcherEngineFromContext(ctx context.Context) (cv.MatcherEngine, error) {

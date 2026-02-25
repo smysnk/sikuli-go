@@ -21,6 +21,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type MatcherEngine int32
+
+const (
+	MatcherEngine_MATCHER_ENGINE_UNSPECIFIED MatcherEngine = 0
+	MatcherEngine_MATCHER_ENGINE_TEMPLATE    MatcherEngine = 1
+	MatcherEngine_MATCHER_ENGINE_ORB         MatcherEngine = 2
+	MatcherEngine_MATCHER_ENGINE_HYBRID      MatcherEngine = 3
+)
+
+// Enum value maps for MatcherEngine.
+var (
+	MatcherEngine_name = map[int32]string{
+		0: "MATCHER_ENGINE_UNSPECIFIED",
+		1: "MATCHER_ENGINE_TEMPLATE",
+		2: "MATCHER_ENGINE_ORB",
+		3: "MATCHER_ENGINE_HYBRID",
+	}
+	MatcherEngine_value = map[string]int32{
+		"MATCHER_ENGINE_UNSPECIFIED": 0,
+		"MATCHER_ENGINE_TEMPLATE":    1,
+		"MATCHER_ENGINE_ORB":         2,
+		"MATCHER_ENGINE_HYBRID":      3,
+	}
+)
+
+func (x MatcherEngine) Enum() *MatcherEngine {
+	p := new(MatcherEngine)
+	*p = x
+	return p
+}
+
+func (x MatcherEngine) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MatcherEngine) Descriptor() protoreflect.EnumDescriptor {
+	return file_sikuli_v1_sikuli_proto_enumTypes[0].Descriptor()
+}
+
+func (MatcherEngine) Type() protoreflect.EnumType {
+	return &file_sikuli_v1_sikuli_proto_enumTypes[0]
+}
+
+func (x MatcherEngine) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MatcherEngine.Descriptor instead.
+func (MatcherEngine) EnumDescriptor() ([]byte, []int) {
+	return file_sikuli_v1_sikuli_proto_rawDescGZIP(), []int{0}
+}
+
 type GrayImage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -777,6 +829,7 @@ type FindRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Source        *GrayImage             `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
 	Pattern       *Pattern               `protobuf:"bytes,2,opt,name=pattern,proto3" json:"pattern,omitempty"`
+	MatcherEngine MatcherEngine          `protobuf:"varint,3,opt,name=matcher_engine,json=matcherEngine,proto3,enum=sikuli.v1.MatcherEngine" json:"matcher_engine,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -823,6 +876,13 @@ func (x *FindRequest) GetPattern() *Pattern {
 		return x.Pattern
 	}
 	return nil
+}
+
+func (x *FindRequest) GetMatcherEngine() MatcherEngine {
+	if x != nil {
+		return x.MatcherEngine
+	}
+	return MatcherEngine_MATCHER_ENGINE_UNSPECIFIED
 }
 
 type FindResponse struct {
@@ -918,6 +978,7 @@ type ScreenQueryOptions struct {
 	Region         *Rect                  `protobuf:"bytes,1,opt,name=region,proto3" json:"region,omitempty"`
 	TimeoutMillis  *int64                 `protobuf:"varint,2,opt,name=timeout_millis,json=timeoutMillis,proto3,oneof" json:"timeout_millis,omitempty"`
 	IntervalMillis *int64                 `protobuf:"varint,3,opt,name=interval_millis,json=intervalMillis,proto3,oneof" json:"interval_millis,omitempty"`
+	MatcherEngine  MatcherEngine          `protobuf:"varint,4,opt,name=matcher_engine,json=matcherEngine,proto3,enum=sikuli.v1.MatcherEngine" json:"matcher_engine,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -971,6 +1032,13 @@ func (x *ScreenQueryOptions) GetIntervalMillis() int64 {
 		return *x.IntervalMillis
 	}
 	return 0
+}
+
+func (x *ScreenQueryOptions) GetMatcherEngine() MatcherEngine {
+	if x != nil {
+		return x.MatcherEngine
+	}
+	return MatcherEngine_MATCHER_ENGINE_UNSPECIFIED
 }
 
 type FindOnScreenRequest struct {
@@ -2084,18 +2152,20 @@ const file_sikuli_v1_sikuli_proto_rawDesc = "" +
 	"\fObserveEvent\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12&\n" +
 	"\x05match\x18\x02 \x01(\v2\x10.sikuli.v1.MatchR\x05match\x122\n" +
-	"\x15timestamp_unix_millis\x18\x03 \x01(\x03R\x13timestampUnixMillis\"i\n" +
+	"\x15timestamp_unix_millis\x18\x03 \x01(\x03R\x13timestampUnixMillis\"\xaa\x01\n" +
 	"\vFindRequest\x12,\n" +
 	"\x06source\x18\x01 \x01(\v2\x14.sikuli.v1.GrayImageR\x06source\x12,\n" +
-	"\apattern\x18\x02 \x01(\v2\x12.sikuli.v1.PatternR\apattern\"6\n" +
+	"\apattern\x18\x02 \x01(\v2\x12.sikuli.v1.PatternR\apattern\x12?\n" +
+	"\x0ematcher_engine\x18\x03 \x01(\x0e2\x18.sikuli.v1.MatcherEngineR\rmatcherEngine\"6\n" +
 	"\fFindResponse\x12&\n" +
 	"\x05match\x18\x01 \x01(\v2\x10.sikuli.v1.MatchR\x05match\"=\n" +
 	"\x0fFindAllResponse\x12*\n" +
-	"\amatches\x18\x01 \x03(\v2\x10.sikuli.v1.MatchR\amatches\"\xbe\x01\n" +
+	"\amatches\x18\x01 \x03(\v2\x10.sikuli.v1.MatchR\amatches\"\xff\x01\n" +
 	"\x12ScreenQueryOptions\x12'\n" +
 	"\x06region\x18\x01 \x01(\v2\x0f.sikuli.v1.RectR\x06region\x12*\n" +
 	"\x0etimeout_millis\x18\x02 \x01(\x03H\x00R\rtimeoutMillis\x88\x01\x01\x12,\n" +
-	"\x0finterval_millis\x18\x03 \x01(\x03H\x01R\x0eintervalMillis\x88\x01\x01B\x11\n" +
+	"\x0finterval_millis\x18\x03 \x01(\x03H\x01R\x0eintervalMillis\x88\x01\x01\x12?\n" +
+	"\x0ematcher_engine\x18\x04 \x01(\x0e2\x18.sikuli.v1.MatcherEngineR\rmatcherEngineB\x11\n" +
 	"\x0f_timeout_millisB\x12\n" +
 	"\x10_interval_millis\"v\n" +
 	"\x13FindOnScreenRequest\x12,\n" +
@@ -2158,7 +2228,12 @@ const file_sikuli_v1_sikuli_proto_rawDesc = "" +
 	"\x14IsAppRunningResponse\x12\x18\n" +
 	"\arunning\x18\x01 \x01(\bR\arunning\"B\n" +
 	"\x13ListWindowsResponse\x12+\n" +
-	"\awindows\x18\x01 \x03(\v2\x11.sikuli.v1.WindowR\awindows2\x8c\v\n" +
+	"\awindows\x18\x01 \x03(\v2\x11.sikuli.v1.WindowR\awindows*\x7f\n" +
+	"\rMatcherEngine\x12\x1e\n" +
+	"\x1aMATCHER_ENGINE_UNSPECIFIED\x10\x00\x12\x1b\n" +
+	"\x17MATCHER_ENGINE_TEMPLATE\x10\x01\x12\x16\n" +
+	"\x12MATCHER_ENGINE_ORB\x10\x02\x12\x19\n" +
+	"\x15MATCHER_ENGINE_HYBRID\x10\x032\x8c\v\n" +
 	"\rSikuliService\x127\n" +
 	"\x04Find\x12\x16.sikuli.v1.FindRequest\x1a\x17.sikuli.v1.FindResponse\x12=\n" +
 	"\aFindAll\x12\x16.sikuli.v1.FindRequest\x1a\x1a.sikuli.v1.FindAllResponse\x12G\n" +
@@ -2193,132 +2268,136 @@ func file_sikuli_v1_sikuli_proto_rawDescGZIP() []byte {
 	return file_sikuli_v1_sikuli_proto_rawDescData
 }
 
+var file_sikuli_v1_sikuli_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_sikuli_v1_sikuli_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
 var file_sikuli_v1_sikuli_proto_goTypes = []any{
-	(*GrayImage)(nil),              // 0: sikuli.v1.GrayImage
-	(*Point)(nil),                  // 1: sikuli.v1.Point
-	(*Rect)(nil),                   // 2: sikuli.v1.Rect
-	(*Pattern)(nil),                // 3: sikuli.v1.Pattern
-	(*Match)(nil),                  // 4: sikuli.v1.Match
-	(*TextMatch)(nil),              // 5: sikuli.v1.TextMatch
-	(*OCRParams)(nil),              // 6: sikuli.v1.OCRParams
-	(*InputOptions)(nil),           // 7: sikuli.v1.InputOptions
-	(*ObserveOptions)(nil),         // 8: sikuli.v1.ObserveOptions
-	(*AppOptions)(nil),             // 9: sikuli.v1.AppOptions
-	(*Window)(nil),                 // 10: sikuli.v1.Window
-	(*ObserveEvent)(nil),           // 11: sikuli.v1.ObserveEvent
-	(*FindRequest)(nil),            // 12: sikuli.v1.FindRequest
-	(*FindResponse)(nil),           // 13: sikuli.v1.FindResponse
-	(*FindAllResponse)(nil),        // 14: sikuli.v1.FindAllResponse
-	(*ScreenQueryOptions)(nil),     // 15: sikuli.v1.ScreenQueryOptions
-	(*FindOnScreenRequest)(nil),    // 16: sikuli.v1.FindOnScreenRequest
-	(*ExistsOnScreenRequest)(nil),  // 17: sikuli.v1.ExistsOnScreenRequest
-	(*ExistsOnScreenResponse)(nil), // 18: sikuli.v1.ExistsOnScreenResponse
-	(*WaitOnScreenRequest)(nil),    // 19: sikuli.v1.WaitOnScreenRequest
-	(*ClickOnScreenRequest)(nil),   // 20: sikuli.v1.ClickOnScreenRequest
-	(*ReadTextRequest)(nil),        // 21: sikuli.v1.ReadTextRequest
-	(*ReadTextResponse)(nil),       // 22: sikuli.v1.ReadTextResponse
-	(*FindTextRequest)(nil),        // 23: sikuli.v1.FindTextRequest
-	(*FindTextResponse)(nil),       // 24: sikuli.v1.FindTextResponse
-	(*MoveMouseRequest)(nil),       // 25: sikuli.v1.MoveMouseRequest
-	(*ClickRequest)(nil),           // 26: sikuli.v1.ClickRequest
-	(*TypeTextRequest)(nil),        // 27: sikuli.v1.TypeTextRequest
-	(*HotkeyRequest)(nil),          // 28: sikuli.v1.HotkeyRequest
-	(*ActionResponse)(nil),         // 29: sikuli.v1.ActionResponse
-	(*ObserveRequest)(nil),         // 30: sikuli.v1.ObserveRequest
-	(*ObserveChangeRequest)(nil),   // 31: sikuli.v1.ObserveChangeRequest
-	(*ObserveResponse)(nil),        // 32: sikuli.v1.ObserveResponse
-	(*AppActionRequest)(nil),       // 33: sikuli.v1.AppActionRequest
-	(*IsAppRunningResponse)(nil),   // 34: sikuli.v1.IsAppRunningResponse
-	(*ListWindowsResponse)(nil),    // 35: sikuli.v1.ListWindowsResponse
+	(MatcherEngine)(0),             // 0: sikuli.v1.MatcherEngine
+	(*GrayImage)(nil),              // 1: sikuli.v1.GrayImage
+	(*Point)(nil),                  // 2: sikuli.v1.Point
+	(*Rect)(nil),                   // 3: sikuli.v1.Rect
+	(*Pattern)(nil),                // 4: sikuli.v1.Pattern
+	(*Match)(nil),                  // 5: sikuli.v1.Match
+	(*TextMatch)(nil),              // 6: sikuli.v1.TextMatch
+	(*OCRParams)(nil),              // 7: sikuli.v1.OCRParams
+	(*InputOptions)(nil),           // 8: sikuli.v1.InputOptions
+	(*ObserveOptions)(nil),         // 9: sikuli.v1.ObserveOptions
+	(*AppOptions)(nil),             // 10: sikuli.v1.AppOptions
+	(*Window)(nil),                 // 11: sikuli.v1.Window
+	(*ObserveEvent)(nil),           // 12: sikuli.v1.ObserveEvent
+	(*FindRequest)(nil),            // 13: sikuli.v1.FindRequest
+	(*FindResponse)(nil),           // 14: sikuli.v1.FindResponse
+	(*FindAllResponse)(nil),        // 15: sikuli.v1.FindAllResponse
+	(*ScreenQueryOptions)(nil),     // 16: sikuli.v1.ScreenQueryOptions
+	(*FindOnScreenRequest)(nil),    // 17: sikuli.v1.FindOnScreenRequest
+	(*ExistsOnScreenRequest)(nil),  // 18: sikuli.v1.ExistsOnScreenRequest
+	(*ExistsOnScreenResponse)(nil), // 19: sikuli.v1.ExistsOnScreenResponse
+	(*WaitOnScreenRequest)(nil),    // 20: sikuli.v1.WaitOnScreenRequest
+	(*ClickOnScreenRequest)(nil),   // 21: sikuli.v1.ClickOnScreenRequest
+	(*ReadTextRequest)(nil),        // 22: sikuli.v1.ReadTextRequest
+	(*ReadTextResponse)(nil),       // 23: sikuli.v1.ReadTextResponse
+	(*FindTextRequest)(nil),        // 24: sikuli.v1.FindTextRequest
+	(*FindTextResponse)(nil),       // 25: sikuli.v1.FindTextResponse
+	(*MoveMouseRequest)(nil),       // 26: sikuli.v1.MoveMouseRequest
+	(*ClickRequest)(nil),           // 27: sikuli.v1.ClickRequest
+	(*TypeTextRequest)(nil),        // 28: sikuli.v1.TypeTextRequest
+	(*HotkeyRequest)(nil),          // 29: sikuli.v1.HotkeyRequest
+	(*ActionResponse)(nil),         // 30: sikuli.v1.ActionResponse
+	(*ObserveRequest)(nil),         // 31: sikuli.v1.ObserveRequest
+	(*ObserveChangeRequest)(nil),   // 32: sikuli.v1.ObserveChangeRequest
+	(*ObserveResponse)(nil),        // 33: sikuli.v1.ObserveResponse
+	(*AppActionRequest)(nil),       // 34: sikuli.v1.AppActionRequest
+	(*IsAppRunningResponse)(nil),   // 35: sikuli.v1.IsAppRunningResponse
+	(*ListWindowsResponse)(nil),    // 36: sikuli.v1.ListWindowsResponse
 }
 var file_sikuli_v1_sikuli_proto_depIdxs = []int32{
-	0,  // 0: sikuli.v1.Pattern.image:type_name -> sikuli.v1.GrayImage
-	1,  // 1: sikuli.v1.Pattern.target_offset:type_name -> sikuli.v1.Point
-	0,  // 2: sikuli.v1.Pattern.mask:type_name -> sikuli.v1.GrayImage
-	2,  // 3: sikuli.v1.Match.rect:type_name -> sikuli.v1.Rect
-	1,  // 4: sikuli.v1.Match.target:type_name -> sikuli.v1.Point
-	2,  // 5: sikuli.v1.TextMatch.rect:type_name -> sikuli.v1.Rect
-	2,  // 6: sikuli.v1.Window.bounds:type_name -> sikuli.v1.Rect
-	4,  // 7: sikuli.v1.ObserveEvent.match:type_name -> sikuli.v1.Match
-	0,  // 8: sikuli.v1.FindRequest.source:type_name -> sikuli.v1.GrayImage
-	3,  // 9: sikuli.v1.FindRequest.pattern:type_name -> sikuli.v1.Pattern
-	4,  // 10: sikuli.v1.FindResponse.match:type_name -> sikuli.v1.Match
-	4,  // 11: sikuli.v1.FindAllResponse.matches:type_name -> sikuli.v1.Match
-	2,  // 12: sikuli.v1.ScreenQueryOptions.region:type_name -> sikuli.v1.Rect
-	3,  // 13: sikuli.v1.FindOnScreenRequest.pattern:type_name -> sikuli.v1.Pattern
-	15, // 14: sikuli.v1.FindOnScreenRequest.opts:type_name -> sikuli.v1.ScreenQueryOptions
-	3,  // 15: sikuli.v1.ExistsOnScreenRequest.pattern:type_name -> sikuli.v1.Pattern
-	15, // 16: sikuli.v1.ExistsOnScreenRequest.opts:type_name -> sikuli.v1.ScreenQueryOptions
-	4,  // 17: sikuli.v1.ExistsOnScreenResponse.match:type_name -> sikuli.v1.Match
-	3,  // 18: sikuli.v1.WaitOnScreenRequest.pattern:type_name -> sikuli.v1.Pattern
-	15, // 19: sikuli.v1.WaitOnScreenRequest.opts:type_name -> sikuli.v1.ScreenQueryOptions
-	3,  // 20: sikuli.v1.ClickOnScreenRequest.pattern:type_name -> sikuli.v1.Pattern
-	15, // 21: sikuli.v1.ClickOnScreenRequest.opts:type_name -> sikuli.v1.ScreenQueryOptions
-	7,  // 22: sikuli.v1.ClickOnScreenRequest.click_opts:type_name -> sikuli.v1.InputOptions
-	0,  // 23: sikuli.v1.ReadTextRequest.source:type_name -> sikuli.v1.GrayImage
-	6,  // 24: sikuli.v1.ReadTextRequest.params:type_name -> sikuli.v1.OCRParams
-	0,  // 25: sikuli.v1.FindTextRequest.source:type_name -> sikuli.v1.GrayImage
-	6,  // 26: sikuli.v1.FindTextRequest.params:type_name -> sikuli.v1.OCRParams
-	5,  // 27: sikuli.v1.FindTextResponse.matches:type_name -> sikuli.v1.TextMatch
-	7,  // 28: sikuli.v1.MoveMouseRequest.opts:type_name -> sikuli.v1.InputOptions
-	7,  // 29: sikuli.v1.ClickRequest.opts:type_name -> sikuli.v1.InputOptions
-	7,  // 30: sikuli.v1.TypeTextRequest.opts:type_name -> sikuli.v1.InputOptions
-	0,  // 31: sikuli.v1.ObserveRequest.source:type_name -> sikuli.v1.GrayImage
-	2,  // 32: sikuli.v1.ObserveRequest.region:type_name -> sikuli.v1.Rect
-	3,  // 33: sikuli.v1.ObserveRequest.pattern:type_name -> sikuli.v1.Pattern
-	8,  // 34: sikuli.v1.ObserveRequest.opts:type_name -> sikuli.v1.ObserveOptions
-	0,  // 35: sikuli.v1.ObserveChangeRequest.source:type_name -> sikuli.v1.GrayImage
-	2,  // 36: sikuli.v1.ObserveChangeRequest.region:type_name -> sikuli.v1.Rect
-	8,  // 37: sikuli.v1.ObserveChangeRequest.opts:type_name -> sikuli.v1.ObserveOptions
-	11, // 38: sikuli.v1.ObserveResponse.events:type_name -> sikuli.v1.ObserveEvent
-	9,  // 39: sikuli.v1.AppActionRequest.opts:type_name -> sikuli.v1.AppOptions
-	10, // 40: sikuli.v1.ListWindowsResponse.windows:type_name -> sikuli.v1.Window
-	12, // 41: sikuli.v1.SikuliService.Find:input_type -> sikuli.v1.FindRequest
-	12, // 42: sikuli.v1.SikuliService.FindAll:input_type -> sikuli.v1.FindRequest
-	16, // 43: sikuli.v1.SikuliService.FindOnScreen:input_type -> sikuli.v1.FindOnScreenRequest
-	17, // 44: sikuli.v1.SikuliService.ExistsOnScreen:input_type -> sikuli.v1.ExistsOnScreenRequest
-	19, // 45: sikuli.v1.SikuliService.WaitOnScreen:input_type -> sikuli.v1.WaitOnScreenRequest
-	20, // 46: sikuli.v1.SikuliService.ClickOnScreen:input_type -> sikuli.v1.ClickOnScreenRequest
-	21, // 47: sikuli.v1.SikuliService.ReadText:input_type -> sikuli.v1.ReadTextRequest
-	23, // 48: sikuli.v1.SikuliService.FindText:input_type -> sikuli.v1.FindTextRequest
-	25, // 49: sikuli.v1.SikuliService.MoveMouse:input_type -> sikuli.v1.MoveMouseRequest
-	26, // 50: sikuli.v1.SikuliService.Click:input_type -> sikuli.v1.ClickRequest
-	27, // 51: sikuli.v1.SikuliService.TypeText:input_type -> sikuli.v1.TypeTextRequest
-	28, // 52: sikuli.v1.SikuliService.Hotkey:input_type -> sikuli.v1.HotkeyRequest
-	30, // 53: sikuli.v1.SikuliService.ObserveAppear:input_type -> sikuli.v1.ObserveRequest
-	30, // 54: sikuli.v1.SikuliService.ObserveVanish:input_type -> sikuli.v1.ObserveRequest
-	31, // 55: sikuli.v1.SikuliService.ObserveChange:input_type -> sikuli.v1.ObserveChangeRequest
-	33, // 56: sikuli.v1.SikuliService.OpenApp:input_type -> sikuli.v1.AppActionRequest
-	33, // 57: sikuli.v1.SikuliService.FocusApp:input_type -> sikuli.v1.AppActionRequest
-	33, // 58: sikuli.v1.SikuliService.CloseApp:input_type -> sikuli.v1.AppActionRequest
-	33, // 59: sikuli.v1.SikuliService.IsAppRunning:input_type -> sikuli.v1.AppActionRequest
-	33, // 60: sikuli.v1.SikuliService.ListWindows:input_type -> sikuli.v1.AppActionRequest
-	13, // 61: sikuli.v1.SikuliService.Find:output_type -> sikuli.v1.FindResponse
-	14, // 62: sikuli.v1.SikuliService.FindAll:output_type -> sikuli.v1.FindAllResponse
-	13, // 63: sikuli.v1.SikuliService.FindOnScreen:output_type -> sikuli.v1.FindResponse
-	18, // 64: sikuli.v1.SikuliService.ExistsOnScreen:output_type -> sikuli.v1.ExistsOnScreenResponse
-	13, // 65: sikuli.v1.SikuliService.WaitOnScreen:output_type -> sikuli.v1.FindResponse
-	13, // 66: sikuli.v1.SikuliService.ClickOnScreen:output_type -> sikuli.v1.FindResponse
-	22, // 67: sikuli.v1.SikuliService.ReadText:output_type -> sikuli.v1.ReadTextResponse
-	24, // 68: sikuli.v1.SikuliService.FindText:output_type -> sikuli.v1.FindTextResponse
-	29, // 69: sikuli.v1.SikuliService.MoveMouse:output_type -> sikuli.v1.ActionResponse
-	29, // 70: sikuli.v1.SikuliService.Click:output_type -> sikuli.v1.ActionResponse
-	29, // 71: sikuli.v1.SikuliService.TypeText:output_type -> sikuli.v1.ActionResponse
-	29, // 72: sikuli.v1.SikuliService.Hotkey:output_type -> sikuli.v1.ActionResponse
-	32, // 73: sikuli.v1.SikuliService.ObserveAppear:output_type -> sikuli.v1.ObserveResponse
-	32, // 74: sikuli.v1.SikuliService.ObserveVanish:output_type -> sikuli.v1.ObserveResponse
-	32, // 75: sikuli.v1.SikuliService.ObserveChange:output_type -> sikuli.v1.ObserveResponse
-	29, // 76: sikuli.v1.SikuliService.OpenApp:output_type -> sikuli.v1.ActionResponse
-	29, // 77: sikuli.v1.SikuliService.FocusApp:output_type -> sikuli.v1.ActionResponse
-	29, // 78: sikuli.v1.SikuliService.CloseApp:output_type -> sikuli.v1.ActionResponse
-	34, // 79: sikuli.v1.SikuliService.IsAppRunning:output_type -> sikuli.v1.IsAppRunningResponse
-	35, // 80: sikuli.v1.SikuliService.ListWindows:output_type -> sikuli.v1.ListWindowsResponse
-	61, // [61:81] is the sub-list for method output_type
-	41, // [41:61] is the sub-list for method input_type
-	41, // [41:41] is the sub-list for extension type_name
-	41, // [41:41] is the sub-list for extension extendee
-	0,  // [0:41] is the sub-list for field type_name
+	1,  // 0: sikuli.v1.Pattern.image:type_name -> sikuli.v1.GrayImage
+	2,  // 1: sikuli.v1.Pattern.target_offset:type_name -> sikuli.v1.Point
+	1,  // 2: sikuli.v1.Pattern.mask:type_name -> sikuli.v1.GrayImage
+	3,  // 3: sikuli.v1.Match.rect:type_name -> sikuli.v1.Rect
+	2,  // 4: sikuli.v1.Match.target:type_name -> sikuli.v1.Point
+	3,  // 5: sikuli.v1.TextMatch.rect:type_name -> sikuli.v1.Rect
+	3,  // 6: sikuli.v1.Window.bounds:type_name -> sikuli.v1.Rect
+	5,  // 7: sikuli.v1.ObserveEvent.match:type_name -> sikuli.v1.Match
+	1,  // 8: sikuli.v1.FindRequest.source:type_name -> sikuli.v1.GrayImage
+	4,  // 9: sikuli.v1.FindRequest.pattern:type_name -> sikuli.v1.Pattern
+	0,  // 10: sikuli.v1.FindRequest.matcher_engine:type_name -> sikuli.v1.MatcherEngine
+	5,  // 11: sikuli.v1.FindResponse.match:type_name -> sikuli.v1.Match
+	5,  // 12: sikuli.v1.FindAllResponse.matches:type_name -> sikuli.v1.Match
+	3,  // 13: sikuli.v1.ScreenQueryOptions.region:type_name -> sikuli.v1.Rect
+	0,  // 14: sikuli.v1.ScreenQueryOptions.matcher_engine:type_name -> sikuli.v1.MatcherEngine
+	4,  // 15: sikuli.v1.FindOnScreenRequest.pattern:type_name -> sikuli.v1.Pattern
+	16, // 16: sikuli.v1.FindOnScreenRequest.opts:type_name -> sikuli.v1.ScreenQueryOptions
+	4,  // 17: sikuli.v1.ExistsOnScreenRequest.pattern:type_name -> sikuli.v1.Pattern
+	16, // 18: sikuli.v1.ExistsOnScreenRequest.opts:type_name -> sikuli.v1.ScreenQueryOptions
+	5,  // 19: sikuli.v1.ExistsOnScreenResponse.match:type_name -> sikuli.v1.Match
+	4,  // 20: sikuli.v1.WaitOnScreenRequest.pattern:type_name -> sikuli.v1.Pattern
+	16, // 21: sikuli.v1.WaitOnScreenRequest.opts:type_name -> sikuli.v1.ScreenQueryOptions
+	4,  // 22: sikuli.v1.ClickOnScreenRequest.pattern:type_name -> sikuli.v1.Pattern
+	16, // 23: sikuli.v1.ClickOnScreenRequest.opts:type_name -> sikuli.v1.ScreenQueryOptions
+	8,  // 24: sikuli.v1.ClickOnScreenRequest.click_opts:type_name -> sikuli.v1.InputOptions
+	1,  // 25: sikuli.v1.ReadTextRequest.source:type_name -> sikuli.v1.GrayImage
+	7,  // 26: sikuli.v1.ReadTextRequest.params:type_name -> sikuli.v1.OCRParams
+	1,  // 27: sikuli.v1.FindTextRequest.source:type_name -> sikuli.v1.GrayImage
+	7,  // 28: sikuli.v1.FindTextRequest.params:type_name -> sikuli.v1.OCRParams
+	6,  // 29: sikuli.v1.FindTextResponse.matches:type_name -> sikuli.v1.TextMatch
+	8,  // 30: sikuli.v1.MoveMouseRequest.opts:type_name -> sikuli.v1.InputOptions
+	8,  // 31: sikuli.v1.ClickRequest.opts:type_name -> sikuli.v1.InputOptions
+	8,  // 32: sikuli.v1.TypeTextRequest.opts:type_name -> sikuli.v1.InputOptions
+	1,  // 33: sikuli.v1.ObserveRequest.source:type_name -> sikuli.v1.GrayImage
+	3,  // 34: sikuli.v1.ObserveRequest.region:type_name -> sikuli.v1.Rect
+	4,  // 35: sikuli.v1.ObserveRequest.pattern:type_name -> sikuli.v1.Pattern
+	9,  // 36: sikuli.v1.ObserveRequest.opts:type_name -> sikuli.v1.ObserveOptions
+	1,  // 37: sikuli.v1.ObserveChangeRequest.source:type_name -> sikuli.v1.GrayImage
+	3,  // 38: sikuli.v1.ObserveChangeRequest.region:type_name -> sikuli.v1.Rect
+	9,  // 39: sikuli.v1.ObserveChangeRequest.opts:type_name -> sikuli.v1.ObserveOptions
+	12, // 40: sikuli.v1.ObserveResponse.events:type_name -> sikuli.v1.ObserveEvent
+	10, // 41: sikuli.v1.AppActionRequest.opts:type_name -> sikuli.v1.AppOptions
+	11, // 42: sikuli.v1.ListWindowsResponse.windows:type_name -> sikuli.v1.Window
+	13, // 43: sikuli.v1.SikuliService.Find:input_type -> sikuli.v1.FindRequest
+	13, // 44: sikuli.v1.SikuliService.FindAll:input_type -> sikuli.v1.FindRequest
+	17, // 45: sikuli.v1.SikuliService.FindOnScreen:input_type -> sikuli.v1.FindOnScreenRequest
+	18, // 46: sikuli.v1.SikuliService.ExistsOnScreen:input_type -> sikuli.v1.ExistsOnScreenRequest
+	20, // 47: sikuli.v1.SikuliService.WaitOnScreen:input_type -> sikuli.v1.WaitOnScreenRequest
+	21, // 48: sikuli.v1.SikuliService.ClickOnScreen:input_type -> sikuli.v1.ClickOnScreenRequest
+	22, // 49: sikuli.v1.SikuliService.ReadText:input_type -> sikuli.v1.ReadTextRequest
+	24, // 50: sikuli.v1.SikuliService.FindText:input_type -> sikuli.v1.FindTextRequest
+	26, // 51: sikuli.v1.SikuliService.MoveMouse:input_type -> sikuli.v1.MoveMouseRequest
+	27, // 52: sikuli.v1.SikuliService.Click:input_type -> sikuli.v1.ClickRequest
+	28, // 53: sikuli.v1.SikuliService.TypeText:input_type -> sikuli.v1.TypeTextRequest
+	29, // 54: sikuli.v1.SikuliService.Hotkey:input_type -> sikuli.v1.HotkeyRequest
+	31, // 55: sikuli.v1.SikuliService.ObserveAppear:input_type -> sikuli.v1.ObserveRequest
+	31, // 56: sikuli.v1.SikuliService.ObserveVanish:input_type -> sikuli.v1.ObserveRequest
+	32, // 57: sikuli.v1.SikuliService.ObserveChange:input_type -> sikuli.v1.ObserveChangeRequest
+	34, // 58: sikuli.v1.SikuliService.OpenApp:input_type -> sikuli.v1.AppActionRequest
+	34, // 59: sikuli.v1.SikuliService.FocusApp:input_type -> sikuli.v1.AppActionRequest
+	34, // 60: sikuli.v1.SikuliService.CloseApp:input_type -> sikuli.v1.AppActionRequest
+	34, // 61: sikuli.v1.SikuliService.IsAppRunning:input_type -> sikuli.v1.AppActionRequest
+	34, // 62: sikuli.v1.SikuliService.ListWindows:input_type -> sikuli.v1.AppActionRequest
+	14, // 63: sikuli.v1.SikuliService.Find:output_type -> sikuli.v1.FindResponse
+	15, // 64: sikuli.v1.SikuliService.FindAll:output_type -> sikuli.v1.FindAllResponse
+	14, // 65: sikuli.v1.SikuliService.FindOnScreen:output_type -> sikuli.v1.FindResponse
+	19, // 66: sikuli.v1.SikuliService.ExistsOnScreen:output_type -> sikuli.v1.ExistsOnScreenResponse
+	14, // 67: sikuli.v1.SikuliService.WaitOnScreen:output_type -> sikuli.v1.FindResponse
+	14, // 68: sikuli.v1.SikuliService.ClickOnScreen:output_type -> sikuli.v1.FindResponse
+	23, // 69: sikuli.v1.SikuliService.ReadText:output_type -> sikuli.v1.ReadTextResponse
+	25, // 70: sikuli.v1.SikuliService.FindText:output_type -> sikuli.v1.FindTextResponse
+	30, // 71: sikuli.v1.SikuliService.MoveMouse:output_type -> sikuli.v1.ActionResponse
+	30, // 72: sikuli.v1.SikuliService.Click:output_type -> sikuli.v1.ActionResponse
+	30, // 73: sikuli.v1.SikuliService.TypeText:output_type -> sikuli.v1.ActionResponse
+	30, // 74: sikuli.v1.SikuliService.Hotkey:output_type -> sikuli.v1.ActionResponse
+	33, // 75: sikuli.v1.SikuliService.ObserveAppear:output_type -> sikuli.v1.ObserveResponse
+	33, // 76: sikuli.v1.SikuliService.ObserveVanish:output_type -> sikuli.v1.ObserveResponse
+	33, // 77: sikuli.v1.SikuliService.ObserveChange:output_type -> sikuli.v1.ObserveResponse
+	30, // 78: sikuli.v1.SikuliService.OpenApp:output_type -> sikuli.v1.ActionResponse
+	30, // 79: sikuli.v1.SikuliService.FocusApp:output_type -> sikuli.v1.ActionResponse
+	30, // 80: sikuli.v1.SikuliService.CloseApp:output_type -> sikuli.v1.ActionResponse
+	35, // 81: sikuli.v1.SikuliService.IsAppRunning:output_type -> sikuli.v1.IsAppRunningResponse
+	36, // 82: sikuli.v1.SikuliService.ListWindows:output_type -> sikuli.v1.ListWindowsResponse
+	63, // [63:83] is the sub-list for method output_type
+	43, // [43:63] is the sub-list for method input_type
+	43, // [43:43] is the sub-list for extension type_name
+	43, // [43:43] is the sub-list for extension extendee
+	0,  // [0:43] is the sub-list for field type_name
 }
 
 func init() { file_sikuli_v1_sikuli_proto_init() }
@@ -2337,13 +2416,14 @@ func file_sikuli_v1_sikuli_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sikuli_v1_sikuli_proto_rawDesc), len(file_sikuli_v1_sikuli_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_sikuli_v1_sikuli_proto_goTypes,
 		DependencyIndexes: file_sikuli_v1_sikuli_proto_depIdxs,
+		EnumInfos:         file_sikuli_v1_sikuli_proto_enumTypes,
 		MessageInfos:      file_sikuli_v1_sikuli_proto_msgTypes,
 	}.Build()
 	File_sikuli_v1_sikuli_proto = out.File

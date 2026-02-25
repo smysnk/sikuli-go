@@ -36,6 +36,7 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 - <span class="api-type">[`IsAppRunningResponse`](#type-isapprunningresponse)</span>
 - <span class="api-type">[`ListWindowsResponse`](#type-listwindowsresponse)</span>
 - <span class="api-type">[`Match`](#type-match)</span>
+- <span class="api-type">[`MatcherEngine`](#type-matcherengine)</span>
 - <span class="api-type">[`MoveMouseRequest`](#type-movemouserequest)</span>
 - <span class="api-type">[`OCRParams`](#type-ocrparams)</span>
 - <span class="api-type">[`ObserveChangeRequest`](#type-observechangerequest)</span>
@@ -128,6 +129,7 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 - <span class="api-method">[`FindOnScreenRequest.Reset`](#method-findonscreenrequest-reset)</span>
 - <span class="api-method">[`FindOnScreenRequest.String`](#method-findonscreenrequest-string)</span>
 - <span class="api-method">[`FindRequest.Descriptor`](#method-findrequest-descriptor)</span>
+- <span class="api-method">[`FindRequest.GetMatcherEngine`](#method-findrequest-getmatcherengine)</span>
 - <span class="api-method">[`FindRequest.GetPattern`](#method-findrequest-getpattern)</span>
 - <span class="api-method">[`FindRequest.GetSource`](#method-findrequest-getsource)</span>
 - <span class="api-method">[`FindRequest.ProtoMessage`](#method-findrequest-protomessage)</span>
@@ -197,6 +199,12 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 - <span class="api-method">[`Match.ProtoReflect`](#method-match-protoreflect)</span>
 - <span class="api-method">[`Match.Reset`](#method-match-reset)</span>
 - <span class="api-method">[`Match.String`](#method-match-string)</span>
+- <span class="api-method">[`MatcherEngine.Descriptor`](#method-matcherengine-descriptor)</span>
+- <span class="api-method">[`MatcherEngine.Enum`](#method-matcherengine-enum)</span>
+- <span class="api-method">[`MatcherEngine.EnumDescriptor`](#method-matcherengine-enumdescriptor)</span>
+- <span class="api-method">[`MatcherEngine.Number`](#method-matcherengine-number)</span>
+- <span class="api-method">[`MatcherEngine.String`](#method-matcherengine-string)</span>
+- <span class="api-method">[`MatcherEngine.Type`](#method-matcherengine-type)</span>
 - <span class="api-method">[`MoveMouseRequest.Descriptor`](#method-movemouserequest-descriptor)</span>
 - <span class="api-method">[`MoveMouseRequest.GetOpts`](#method-movemouserequest-getopts)</span>
 - <span class="api-method">[`MoveMouseRequest.GetX`](#method-movemouserequest-getx)</span>
@@ -295,6 +303,7 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 - <span class="api-method">[`Rect.String`](#method-rect-string)</span>
 - <span class="api-method">[`ScreenQueryOptions.Descriptor`](#method-screenqueryoptions-descriptor)</span>
 - <span class="api-method">[`ScreenQueryOptions.GetIntervalMillis`](#method-screenqueryoptions-getintervalmillis)</span>
+- <span class="api-method">[`ScreenQueryOptions.GetMatcherEngine`](#method-screenqueryoptions-getmatcherengine)</span>
 - <span class="api-method">[`ScreenQueryOptions.GetRegion`](#method-screenqueryoptions-getregion)</span>
 - <span class="api-method">[`ScreenQueryOptions.GetTimeoutMillis`](#method-screenqueryoptions-gettimeoutmillis)</span>
 - <span class="api-method">[`ScreenQueryOptions.ProtoMessage`](#method-screenqueryoptions-protomessage)</span>
@@ -432,6 +441,10 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 #### <a id="type-match"></a><span class="api-type">Type</span> `Match`
 
 - Signature: <span class="api-signature">`type Match struct {`</span>
+
+#### <a id="type-matcherengine"></a><span class="api-type">Type</span> `MatcherEngine`
+
+- Signature: <span class="api-signature">`type MatcherEngine int32`</span>
 
 #### <a id="type-movemouserequest"></a><span class="api-type">Type</span> `MoveMouseRequest`
 
@@ -805,6 +818,11 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 - Signature: <span class="api-signature">`func (*FindRequest) Descriptor() ([]byte, []int)`</span>
 - Notes: Deprecated: Use FindRequest.ProtoReflect.Descriptor instead.
 
+#### <a id="method-findrequest-getmatcherengine"></a><span class="api-method">Method</span> `FindRequest.GetMatcherEngine`
+
+- Signature: <span class="api-signature">`func (x *FindRequest) GetMatcherEngine() MatcherEngine`</span>
+- Uses: [`MatcherEngine`](#type-matcherengine)
+
 #### <a id="method-findrequest-getpattern"></a><span class="api-method">Method</span> `FindRequest.GetPattern`
 
 - Signature: <span class="api-signature">`func (x *FindRequest) GetPattern() *Pattern`</span>
@@ -1098,6 +1116,31 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 #### <a id="method-match-string"></a><span class="api-method">Method</span> `Match.String`
 
 - Signature: <span class="api-signature">`func (x *Match) String() string`</span>
+
+#### <a id="method-matcherengine-descriptor"></a><span class="api-method">Method</span> `MatcherEngine.Descriptor`
+
+- Signature: <span class="api-signature">`func (MatcherEngine) Descriptor() protoreflect.EnumDescriptor`</span>
+
+#### <a id="method-matcherengine-enum"></a><span class="api-method">Method</span> `MatcherEngine.Enum`
+
+- Signature: <span class="api-signature">`func (x MatcherEngine) Enum() *MatcherEngine`</span>
+
+#### <a id="method-matcherengine-enumdescriptor"></a><span class="api-method">Method</span> `MatcherEngine.EnumDescriptor`
+
+- Signature: <span class="api-signature">`func (MatcherEngine) EnumDescriptor() ([]byte, []int)`</span>
+- Notes: Deprecated: Use MatcherEngine.Descriptor instead.
+
+#### <a id="method-matcherengine-number"></a><span class="api-method">Method</span> `MatcherEngine.Number`
+
+- Signature: <span class="api-signature">`func (x MatcherEngine) Number() protoreflect.EnumNumber`</span>
+
+#### <a id="method-matcherengine-string"></a><span class="api-method">Method</span> `MatcherEngine.String`
+
+- Signature: <span class="api-signature">`func (x MatcherEngine) String() string`</span>
+
+#### <a id="method-matcherengine-type"></a><span class="api-method">Method</span> `MatcherEngine.Type`
+
+- Signature: <span class="api-signature">`func (MatcherEngine) Type() protoreflect.EnumType`</span>
 
 #### <a id="method-movemouserequest-descriptor"></a><span class="api-method">Method</span> `MoveMouseRequest.Descriptor`
 
@@ -1519,6 +1562,11 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 
 - Signature: <span class="api-signature">`func (x *ScreenQueryOptions) GetIntervalMillis() int64`</span>
 
+#### <a id="method-screenqueryoptions-getmatcherengine"></a><span class="api-method">Method</span> `ScreenQueryOptions.GetMatcherEngine`
+
+- Signature: <span class="api-signature">`func (x *ScreenQueryOptions) GetMatcherEngine() MatcherEngine`</span>
+- Uses: [`MatcherEngine`](#type-matcherengine)
+
 #### <a id="method-screenqueryoptions-getregion"></a><span class="api-method">Method</span> `ScreenQueryOptions.GetRegion`
 
 - Signature: <span class="api-signature">`func (x *ScreenQueryOptions) GetRegion() *Rect`</span>
@@ -1809,6 +1857,22 @@ const (
 )
 
 VARIABLES
+
+var (
+	MatcherEngine_name = map[int32]string{
+		0: "MATCHER_ENGINE_UNSPECIFIED",
+		1: "MATCHER_ENGINE_TEMPLATE",
+		2: "MATCHER_ENGINE_ORB",
+		3: "MATCHER_ENGINE_HYBRID",
+	}
+	MatcherEngine_value = map[string]int32{
+		"MATCHER_ENGINE_UNSPECIFIED": 0,
+		"MATCHER_ENGINE_TEMPLATE":    1,
+		"MATCHER_ENGINE_ORB":         2,
+		"MATCHER_ENGINE_HYBRID":      3,
+	}
+)
+    Enum value maps for MatcherEngine.
 
 var File_sikuli_v1_sikuli_proto protoreflect.FileDescriptor
 var SikuliService_ServiceDesc = grpc.ServiceDesc{
@@ -2105,14 +2169,17 @@ func (x *FindOnScreenRequest) Reset()
 func (x *FindOnScreenRequest) String() string
 
 type FindRequest struct {
-	Source  *GrayImage `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
-	Pattern *Pattern   `protobuf:"bytes,2,opt,name=pattern,proto3" json:"pattern,omitempty"`
+	Source        *GrayImage    `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	Pattern       *Pattern      `protobuf:"bytes,2,opt,name=pattern,proto3" json:"pattern,omitempty"`
+	MatcherEngine MatcherEngine `protobuf:"varint,3,opt,name=matcher_engine,json=matcherEngine,proto3,enum=sikuli.v1.MatcherEngine" json:"matcher_engine,omitempty"`
 
 	// Has unexported fields.
 }
 
 func (*FindRequest) Descriptor() ([]byte, []int)
     Deprecated: Use FindRequest.ProtoReflect.Descriptor instead.
+
+func (x *FindRequest) GetMatcherEngine() MatcherEngine
 
 func (x *FindRequest) GetPattern() *Pattern
 
@@ -2323,6 +2390,27 @@ func (x *Match) ProtoReflect() protoreflect.Message
 func (x *Match) Reset()
 
 func (x *Match) String() string
+
+type MatcherEngine int32
+
+const (
+	MatcherEngine_MATCHER_ENGINE_UNSPECIFIED MatcherEngine = 0
+	MatcherEngine_MATCHER_ENGINE_TEMPLATE    MatcherEngine = 1
+	MatcherEngine_MATCHER_ENGINE_ORB         MatcherEngine = 2
+	MatcherEngine_MATCHER_ENGINE_HYBRID      MatcherEngine = 3
+)
+func (MatcherEngine) Descriptor() protoreflect.EnumDescriptor
+
+func (x MatcherEngine) Enum() *MatcherEngine
+
+func (MatcherEngine) EnumDescriptor() ([]byte, []int)
+    Deprecated: Use MatcherEngine.Descriptor instead.
+
+func (x MatcherEngine) Number() protoreflect.EnumNumber
+
+func (x MatcherEngine) String() string
+
+func (MatcherEngine) Type() protoreflect.EnumType
 
 type MoveMouseRequest struct {
 	X    int32         `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
@@ -2625,9 +2713,10 @@ func (x *Rect) Reset()
 func (x *Rect) String() string
 
 type ScreenQueryOptions struct {
-	Region         *Rect  `protobuf:"bytes,1,opt,name=region,proto3" json:"region,omitempty"`
-	TimeoutMillis  *int64 `protobuf:"varint,2,opt,name=timeout_millis,json=timeoutMillis,proto3,oneof" json:"timeout_millis,omitempty"`
-	IntervalMillis *int64 `protobuf:"varint,3,opt,name=interval_millis,json=intervalMillis,proto3,oneof" json:"interval_millis,omitempty"`
+	Region         *Rect         `protobuf:"bytes,1,opt,name=region,proto3" json:"region,omitempty"`
+	TimeoutMillis  *int64        `protobuf:"varint,2,opt,name=timeout_millis,json=timeoutMillis,proto3,oneof" json:"timeout_millis,omitempty"`
+	IntervalMillis *int64        `protobuf:"varint,3,opt,name=interval_millis,json=intervalMillis,proto3,oneof" json:"interval_millis,omitempty"`
+	MatcherEngine  MatcherEngine `protobuf:"varint,4,opt,name=matcher_engine,json=matcherEngine,proto3,enum=sikuli.v1.MatcherEngine" json:"matcher_engine,omitempty"`
 
 	// Has unexported fields.
 }
@@ -2636,6 +2725,8 @@ func (*ScreenQueryOptions) Descriptor() ([]byte, []int)
     Deprecated: Use ScreenQueryOptions.ProtoReflect.Descriptor instead.
 
 func (x *ScreenQueryOptions) GetIntervalMillis() int64
+
+func (x *ScreenQueryOptions) GetMatcherEngine() MatcherEngine
 
 func (x *ScreenQueryOptions) GetRegion() *Rect
 

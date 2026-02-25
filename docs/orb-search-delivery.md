@@ -14,7 +14,7 @@ This document defines the phased delivery plan for adding ORB-based image search
 - Completed: matcher abstraction with engine routing (`template`, `orb`, `hybrid`).
 - Completed: ORB matcher backend wired for OpenCV builds.
 - Completed: hybrid matcher backend (`template` primary + ORB fallback).
-- Completed: gRPC compatibility header (`x-sikuligo-engine`) for engine selection.
+- Completed: typed proto matcher-engine fields for engine selection.
 - Completed: Node and Python client support for session-level defaults and per-call overrides.
 - Pending: expanded benchmark corpus and default-engine rollout policy updates.
 
@@ -51,7 +51,9 @@ Enablement paths:
 
 - Per script session: set default engine when creating the client (`Screen(engine="orb")`, `Sikuli(engine="hybrid")`).
 - Ad-hoc per call: override on individual calls (`find(..., engine="orb")`, `click(..., engine="hybrid")`).
-- Compatibility path: optional gRPC metadata header (`x-sikuligo-engine`) for clients that cannot yet pass typed options.
+- Transport field path:
+  - `FindRequest.matcher_engine`
+  - `ScreenQueryOptions.matcher_engine`
 
 ## Phase 1: Core Matcher Abstraction
 
@@ -107,7 +109,7 @@ Deliverables:
 - proto/API options for matcher engine
 - server logic for precedence rules
 - Node/Python client constructor defaults + per-method overrides
-- metadata compatibility fallback for legacy clients
+- server compatibility fallback for legacy header-based clients
 
 Entry criteria:
 

@@ -20,7 +20,6 @@ except ImportError as exc:  # pragma: no cover - runtime setup validation
 DEFAULT_ADDR = "127.0.0.1:50051"
 DEFAULT_TIMEOUT_SECONDS = 5.0
 TRACE_HEADER = "x-trace-id"
-MATCHER_ENGINE_HEADER = "x-sikuligo-engine"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 ImageInput = str | bytes | bytearray | memoryview
@@ -34,6 +33,15 @@ def _normalize_matcher_engine(raw: str | None) -> MatcherEngine:
     if normalized in ("orb", "hybrid"):
         return normalized  # type: ignore[return-value]
     return "template"
+
+
+def _matcher_engine_proto_value(raw: str | None) -> int:
+    normalized = _normalize_matcher_engine(raw)
+    if normalized == "orb":
+        return int(pb.MATCHER_ENGINE_ORB)
+    if normalized == "hybrid":
+        return int(pb.MATCHER_ENGINE_HYBRID)
+    return int(pb.MATCHER_ENGINE_TEMPLATE)
 
 
 class SikuliError(RuntimeError):
@@ -85,17 +93,12 @@ class Sikuli:
         except grpc.FutureTimeoutError as exc:
             raise TimeoutError(f"timeout waiting for Sikuli server at {self._address}") from exc
 
-    def _metadata(
-        self,
-        extra: Mapping[str, str] | None = None,
-        matcher_engine: str | None = None,
-    ) -> Sequence[tuple[str, str]]:
+    def _metadata(self, extra: Mapping[str, str] | None = None) -> Sequence[tuple[str, str]]:
         out: list[tuple[str, str]] = []
         if self._auth_token:
             out.append(("x-api-key", self._auth_token))
         if self._trace_id:
             out.append((TRACE_HEADER, self._trace_id))
-        out.append((MATCHER_ENGINE_HEADER, _normalize_matcher_engine(matcher_engine or self._matcher_engine)))
         if extra:
             out.extend((k, v) for k, v in extra.items() if v)
         return out
@@ -124,14 +127,31 @@ class Sikuli:
         matcher_engine: str | None = None,
     ):
         method = getattr(self._stub, method_name)
+        request = self._with_matcher_engine(method_name, request, matcher_engine)
         try:
             return method(
                 request,
                 timeout=timeout_seconds if timeout_seconds is not None else self._timeout_seconds,
-                metadata=self._metadata(metadata, matcher_engine=matcher_engine),
+                metadata=self._metadata(metadata),
             )
         except grpc.RpcError as err:
             raise SikuliError(err.code(), err.details() or "", self._trace_id_from_error(err)) from err
+
+    def _with_matcher_engine(self, method_name: str, request: object, matcher_engine: str | None):
+        value = _matcher_engine_proto_value(matcher_engine or self._matcher_engine)
+        if method_name in ("Find", "FindAll") and hasattr(request, "matcher_engine"):
+            if int(getattr(request, "matcher_engine")) == int(pb.MATCHER_ENGINE_UNSPECIFIED):
+                setattr(request, "matcher_engine", value)
+            return request
+
+        if method_name in ("FindOnScreen", "ExistsOnScreen", "WaitOnScreen", "ClickOnScreen"):
+            opts = getattr(request, "opts", None)
+            if isinstance(opts, pb.ScreenQueryOptions):
+                if int(opts.matcher_engine) == int(pb.MATCHER_ENGINE_UNSPECIFIED):
+                    opts.matcher_engine = value
+            return request
+
+        return request
 
     def find_on_screen(
         self,
@@ -161,6 +181,7 @@ class Sikuli:
                 region=region,
                 timeout_millis=timeout_millis,
                 interval_millis=interval_millis,
+                matcher_engine=engine,
             ),
         )
         return self._call("FindOnScreen", req, timeout_seconds=timeout_seconds, matcher_engine=engine)
@@ -193,6 +214,7 @@ class Sikuli:
                 region=region,
                 timeout_millis=timeout_millis,
                 interval_millis=interval_millis,
+                matcher_engine=engine,
             ),
         )
         return self._call("ExistsOnScreen", req, timeout_seconds=timeout_seconds, matcher_engine=engine)
@@ -225,6 +247,7 @@ class Sikuli:
                 region=region,
                 timeout_millis=timeout_millis,
                 interval_millis=interval_millis,
+                matcher_engine=engine,
             ),
         )
         return self._call("WaitOnScreen", req, timeout_seconds=timeout_seconds, matcher_engine=engine)
@@ -264,6 +287,7 @@ class Sikuli:
                 region=region,
                 timeout_millis=timeout_millis,
                 interval_millis=interval_millis,
+                matcher_engine=engine,
             ),
             click_opts=click_opts,
         )
@@ -480,6 +504,7 @@ def screen_query_options(
     region: RegionInput | None = None,
     timeout_millis: int | None = None,
     interval_millis: int | None = None,
+    matcher_engine: str | None = None,
 ) -> pb.ScreenQueryOptions:
     opts = pb.ScreenQueryOptions()
     if region is not None:
@@ -488,6 +513,8 @@ def screen_query_options(
         opts.timeout_millis = int(timeout_millis)
     if interval_millis is not None:
         opts.interval_millis = int(interval_millis)
+    if matcher_engine is not None:
+        opts.matcher_engine = _matcher_engine_proto_value(matcher_engine)
     return opts
 
 

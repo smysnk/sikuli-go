@@ -40,6 +40,7 @@ goog.exportSymbol('proto.sikuli.v1.InputOptions', null, global);
 goog.exportSymbol('proto.sikuli.v1.IsAppRunningResponse', null, global);
 goog.exportSymbol('proto.sikuli.v1.ListWindowsResponse', null, global);
 goog.exportSymbol('proto.sikuli.v1.Match', null, global);
+goog.exportSymbol('proto.sikuli.v1.MatcherEngine', null, global);
 goog.exportSymbol('proto.sikuli.v1.MoveMouseRequest', null, global);
 goog.exportSymbol('proto.sikuli.v1.OCRParams', null, global);
 goog.exportSymbol('proto.sikuli.v1.ObserveChangeRequest', null, global);
@@ -3618,7 +3619,8 @@ proto.sikuli.v1.FindRequest.prototype.toObject = function(opt_includeInstance) {
 proto.sikuli.v1.FindRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     source: (f = msg.getSource()) && proto.sikuli.v1.GrayImage.toObject(includeInstance, f),
-    pattern: (f = msg.getPattern()) && proto.sikuli.v1.Pattern.toObject(includeInstance, f)
+    pattern: (f = msg.getPattern()) && proto.sikuli.v1.Pattern.toObject(includeInstance, f),
+    matcherEngine: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -3665,6 +3667,10 @@ proto.sikuli.v1.FindRequest.deserializeBinaryFromReader = function(msg, reader) 
       reader.readMessage(value,proto.sikuli.v1.Pattern.deserializeBinaryFromReader);
       msg.setPattern(value);
       break;
+    case 3:
+      var value = /** @type {!proto.sikuli.v1.MatcherEngine} */ (reader.readEnum());
+      msg.setMatcherEngine(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -3708,6 +3714,13 @@ proto.sikuli.v1.FindRequest.serializeBinaryToWriter = function(message, writer) 
       2,
       f,
       proto.sikuli.v1.Pattern.serializeBinaryToWriter
+    );
+  }
+  f = message.getMatcherEngine();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      3,
+      f
     );
   }
 };
@@ -3784,6 +3797,24 @@ proto.sikuli.v1.FindRequest.prototype.clearPattern = function() {
  */
 proto.sikuli.v1.FindRequest.prototype.hasPattern = function() {
   return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional MatcherEngine matcher_engine = 3;
+ * @return {!proto.sikuli.v1.MatcherEngine}
+ */
+proto.sikuli.v1.FindRequest.prototype.getMatcherEngine = function() {
+  return /** @type {!proto.sikuli.v1.MatcherEngine} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {!proto.sikuli.v1.MatcherEngine} value
+ * @return {!proto.sikuli.v1.FindRequest} returns this
+ */
+proto.sikuli.v1.FindRequest.prototype.setMatcherEngine = function(value) {
+  return jspb.Message.setProto3EnumField(this, 3, value);
 };
 
 
@@ -4132,7 +4163,8 @@ proto.sikuli.v1.ScreenQueryOptions.toObject = function(includeInstance, msg) {
   var f, obj = {
     region: (f = msg.getRegion()) && proto.sikuli.v1.Rect.toObject(includeInstance, f),
     timeoutMillis: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    intervalMillis: jspb.Message.getFieldWithDefault(msg, 3, 0)
+    intervalMillis: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    matcherEngine: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -4182,6 +4214,10 @@ proto.sikuli.v1.ScreenQueryOptions.deserializeBinaryFromReader = function(msg, r
       var value = /** @type {number} */ (reader.readInt64());
       msg.setIntervalMillis(value);
       break;
+    case 4:
+      var value = /** @type {!proto.sikuli.v1.MatcherEngine} */ (reader.readEnum());
+      msg.setMatcherEngine(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -4230,6 +4266,13 @@ proto.sikuli.v1.ScreenQueryOptions.serializeBinaryToWriter = function(message, w
   if (f != null) {
     writer.writeInt64(
       3,
+      f
+    );
+  }
+  f = message.getMatcherEngine();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      4,
       f
     );
   }
@@ -4342,6 +4385,24 @@ proto.sikuli.v1.ScreenQueryOptions.prototype.clearIntervalMillis = function() {
  */
 proto.sikuli.v1.ScreenQueryOptions.prototype.hasIntervalMillis = function() {
   return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional MatcherEngine matcher_engine = 4;
+ * @return {!proto.sikuli.v1.MatcherEngine}
+ */
+proto.sikuli.v1.ScreenQueryOptions.prototype.getMatcherEngine = function() {
+  return /** @type {!proto.sikuli.v1.MatcherEngine} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {!proto.sikuli.v1.MatcherEngine} value
+ * @return {!proto.sikuli.v1.ScreenQueryOptions} returns this
+ */
+proto.sikuli.v1.ScreenQueryOptions.prototype.setMatcherEngine = function(value) {
+  return jspb.Message.setProto3EnumField(this, 4, value);
 };
 
 
@@ -8212,5 +8273,15 @@ proto.sikuli.v1.ListWindowsResponse.prototype.clearWindowsList = function() {
   return this.setWindowsList([]);
 };
 
+
+/**
+ * @enum {number}
+ */
+proto.sikuli.v1.MatcherEngine = {
+  MATCHER_ENGINE_UNSPECIFIED: 0,
+  MATCHER_ENGINE_TEMPLATE: 1,
+  MATCHER_ENGINE_ORB: 2,
+  MATCHER_ENGINE_HYBRID: 3
+};
 
 goog.object.extend(exports, proto.sikuli.v1);

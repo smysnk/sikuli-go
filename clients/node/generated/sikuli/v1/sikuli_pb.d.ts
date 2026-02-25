@@ -397,6 +397,8 @@ export class FindRequest extends jspb.Message {
     clearPattern(): void;
     getPattern(): Pattern | undefined;
     setPattern(value?: Pattern): FindRequest;
+    getMatcherEngine(): MatcherEngine;
+    setMatcherEngine(value: MatcherEngine): FindRequest;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): FindRequest.AsObject;
@@ -412,6 +414,7 @@ export namespace FindRequest {
     export type AsObject = {
         source?: GrayImage.AsObject,
         pattern?: Pattern.AsObject,
+        matcherEngine: MatcherEngine,
     }
 }
 
@@ -476,6 +479,8 @@ export class ScreenQueryOptions extends jspb.Message {
     clearIntervalMillis(): void;
     getIntervalMillis(): number | undefined;
     setIntervalMillis(value: number): ScreenQueryOptions;
+    getMatcherEngine(): MatcherEngine;
+    setMatcherEngine(value: MatcherEngine): ScreenQueryOptions;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): ScreenQueryOptions.AsObject;
@@ -492,6 +497,7 @@ export namespace ScreenQueryOptions {
         region?: Rect.AsObject,
         timeoutMillis?: number,
         intervalMillis?: number,
+        matcherEngine: MatcherEngine,
     }
 }
 
@@ -1038,4 +1044,11 @@ export namespace ListWindowsResponse {
     export type AsObject = {
         windowsList: Array<Window.AsObject>,
     }
+}
+
+export enum MatcherEngine {
+    MATCHER_ENGINE_UNSPECIFIED = 0,
+    MATCHER_ENGINE_TEMPLATE = 1,
+    MATCHER_ENGINE_ORB = 2,
+    MATCHER_ENGINE_HYBRID = 3,
 }

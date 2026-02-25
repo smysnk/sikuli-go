@@ -83,6 +83,7 @@ message ObserveEvent {
 message FindRequest {
   GrayImage source = 1;
   Pattern pattern = 2;
+  MatcherEngine matcher_engine = 3;
 }
 
 message FindResponse {
@@ -93,10 +94,18 @@ message FindAllResponse {
   repeated Match matches = 1;
 }
 
+enum MatcherEngine {
+  MATCHER_ENGINE_UNSPECIFIED = 0;
+  MATCHER_ENGINE_TEMPLATE = 1;
+  MATCHER_ENGINE_ORB = 2;
+  MATCHER_ENGINE_HYBRID = 3;
+}
+
 message ScreenQueryOptions {
   Rect region = 1;
   optional int64 timeout_millis = 2;
   optional int64 interval_millis = 3;
+  MatcherEngine matcher_engine = 4;
 }
 
 message FindOnScreenRequest {

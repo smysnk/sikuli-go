@@ -5,11 +5,9 @@ import (
 	"image"
 	"testing"
 
-	"github.com/smysnk/sikuligo/internal/cv"
 	pb "github.com/smysnk/sikuligo/internal/grpcv1/pb"
 	"github.com/smysnk/sikuligo/pkg/sikuli"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -316,7 +314,6 @@ func TestClickOnScreenInvokesClickBackend(t *testing.T) {
 
 func TestFindInvalidMatcherEngineMapsToInvalidArgument(t *testing.T) {
 	srv := NewServer()
-	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(matcherEngineHeader, "not-a-real-engine"))
 	req := &pb.FindRequest{
 		Source: grayImage("source", [][]uint8{
 			{10, 10, 10},
@@ -329,8 +326,9 @@ func TestFindInvalidMatcherEngineMapsToInvalidArgument(t *testing.T) {
 			}),
 			Exact: boolPtr(true),
 		},
+		MatcherEngine: pb.MatcherEngine(99),
 	}
-	_, err := srv.Find(ctx, req)
+	_, err := srv.Find(context.Background(), req)
 	if err == nil {
 		t.Fatalf("expected invalid argument error")
 	}
@@ -339,9 +337,8 @@ func TestFindInvalidMatcherEngineMapsToInvalidArgument(t *testing.T) {
 	}
 }
 
-func TestFindHybridMatcherViaMetadata(t *testing.T) {
+func TestFindHybridMatcherViaProtoField(t *testing.T) {
 	srv := NewServer()
-	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(matcherEngineHeader, string(cv.MatcherEngineHybrid)))
 	req := &pb.FindRequest{
 		Source: grayImage("source", [][]uint8{
 			{10, 10, 10, 10},
@@ -356,13 +353,35 @@ func TestFindHybridMatcherViaMetadata(t *testing.T) {
 			}),
 			Exact: boolPtr(true),
 		},
+		MatcherEngine: pb.MatcherEngine_MATCHER_ENGINE_HYBRID,
 	}
-	res, err := srv.Find(ctx, req)
+	res, err := srv.Find(context.Background(), req)
 	if err != nil {
 		t.Fatalf("find failed: %v", err)
 	}
 	if res.GetMatch() == nil {
 		t.Fatalf("expected match in response")
+	}
+}
+
+func TestFindOnScreenInvalidMatcherEngineMapsToInvalidArgument(t *testing.T) {
+	srv := NewServer()
+	req := &pb.FindOnScreenRequest{
+		Pattern: &pb.Pattern{
+			Image: grayImage("needle", [][]uint8{
+				{10},
+			}),
+		},
+		Opts: &pb.ScreenQueryOptions{
+			MatcherEngine: pb.MatcherEngine(99),
+		},
+	}
+	_, err := srv.FindOnScreen(context.Background(), req)
+	if err == nil {
+		t.Fatalf("expected invalid argument error")
+	}
+	if code := status.Code(err); code != codes.InvalidArgument {
+		t.Fatalf("expected invalid argument code, got %s", code)
 	}
 }
 

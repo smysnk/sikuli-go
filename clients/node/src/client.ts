@@ -6,9 +6,9 @@ import * as protoLoader from "@grpc/proto-loader";
 const DEFAULT_ADDR = "127.0.0.1:50051";
 const DEFAULT_TIMEOUT_MS = 5000;
 const TRACE_HEADER = "x-trace-id";
-const MATCHER_ENGINE_HEADER = "x-sikuligo-engine";
 
 export type MatcherEngine = "template" | "orb" | "hybrid";
+const SCREEN_SEARCH_METHODS = new Set(["FindOnScreen", "ExistsOnScreen", "WaitOnScreen", "ClickOnScreen"]);
 
 export type RpcMessage = Record<string, unknown>;
 
@@ -81,6 +81,41 @@ function normalizeMatcherEngine(raw: string | undefined): MatcherEngine {
   return "template";
 }
 
+function matcherEngineToProtoValue(engine: MatcherEngine): number {
+  switch (engine) {
+    case "orb":
+      return 2;
+    case "hybrid":
+      return 3;
+    default:
+      return 1;
+  }
+}
+
+function withMatcherEngine(methodName: string, request: RpcMessage, engine: MatcherEngine): RpcMessage {
+  const req: RpcMessage = { ...request };
+  const protoValue = matcherEngineToProtoValue(engine);
+  if (methodName === "Find" || methodName === "FindAll") {
+    const current = req.matcher_engine;
+    if (current === undefined || current === null || current === 0 || current === "MATCHER_ENGINE_UNSPECIFIED") {
+      req.matcher_engine = protoValue;
+    }
+    return req;
+  }
+  if (SCREEN_SEARCH_METHODS.has(methodName)) {
+    const opts =
+      req.opts && typeof req.opts === "object"
+        ? ({ ...(req.opts as RpcMessage) } as RpcMessage)
+        : ({} as RpcMessage);
+    const current = opts.matcher_engine;
+    if (current === undefined || current === null || current === 0 || current === "MATCHER_ENGINE_UNSPECIFIED") {
+      opts.matcher_engine = protoValue;
+    }
+    req.opts = opts;
+  }
+  return req;
+}
+
 export class Sikuli {
   private readonly client: grpc.Client & Record<string, unknown>;
   private readonly address: string;
@@ -148,7 +183,7 @@ export class Sikuli {
     });
   }
 
-  private buildMetadata(extra: Record<string, string> = {}, matcherEngine?: MatcherEngine): grpc.Metadata {
+  private buildMetadata(extra: Record<string, string> = {}): grpc.Metadata {
     const md = new grpc.Metadata();
     if (this.authToken) {
       md.set("x-api-key", this.authToken);
@@ -156,7 +191,6 @@ export class Sikuli {
     if (this.traceId) {
       md.set(TRACE_HEADER, this.traceId);
     }
-    md.set(MATCHER_ENGINE_HEADER, normalizeMatcherEngine(matcherEngine ?? this.matcherEngine));
     for (const [k, v] of Object.entries(extra)) {
       if (v) {
         md.set(k, v);
@@ -199,7 +233,8 @@ export class Sikuli {
     const startedAt = Date.now();
     const deadline = new Date(Date.now() + timeoutMs);
     const matcherEngine = normalizeMatcherEngine(opts.matcherEngine ?? this.matcherEngine);
-    const metadata = this.buildMetadata(opts.metadata, matcherEngine);
+    const metadata = this.buildMetadata(opts.metadata);
+    const wireRequest = withMatcherEngine(methodName, request, matcherEngine);
     this.debugLog("rpc.start", {
       method: methodName,
       address: this.address,
@@ -210,7 +245,7 @@ export class Sikuli {
     return new Promise((resolve, reject) => {
       callFn.call(
         this.client,
-        request,
+        wireRequest,
         metadata,
         { deadline },
         (err: grpc.ServiceError | null, response: RpcMessage) => {

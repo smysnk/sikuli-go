@@ -179,11 +179,11 @@ Package: `package grpcv1 // import "github.com/smysnk/sikuligo/internal/grpcv1"`
 
 #### <a id="method-server-find"></a><span class="api-method">Method</span> `Server.Find`
 
-- Signature: <span class="api-signature">`func (s *Server) Find(_ context.Context, req *pb.FindRequest) (*pb.FindResponse, error)`</span>
+- Signature: <span class="api-signature">`func (s *Server) Find(ctx context.Context, req *pb.FindRequest) (*pb.FindResponse, error)`</span>
 
 #### <a id="method-server-findall"></a><span class="api-method">Method</span> `Server.FindAll`
 
-- Signature: <span class="api-signature">`func (s *Server) FindAll(_ context.Context, req *pb.FindRequest) (*pb.FindAllResponse, error)`</span>
+- Signature: <span class="api-signature">`func (s *Server) FindAll(ctx context.Context, req *pb.FindRequest) (*pb.FindAllResponse, error)`</span>
 
 #### <a id="method-server-findonscreen"></a><span class="api-method">Method</span> `Server.FindOnScreen`
 
@@ -338,9 +338,9 @@ func (s *Server) CloseApp(_ context.Context, req *pb.AppActionRequest) (*pb.Acti
 
 func (s *Server) ExistsOnScreen(ctx context.Context, req *pb.ExistsOnScreenRequest) (*pb.ExistsOnScreenResponse, error)
 
-func (s *Server) Find(_ context.Context, req *pb.FindRequest) (*pb.FindResponse, error)
+func (s *Server) Find(ctx context.Context, req *pb.FindRequest) (*pb.FindResponse, error)
 
-func (s *Server) FindAll(_ context.Context, req *pb.FindRequest) (*pb.FindAllResponse, error)
+func (s *Server) FindAll(ctx context.Context, req *pb.FindRequest) (*pb.FindAllResponse, error)
 
 func (s *Server) FindOnScreen(ctx context.Context, req *pb.FindOnScreenRequest) (*pb.FindResponse, error)
 
