@@ -10,6 +10,7 @@ on:
       - "proto/**"
       - "pkg/**"
       - "docs/**"
+      - "sikuli-framework/**"
       - "scripts/**"
       - "go.mod"
       - "go.sum"
@@ -21,6 +22,7 @@ on:
       - "proto/**"
       - "pkg/**"
       - "docs/**"
+      - "sikuli-framework/**"
       - "scripts/**"
       - "go.mod"
       - "go.sum"
@@ -258,6 +260,49 @@ jobs:
           name: go-parity-e2e-results
           path: .test-results-e2e
           retention-days: 14
+
+  sikuli-framework:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up GoLang
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            sikuli-framework/pyproject.toml
+            sikuli-framework/pytest.ini
+
+      - name: Build sikuligo binary for integration tests
+        run: go build -o ./sikuligo ./cmd/sikuligrpc
+
+      - name: Install sikuli-framework test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+          python -m pip install sikuligo
+
+      - name: Run sikuli-framework unit tests
+        run: |
+          cd sikuli-framework
+          python -m pytest -q -m "not integration"
+
+      - name: Run sikuli-framework integration tests
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+        env:
+          SIKULIGO_INTEGRATION: "1"
+          SIKULIGO_BINARY_PATH: ${{ github.workspace }}/sikuligo
+        run: |
+          cd sikuli-framework
+          python -m pytest -q -m integration
 
   tagged-backend-build:
     name: Tagged Backend Build (gosseract+opencv)
