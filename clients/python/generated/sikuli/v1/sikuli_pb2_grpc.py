@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from sikuli.v1 import sikuli_pb2 as sikuli_dot_v1_dot_sikuli__pb2
+from generated.sikuli.v1 import sikuli_pb2 as sikuli_dot_v1_dot_sikuli__pb2
 
 
 class SikuliServiceStub(object):

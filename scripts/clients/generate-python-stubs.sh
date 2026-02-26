@@ -43,4 +43,11 @@ fi
 mkdir -p "$OUT_DIR/sikuli" "$OUT_DIR/sikuli/v1"
 touch "$OUT_DIR/__init__.py" "$OUT_DIR/sikuli/__init__.py" "$OUT_DIR/sikuli/v1/__init__.py"
 
+# grpcio-tools generates absolute imports using proto package names (e.g. `from sikuli.v1 ...`).
+# Rewrite to the packaged module path so examples/imports work without PYTHONPATH tweaks.
+if [[ -f "$OUT_DIR/sikuli/v1/sikuli_pb2_grpc.py" ]]; then
+  perl -i -pe 's/^from sikuli\.v1 import sikuli_pb2 as /from generated.sikuli.v1 import sikuli_pb2 as /' \
+    "$OUT_DIR/sikuli/v1/sikuli_pb2_grpc.py"
+fi
+
 echo "Python artifacts generated in: $OUT_DIR"
