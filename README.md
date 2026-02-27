@@ -18,8 +18,11 @@ Sikuli is an open-source tool for automating anything visible on a computer scre
 Install the Node client package:
 
 ```bash
+mkdir sikuligo-demo
+cd sikuligo-demo
+yarn init -y
 yarn add @sikuligo/sikuligo
-yarn init:examples # copies the packaged examples into ./examples
+yarn run init:examples # copies the packaged examples into ./examples
 node examples/click.js
 ```
 

@@ -24,12 +24,15 @@ For source build details, see:
 Use the published package examples in any project directory:
 
 ```bash
+mkdir sikuligo-demo
+cd sikuligo-demo
+yarn init -y
 yarn add @sikuligo/sikuligo
-yarn init:examples
+yarn run init:examples
 node examples/click.js
 ```
 
-`yarn init:examples` copies package examples into `./examples`.
+`yarn run init:examples` copies package examples into `./examples`.
 
 Run:
 
