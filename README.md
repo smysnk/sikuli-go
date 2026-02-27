@@ -19,11 +19,9 @@ Install the Node client package:
 
 ```bash
 yarn add @sikuligo/sikuligo
-yarn init:examples
+yarn init:examples # copies the packaged examples into ./examples
 node examples/click.js
 ```
-
-`yarn init:examples` copies the packaged examples into `./examples`.
 
 Runs:
 ```js
