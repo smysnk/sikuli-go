@@ -38,7 +38,7 @@ if [[ "${NODE_CLIENT_BUILD:-0}" == "1" || ${#missing[@]} -gt 0 ]]; then
   npm run build
 fi
 
-npm pack --dry-run --ignore-scripts
+NPM_CONFIG_WORKSPACES=false npm pack --dry-run --ignore-scripts
 
 if [[ "${NPM_PUBLISH:-0}" == "1" ]]; then
   if [[ -z "${NPM_TOKEN:-}" ]]; then
@@ -46,7 +46,7 @@ if [[ "${NPM_PUBLISH:-0}" == "1" ]]; then
     exit 1
   fi
   npm config set //registry.npmjs.org/:_authToken="${NPM_TOKEN}"
-  npm publish --ignore-scripts --access public
+  NPM_CONFIG_WORKSPACES=false npm publish --ignore-scripts --access public
 else
   echo "Node package scaffold validated (publish skipped; set NPM_PUBLISH=1)"
 fi
