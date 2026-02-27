@@ -79,16 +79,22 @@ for (const name of binNames) {
 }
 writeJson(nodeLockPath, lock);
 
-const binPkgFiles = fs
-  .readdirSync(binPkgDir, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => path.join(binPkgDir, entry.name, "package.json"))
-  .filter((filePath) => fs.existsSync(filePath));
+const binPkgFiles = fs.existsSync(binPkgDir)
+  ? fs
+      .readdirSync(binPkgDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => path.join(binPkgDir, entry.name, "package.json"))
+      .filter((filePath) => fs.existsSync(filePath))
+  : [];
 
 for (const filePath of binPkgFiles) {
   const pkg = JSON.parse(fs.readFileSync(filePath, "utf8"));
   pkg.version = newVersion;
   writeJson(filePath, pkg);
+}
+
+if (!fs.existsSync(binPkgDir)) {
+  console.warn(`Skipping Node binary package version update: missing directory ${binPkgDir}`);
 }
 JS
 
