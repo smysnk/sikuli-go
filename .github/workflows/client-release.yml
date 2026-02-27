@@ -145,7 +145,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: node-binary-checksums
-          path: packages/node/packages/checksums.txt
+          path: packages/client-node/packages/checksums.txt
 
   node-client:
     needs: node-binaries
@@ -160,7 +160,7 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
           cache: "npm"
-          cache-dependency-path: packages/node/package-lock.json
+          cache-dependency-path: packages/client-node/package-lock.json
 
       - name: Setup protoc
         uses: arduino/setup-protoc@v3
