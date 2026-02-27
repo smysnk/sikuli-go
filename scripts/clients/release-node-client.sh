@@ -10,11 +10,18 @@ export NPM_CONFIG_CACHE="$NPM_CACHE_DIR"
 
 cd "$CLIENT_DIR"
 if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
-  npm install
+  npm install --include=dev
 fi
 
-if [[ ! -x "node_modules/.bin/tsc" ]]; then
-  echo "Missing node_modules tooling. Run: (cd $CLIENT_DIR && npm install) or set SKIP_INSTALL=0" >&2
+missing_tools=()
+for tool in tsc grpc_tools_node_protoc grpc_tools_node_protoc_plugin protoc-gen-ts; do
+  if [[ ! -x "node_modules/.bin/$tool" ]]; then
+    missing_tools+=("$tool")
+  fi
+done
+if [[ ${#missing_tools[@]} -gt 0 ]]; then
+  echo "Missing node_modules tooling: ${missing_tools[*]}" >&2
+  echo "Run: (cd $CLIENT_DIR && npm install --include=dev) or set SKIP_INSTALL=1 if already installed." >&2
   exit 1
 fi
 
