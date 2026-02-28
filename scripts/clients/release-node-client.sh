@@ -41,13 +41,13 @@ if [[ "${NODE_CLIENT_BUILD:-0}" == "1" || ${#missing[@]} -gt 0 ]]; then
   run_npm_no_workspace run build
 fi
 
-run_npm_no_workspace pack --dry-run --ignore-scripts
+run_npm_no_workspace pack --dry-run --ignore-scripts "$CLIENT_DIR"
 
 if [[ "${NPM_PUBLISH:-0}" == "1" ]]; then
   configure_npm_auth_token "${NPM_TOKEN:-}"
   verify_npm_auth
   check_npm_package_visibility "@sikuligo/sikuligo"
-  run_npm_no_workspace publish --ignore-scripts --access public
+  run_npm_no_workspace publish --ignore-scripts --access public "$CLIENT_DIR"
 else
   echo "Node package scaffold validated (publish skipped; set NPM_PUBLISH=1)"
 fi
