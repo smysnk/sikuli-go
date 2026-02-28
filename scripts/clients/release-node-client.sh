@@ -96,12 +96,18 @@ run_npm_no_workspace pack --dry-run --ignore-scripts "$CLIENT_DIR"
 
 if [[ "$NODE_PUBLISH_MODE" == "1" ]]; then
   step "9/10 Authenticate and preflight npm registry checks"
-  configure_npm_auth_token "${NPM_TOKEN:-}"
-  verify_npm_auth
-  check_npm_package_visibility "@sikuligo/sikuligo"
+  (
+    cd "$ROOT_DIR"
+    configure_npm_auth_token "${NPM_TOKEN:-}"
+    verify_npm_auth
+    check_npm_package_visibility "@sikuligo/sikuligo"
+  )
 
   step "10/10 Publish @sikuligo/sikuligo"
-  run_npm_no_workspace publish --ignore-scripts --access public "$CLIENT_DIR"
+  (
+    cd "$ROOT_DIR"
+    run_npm_no_workspace publish --ignore-scripts --access public "$CLIENT_DIR"
+  )
 else
   step "9/10 Publish preflight skipped (NPM_PUBLISH!=1)"
   step "10/10 Publish skipped; release validation complete"
