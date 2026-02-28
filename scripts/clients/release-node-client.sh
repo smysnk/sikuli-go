@@ -8,9 +8,18 @@ NPM_CACHE_DIR="${NPM_CONFIG_CACHE:-$ROOT_DIR/.test-results/npm-cache}"
 mkdir -p "$NPM_CACHE_DIR"
 export NPM_CONFIG_CACHE="$NPM_CACHE_DIR"
 
+run_npm_without_workspace_flags() {
+  env \
+    -u NPM_CONFIG_WORKSPACE \
+    -u npm_config_workspace \
+    -u NPM_CONFIG_WORKSPACES \
+    -u npm_config_workspaces \
+    npm "$@"
+}
+
 cd "$CLIENT_DIR"
 if [[ "${SKIP_INSTALL:-0}" != "1" ]]; then
-  NPM_CONFIG_OMIT= npm install --include=dev
+  NPM_CONFIG_OMIT= run_npm_without_workspace_flags install --include=dev
 fi
 
 required_files=(
@@ -35,17 +44,8 @@ if [[ "${NODE_CLIENT_BUILD:-0}" == "1" || ${#missing[@]} -gt 0 ]]; then
     echo "Missing Node client artifacts: ${missing[*]}"
     echo "Attempting npm run build to regenerate dist/generated artifacts..."
   fi
-  npm run build
+  run_npm_without_workspace_flags run build
 fi
-
-run_npm_without_workspace_flags() {
-  env \
-    -u NPM_CONFIG_WORKSPACE \
-    -u npm_config_workspace \
-    -u NPM_CONFIG_WORKSPACES \
-    -u npm_config_workspaces \
-    npm "$@"
-}
 
 run_npm_without_workspace_flags pack --dry-run --ignore-scripts
 
@@ -54,7 +54,7 @@ if [[ "${NPM_PUBLISH:-0}" == "1" ]]; then
     echo "Missing NPM_TOKEN for publish" >&2
     exit 1
   fi
-  npm config set //registry.npmjs.org/:_authToken="${NPM_TOKEN}"
+  run_npm_without_workspace_flags config set //registry.npmjs.org/:_authToken="${NPM_TOKEN}"
   run_npm_without_workspace_flags publish --ignore-scripts --access public
 else
   echo "Node package scaffold validated (publish skipped; set NPM_PUBLISH=1)"
