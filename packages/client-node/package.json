@@ -73,6 +73,7 @@
     "@sikuligo/bin-win32-x64": "0.1.4"
   },
   "devDependencies": {
+    "@types/node": "^20.19.11",
     "grpc-tools": "^1.13.0",
     "grpc_tools_node_protoc_ts": "^5.3.3",
     "tsx": "^4.20.5",
