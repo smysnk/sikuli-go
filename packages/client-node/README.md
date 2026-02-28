@@ -2,23 +2,6 @@
 
 SikuliGO is a GoLang implementation of Sikuli visual automation. This package provides the Node.js SDK for launching `sikuligo` locally and executing automation with a small API surface.
 
-## Setup
-
-Install `sikuligo` on macOS (optional, if not using local repo binary):
-
-```bash
-brew tap sikuligo/tap
-brew install sikuligo/tap/sikuligo
-```
-
-```bash
-yarn install
-```
-
-For source build details, see:
-
-- [Build From Source](../../docs/build-from-source.md)
-
 ## Quickstart
 
 Use the published package examples in any project directory:
@@ -28,44 +11,12 @@ mkdir sikuligo-demo
 cd sikuligo-demo
 yarn init -y
 yarn add @sikuligo/sikuligo
-yarn run init:examples
-node examples/click.js
+yarn init-examples
+node examples/click.js  # copies package examples into `./examples`.
 ```
-
-`yarn run init:examples` copies package examples into `./examples`.
-
-Run:
-
-```bash
-yarn workspace @sikuligo/sikuligo example:workflow:connect
-```
-
-`yarn workspace @sikuligo/sikuligo example:workflow:connect` runs:
 
 ```js
-import { Screen, Pattern } from "../src";
-
-async function main() {
-  const screen = await Screen();
-  try {
-    const match = await screen.click(Pattern("assets/pattern.png").exact());
-    console.log(`clicked match target at (${match.targetX}, ${match.targetY})`);
-  } finally {
-    await screen.close();
-  }
-}
-```
-
-`yarn workspace @sikuligo/sikuligo example:workflow:auto` uses the same primary constructor pattern (`connect -> spawn` fallback handled by `Screen()`):
-
-```bash
-yarn workspace @sikuligo/sikuligo example:workflow:auto
-```
-
-`yarn workspace @sikuligo/sikuligo example:workflow:auto` runs:
-
-```js
-import { Screen, Pattern } from "../src";
+import { Screen, Pattern } from "@sikuligo/sikuligo";
 
 async function main() {
   const screen = await Screen();
@@ -81,15 +32,15 @@ async function main() {
 ## Run Examples
 
 ```bash
-yarn workspace @sikuligo/sikuligo example:workflow:auto
-yarn workspace @sikuligo/sikuligo example:workflow:connect
-yarn workspace @sikuligo/sikuligo example:find
-yarn workspace @sikuligo/sikuligo example:click
-yarn workspace @sikuligo/sikuligo example:ocr
-yarn workspace @sikuligo/sikuligo example:input
-yarn workspace @sikuligo/sikuligo example:app
-yarn workspace @sikuligo/sikuligo example:user-flow
-yarn workspace @sikuligo/sikuligo doctor
+node examples/workflow-auto-launch.js
+node examples/workflow-connect.js
+node examples/find.js
+node examples/click.js
+node examples/ocr.js
+node examples/input.js
+node examples/app.js
+node examples/user-flow.js
+yarn sikuligo-doctor
 ```
 
 ## Environment
@@ -111,7 +62,7 @@ Primary constructors:
 Set matcher engine per session:
 
 ```js
-import { Screen, Pattern } from "../src";
+import { Screen, Pattern } from "@sikuligo/sikuligo";
 
 const screen = await Screen({ matcherEngine: "hybrid" });
 const match = await screen.click(Pattern("assets/pattern.png").exact());
@@ -121,7 +72,7 @@ await screen.close();
 Override matcher engine per call (ad-hoc):
 
 ```js
-import { Screen, Pattern } from "../src";
+import { Screen, Pattern } from "@sikuligo/sikuligo";
 
 const screen = await Screen({ matcherEngine: "template" });
 const match = await screen.click(Pattern("assets/pattern.png").exact(), "orb");

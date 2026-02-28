@@ -29,7 +29,7 @@
   "bin": {
     "sikuligo-doctor": "dist/src/doctor.js",
     "sikuligo-init-examples": "dist/src/init-examples.js",
-    "init:examples": "dist/src/init-examples.js"
+    "init-examples": "dist/src/init-examples.js"
   },
   "files": [
     "dist",

@@ -22,7 +22,7 @@ mkdir sikuligo-demo
 cd sikuligo-demo
 yarn init -y
 yarn add @sikuligo/sikuligo
-yarn run init:examples # copies the packaged examples into ./examples
+yarn init-examples # copies the packaged examples into ./examples
 node examples/click.js
 ```
 
@@ -124,52 +124,11 @@ finally:
 - [`docs`](docs) : documentation and assets
 - [`legacy`](legacy) : previous Java-era project directories retained for reference
 
-## Getting Started
-
-Requires GoLang `1.24+`.
-
-```bash
-yarn install
-cd packages/api
-go mod tidy
-go test ./...
-```
-
-Start the new workspace apps:
-
-```bash
-yarn workspace @sikuligo/editor dev
-yarn workspace @sikuligo/api-electron dev
-```
-
-For all source build commands, use:
-
 ## Install and Build
 
 Build from source:
 
 - [Build From Source](docs/build-from-source.md)
-
-API publish/install guidance for Windows and Linux:
-
-- [API Publish/Install (Windows/Linux)](docs/api-publish-install.md)
-
-Install on macOS with Homebrew:
-
-```bash
-brew tap sikuligo/tap
-brew install sikuligo/tap/sikuligo
-```
-
-Install on Linux/Windows from release artifacts:
-
-- [Windows/Linux install commands](docs/api-publish-install.md#install-on-linux)
-
-Run the repo workspace Node example:
-
-```bash
-yarn workspace @sikuligo/sikuligo example:workflow:auto
-```
 
 ## Project History and Credits
 
