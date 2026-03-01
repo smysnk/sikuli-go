@@ -2,17 +2,22 @@
 
 SikuliGO is a GoLang implementation of Sikuli visual automation. This package provides the Node.js SDK for launching `sikuligo` locally and executing automation with a small API surface.
 
+## Links
+
+- Main repository: [github.com/smysnk/SikuliGO](https://github.com/smysnk/SikuliGO)
+- API reference: [smysnk.github.io/SikuliGO/api](https://smysnk.github.io/SikuliGO/api/)
+- Node user flow: [smysnk.github.io/SikuliGO/node-package-user-flow](https://smysnk.github.io/SikuliGO/node-package-user-flow)
+- Client strategy: [smysnk.github.io/SikuliGO/client-strategy](https://smysnk.github.io/SikuliGO/client-strategy)
+- Architecture docs: [Port Strategy](https://smysnk.github.io/SikuliGO/port-strategy), [gRPC Strategy](https://smysnk.github.io/SikuliGO/grpc-strategy)
+
 ## Quickstart
 
-Use the published package examples in any project directory:
+`init:js-examples` prompts for a target directory, scaffolds a `package.json` with the latest `@sikuligo/sikuligo` dependency, runs `yarn install`, and copies `.js` + `.mjs` examples into `examples/`.
 
 ```bash
-mkdir sikuligo-demo
+yarn dlx @sikuligo/sikuligo init:js-examples
 cd sikuligo-demo
-yarn init -y
-yarn add @sikuligo/sikuligo
-yarn init-examples
-yarn node examples/click.mjs
+yarn node examples/click.js
 ```
 
 ```js
@@ -27,52 +32,29 @@ try {
 }
 ```
 
-## Run Examples
+## Web Dashboard
+
+Launch with `yarn dlx` (ephemeral):
 
 ```bash
-yarn node examples/workflow-auto-launch.mjs
-yarn node examples/workflow-connect.mjs
-yarn node examples/find.mjs
-yarn node examples/click.mjs
-yarn node examples/ocr.mjs
-yarn node examples/input.mjs
-yarn node examples/app.mjs
-yarn node examples/user-flow.mjs
-yarn sikuligo-doctor
+yarn dlx @sikuligo/sikuligo -listen 127.0.0.1:50051 -admin-listen :8080
 ```
 
-## Environment
-- `SIKULIGO_BINARY_PATH` (optional explicit path to `sikuligo`)
-- `SIKULI_GRPC_ADDR` (optional address used by `start/launch` probe/connect; default probe `127.0.0.1:50051`)
-- `SIKULI_GRPC_AUTH_TOKEN` (optional; sent as `x-api-key` for spawned/connected sessions)
-- `SIKULI_MATCHER_ENGINE` (optional default matcher engine: `template`, `orb`, `hybrid`)
-- `SIKULI_DEBUG` (optional; set to `1` to log launcher and per-RPC timing details; spawned `sikuligo` logs are shown too)
-- `SIKULIGO_SQLITE_PATH` (optional sqlite path for spawned server sessions; default `sikuligo.db`)
-- `SIKULI_APP_NAME` (optional; used by `examples/app.mjs`)
+Open:
 
-Primary constructors:
-- `Screen()` / `Sikuli()` = connect to default address first (1s), else spawn
-- `Screen.connect()` / `Sikuli.connect()` = connect only
-- `Screen.spawn()` / `Sikuli.spawn()` = spawn only
+- http://127.0.0.1:8080/dashboard
 
-## Matcher Engine Selection
+Additional endpoints:
 
-Set matcher engine per session:
+- http://127.0.0.1:8080/healthz
+- http://127.0.0.1:8080/metrics
+- http://127.0.0.1:8080/snapshot
 
-```js
-import { Screen, Pattern } from "@sikuligo/sikuligo";
+Install permanently on PATH:
 
-const screen = await Screen({ matcherEngine: "hybrid" });
-const match = await screen.click(Pattern("assets/pattern.png").exact());
-await screen.close();
-```
-
-Override matcher engine per call (ad-hoc):
-
-```js
-import { Screen, Pattern } from "@sikuligo/sikuligo";
-
-const screen = await Screen({ matcherEngine: "template" });
-const match = await screen.click(Pattern("assets/pattern.png").exact(), "orb");
-await screen.close();
+```bash
+yarn dlx @sikuligo/sikuligo install-binary
+source ~/.zshrc
+# or
+source ~/.bash_profile
 ```

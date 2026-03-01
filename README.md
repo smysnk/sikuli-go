@@ -18,12 +18,9 @@ Sikuli is an open-source tool for automating anything visible on a computer scre
 Install the Node client package:
 
 ```bash
-mkdir sikuligo-demo
+yarn dlx @sikuligo/sikuligo init:js-examples
 cd sikuligo-demo
-yarn init -y
-yarn add @sikuligo/sikuligo
-yarn init-examples # copies the packaged examples into ./examples
-yarn node examples/click.mjs
+yarn node examples/click.js
 ```
 
 Runs:
@@ -41,16 +38,12 @@ try {
 
 ### Python
 
-Install the Python client package:
+Scaffold and run Python examples:
 
 ```bash
-python3 -m pip install sikuligo
-cd packages/client-python
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install -r requirements.txt
-python3 -m pip install -e .
-python3 examples/workflow_auto_launch.py
+pipx run sikuligo init:py-examples
+cd sikuligo-demo
+python3 examples/click.py
 ```
 
 Runs:
@@ -68,6 +61,23 @@ finally:
 ## API Dashboard
 
 ![SikuliGO Dashboard Demo](docs/images/dashboard.png)
+
+## Install API Binary On PATH
+
+Install via Yarn (Node ecosystem):
+
+```bash
+yarn dlx @sikuligo/sikuligo install-binary
+```
+
+Install via Python:
+
+```bash
+pipx run sikuligo install-binary
+```
+
+Both commands create `~/.local/bin` if needed, copy all available `sikuli*` runtimes, and can prompt to add PATH to `~/.zshrc` or `~/.bash_profile`.
+If PATH is updated, reload with `source ~/.zshrc` or `source ~/.bash_profile`.
 
 ## Available Clients
 

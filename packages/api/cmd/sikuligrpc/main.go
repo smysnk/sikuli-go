@@ -20,6 +20,14 @@ import (
 )
 
 func main() {
+	handled, err := maybeRunInitExamples(os.Args[1:])
+	if err != nil {
+		log.Fatalf("init examples: %v", err)
+	}
+	if handled {
+		return
+	}
+
 	listenAddr := flag.String("listen", ":50051", "gRPC listen address")
 	adminListenAddr := flag.String("admin-listen", ":8080", "admin HTTP listen address for health/metrics/dashboard; empty disables admin server")
 	sqlitePath := flag.String("sqlite-path", "sikuligo.db", "sqlite datastore path for API sessions, client sessions, and interactions")

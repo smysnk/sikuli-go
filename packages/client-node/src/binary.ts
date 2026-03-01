@@ -1,6 +1,8 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 
 const DEFAULT_BINARY_NAME = process.platform === "win32" ? "sikuligo.exe" : "sikuligo";
 
@@ -34,6 +36,50 @@ function candidateBinaryPaths(rootDir: string): string[] {
     ...names.map((name) => path.join(rootDir, "bin", name)),
     ...names.map((name) => path.join(rootDir, "dist", name))
   ];
+}
+
+function isVirtualZipPath(candidatePath: string): boolean {
+  if (!candidatePath) {
+    return false;
+  }
+  return candidatePath.includes(".zip/") || candidatePath.includes(".zip\\") || candidatePath.startsWith("zip:");
+}
+
+function materializeSpawnableBinary(candidatePath: string): string {
+  if (!isVirtualZipPath(candidatePath)) {
+    return candidatePath;
+  }
+
+  const ext = path.extname(candidatePath);
+  const base = path.basename(candidatePath, ext);
+  const key = createHash("sha256").update(candidatePath).digest("hex").slice(0, 16);
+  const cacheDir = path.join(os.tmpdir(), "sikuligo-node-binaries");
+  const outputPath = path.join(cacheDir, `${base}-${key}${ext}`);
+  if (isExecutable(outputPath)) {
+    return outputPath;
+  }
+
+  fs.mkdirSync(cacheDir, { recursive: true });
+  const tmpPath = `${outputPath}.tmp-${process.pid}-${Date.now()}`;
+  const binaryData = fs.readFileSync(candidatePath);
+  try {
+    fs.writeFileSync(tmpPath, binaryData, {
+      mode: process.platform === "win32" ? 0o666 : 0o755
+    });
+    if (process.platform !== "win32") {
+      fs.chmodSync(tmpPath, 0o755);
+    }
+    fs.renameSync(tmpPath, outputPath);
+  } catch (err) {
+    try {
+      fs.rmSync(tmpPath, { force: true });
+    } catch {
+      // Ignore cleanup errors.
+    }
+    throw err;
+  }
+
+  return outputPath;
 }
 
 function resolvePackagedBinary(): string | undefined {
@@ -102,22 +148,22 @@ export function resolveSikuliBinary(explicitPath?: string): string {
     if (!isExecutable(manual)) {
       throw errorWithResolutionHelp(`Configured binary path is not executable: ${manual}`);
     }
-    return manual;
+    return materializeSpawnableBinary(manual);
   }
 
   const localFallback = resolveLocalRepoFallback();
   if (localFallback) {
-    return localFallback;
+    return materializeSpawnableBinary(localFallback);
   }
 
   const packagedBinary = resolvePackagedBinary();
   if (packagedBinary) {
-    return packagedBinary;
+    return materializeSpawnableBinary(packagedBinary);
   }
 
   const pathBinary = resolveFromPath();
   if (pathBinary) {
-    return pathBinary;
+    return materializeSpawnableBinary(pathBinary);
   }
 
   throw errorWithResolutionHelp(

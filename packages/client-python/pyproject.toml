@@ -33,8 +33,14 @@ dev = [
   "twine>=5.1.1",
 ]
 
+[project.scripts]
+sikuligo = "sikuligo.cli:main"
+
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 include = ["sikuligo*", "generated*"]
+
+[tool.setuptools.package-data]
+sikuligo = ["scaffold/python/examples/*.py", "scaffold/python/examples/assets/*.png"]

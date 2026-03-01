@@ -96,7 +96,7 @@ Status: ✅ Implemented (baseline wrapper and examples)
 
 - Generate Python stubs into `packages/client-python/generated/`.
 - Add wrapper in `packages/client-python/sikuligo/` for deadlines, metadata/auth, and error mapping.
-- Add runnable examples in `packages/client-python/examples/` (`find.py`, `read_text.py`, `click_and_type.py`, `app_control.py`).
+- Add runnable examples in `packages/client-python/examples/` (`find.py`, `ocr.py`, `input.py`, `app.py`).
 - Add CI smoke tests against local `cmd/sikuligrpc` (next step).
 
 ### Phase 3: Node.js client

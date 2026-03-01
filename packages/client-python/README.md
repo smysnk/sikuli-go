@@ -2,47 +2,26 @@
 
 This directory contains the Python client for SikuliGO with Sikuli-style `Screen` + `Pattern` APIs.
 
-## Prerequisites
-- Python 3.10+
-- `protoc`
+## Links
 
-## Setup
-
-Install `sikuligo` on macOS (optional, if not using local repo binary):
-
-```bash
-brew tap sikuligo/tap
-brew install sikuligo/tap/sikuligo
-```
-
-```bash
-cd packages/client-python
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install -r requirements.txt
-```
-
-For source build details, see:
-
-- [Build From Source](../../docs/build-from-source.md)
-
-Install from PyPI:
-
-```bash
-pip install sikuligo
-```
+- Main repository: [github.com/smysnk/SikuliGO](https://github.com/smysnk/SikuliGO)
+- API reference: [smysnk.github.io/SikuliGO/api](https://smysnk.github.io/SikuliGO/api/)
+- Client strategy: [smysnk.github.io/SikuliGO/client-strategy](https://smysnk.github.io/SikuliGO/client-strategy)
+- Architecture docs: [Port Strategy](https://smysnk.github.io/SikuliGO/port-strategy), [gRPC Strategy](https://smysnk.github.io/SikuliGO/grpc-strategy)
 
 ## Quickstart
 
-Run:
+`init:py-examples` prompts for the target directory, creates `.venv`, installs `requirements.txt`, and copies examples.
+Each example bootstraps `sikuligo` into `./.sikuligo/bin` and prepends it to PATH for the process.
+To install `sikuligo` onto PATH persistently:
 
 ```bash
-cd packages/client-python
-python3 examples/workflow_connect.py
+pipx run sikuligo init:py-examples
+cd sikuligo-demo
+python3 examples/click.py
 ```
 
-`python3 examples/workflow_connect.py` runs:
-
+runs:
 ```python
 from __future__ import annotations
 from sikuligo import Pattern, Screen
@@ -55,68 +34,29 @@ finally:
     screen.close()
 ```
 
-`python3 examples/workflow_auto_launch.py` uses the same primary constructor pattern (`connect -> spawn` fallback handled by `Screen()`):
+## Web Dashboard
+
+Launch with `pipx run`:
 
 ```bash
-cd packages/client-python
-python3 examples/workflow_auto_launch.py
-```
-```python
-from __future__ import annotations
-from sikuligo import Pattern, Screen
-
-screen = Screen()
-try:
-    match = screen.click(Pattern("assets/pattern.png").exact())
-    print(f"clicked match target at ({match.target_x}, {match.target_y})")
-finally:
-    screen.close()
+pipx run sikuligo sikuligo -listen 127.0.0.1:50051 -admin-listen :8080
 ```
 
-## Environment
+Open:
 
-- `SIKULI_GRPC_ADDR` (optional address used by `Screen()` probe/connect; default probe `127.0.0.1:50051`)
-- `SIKULI_GRPC_AUTH_TOKEN` (optional; sent as `x-api-key`)
-- `SIKULI_MATCHER_ENGINE` (optional default matcher engine: `template`, `orb`, `hybrid`)
-- `SIKULIGO_SQLITE_PATH` (optional sqlite path for spawned server sessions; default `sikuligo.db`)
+- http://127.0.0.1:8080/dashboard
 
-Primary constructors:
-- `Screen()` = connect to default address first (1s), else spawn
-- `Screen.connect()` = connect only
-- `Screen.spawn()` = spawn only
+Additional endpoints:
 
-## Matcher Engine Selection
+- http://127.0.0.1:8080/healthz
+- http://127.0.0.1:8080/metrics
+- http://127.0.0.1:8080/snapshot
 
-Set matcher engine per session:
-
-```python
-from sikuligo import Pattern, Screen
-
-screen = Screen(matcher_engine="hybrid")
-try:
-    match = screen.click(Pattern("assets/pattern.png").exact())
-finally:
-    screen.close()
-```
-
-Override matcher engine per call (ad-hoc):
-
-```python
-from sikuligo import Pattern, Screen
-
-screen = Screen(matcher_engine="template")
-try:
-    match = screen.click(Pattern("assets/pattern.png").exact(), engine="orb")
-finally:
-    screen.close()
-```
-
-## Run Additional Examples
+Install permanently on PATH:
 
 ```bash
-cd packages/client-python
-python3 examples/find.py
-python3 examples/read_text.py
-python3 examples/click_and_type.py
-python3 examples/app_control.py
+pipx run sikuligo install-binary
+source ~/.zshrc
+# or
+source ~/.bash_profile
 ```

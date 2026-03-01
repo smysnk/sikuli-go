@@ -25,6 +25,8 @@ native/
 **/packages/bin*
 *.db
 sikuligo
+!packages/client-python/sikuligo/
+!packages/client-python/sikuligo/**
 sikuligo-monitor
 node_modules/
 **/node_modules/
