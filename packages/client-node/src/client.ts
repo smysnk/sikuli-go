@@ -1,5 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
 import * as grpc from "@grpc/grpc-js";
-import { SikuliServiceClient } from "../generated/sikuli/v1/sikuli_grpc_pb";
 
 const DEFAULT_ADDR = "127.0.0.1:50051";
 const DEFAULT_TIMEOUT_MS = 5000;
@@ -45,6 +46,26 @@ function normalizeMatcherEngine(raw: string | undefined): MatcherEngine {
     return normalized;
   }
   return "template";
+}
+
+function loadGeneratedServiceClient(): grpc.ServiceClientConstructor {
+  const candidates = [
+    path.resolve(__dirname, "../../generated/sikuli/v1/sikuli_grpc_pb.js"),
+    path.resolve(__dirname, "../generated/sikuli/v1/sikuli_grpc_pb.js")
+  ];
+  for (const candidate of candidates) {
+    if (!fs.existsSync(candidate)) {
+      continue;
+    }
+    const mod = require(candidate) as { SikuliServiceClient?: grpc.ServiceClientConstructor };
+    if (mod && typeof mod.SikuliServiceClient === "function") {
+      return mod.SikuliServiceClient;
+    }
+  }
+  throw new Error(
+    `Unable to load generated gRPC stubs. Tried: ${candidates.join(", ")}. ` +
+      "Rebuild package artifacts before running."
+  );
 }
 
 function matcherEngineToProtoValue(engine: MatcherEngine): number {
@@ -101,7 +122,8 @@ export class Sikuli {
     this.debugEnabled = /^(1|true|yes|on)$/i.test(process.env.SIKULI_DEBUG ?? "");
 
     const credentials = opts.credentials ?? grpc.credentials.createInsecure();
-    this.client = new SikuliServiceClient(address, credentials) as unknown as grpc.Client &
+    const serviceClientCtor = loadGeneratedServiceClient();
+    this.client = new serviceClientCtor(address, credentials) as unknown as grpc.Client &
       Record<string, unknown>;
   }
 
