@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import * as grpc from "@grpc/grpc-js";
+import * as protoLoader from "@grpc/proto-loader";
 
 const DEFAULT_ADDR = "127.0.0.1:50051";
 const DEFAULT_TIMEOUT_MS = 5000;
@@ -17,6 +18,7 @@ export interface SikuliOptions {
   traceId?: string;
   timeoutMs?: number;
   matcherEngine?: MatcherEngine;
+  protoPath?: string;
   credentials?: grpc.ChannelCredentials;
 }
 
@@ -48,24 +50,40 @@ function normalizeMatcherEngine(raw: string | undefined): MatcherEngine {
   return "template";
 }
 
-function loadGeneratedServiceClient(): grpc.ServiceClientConstructor {
+function resolveDefaultProtoPath(): string {
   const candidates = [
-    path.resolve(__dirname, "../../generated/sikuli/v1/sikuli_grpc_pb.js"),
-    path.resolve(__dirname, "../generated/sikuli/v1/sikuli_grpc_pb.js")
+    path.resolve(__dirname, "../../proto/sikuli/v1/sikuli.proto"),
+    path.resolve(__dirname, "../proto/sikuli/v1/sikuli.proto"),
+    path.resolve(process.cwd(), "proto/sikuli/v1/sikuli.proto"),
+    path.resolve(process.cwd(), "packages/client-node/proto/sikuli/v1/sikuli.proto"),
+    path.resolve(process.cwd(), "packages/api/proto/sikuli/v1/sikuli.proto")
   ];
   for (const candidate of candidates) {
-    if (!fs.existsSync(candidate)) {
-      continue;
-    }
-    const mod = require(candidate) as { SikuliServiceClient?: grpc.ServiceClientConstructor };
-    if (mod && typeof mod.SikuliServiceClient === "function") {
-      return mod.SikuliServiceClient;
+    if (fs.existsSync(candidate)) {
+      return candidate;
     }
   }
   throw new Error(
-    `Unable to load generated gRPC stubs. Tried: ${candidates.join(", ")}. ` +
+    `Unable to resolve sikuli.proto. Tried: ${candidates.join(", ")}. ` +
       "Rebuild package artifacts before running."
   );
+}
+
+function serviceConstructorFromProto(protoPath: string): grpc.ServiceClientConstructor {
+  const packageDefinition = protoLoader.loadSync(protoPath, {
+    includeDirs: [path.dirname(protoPath)],
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true
+  });
+  const root = grpc.loadPackageDefinition(packageDefinition) as any;
+  const serviceCtor = root?.sikuli?.v1?.SikuliService;
+  if (!serviceCtor) {
+    throw new Error(`SikuliService not found in proto: ${protoPath}`);
+  }
+  return serviceCtor as grpc.ServiceClientConstructor;
 }
 
 function matcherEngineToProtoValue(engine: MatcherEngine): number {
@@ -121,8 +139,9 @@ export class Sikuli {
     this.matcherEngine = normalizeMatcherEngine(opts.matcherEngine ?? process.env.SIKULI_MATCHER_ENGINE);
     this.debugEnabled = /^(1|true|yes|on)$/i.test(process.env.SIKULI_DEBUG ?? "");
 
+    const protoPath = opts.protoPath ?? resolveDefaultProtoPath();
+    const serviceClientCtor = serviceConstructorFromProto(protoPath);
     const credentials = opts.credentials ?? grpc.credentials.createInsecure();
-    const serviceClientCtor = loadGeneratedServiceClient();
     this.client = new serviceClientCtor(address, credentials) as unknown as grpc.Client &
       Record<string, unknown>;
   }
@@ -210,15 +229,7 @@ export class Sikuli {
   }
 
   private unary(methodName: string, request: RpcMessage, opts: UnaryCallOptions = {}): Promise<RpcMessage> {
-    const candidates = [methodName, `${methodName.charAt(0).toLowerCase()}${methodName.slice(1)}`];
-    let callFn: Function | undefined;
-    for (const candidate of candidates) {
-      const fn = this.client[candidate] as Function | undefined;
-      if (typeof fn === "function") {
-        callFn = fn;
-        break;
-      }
-    }
+    const callFn = this.client[methodName] as Function | undefined;
     if (typeof callFn !== "function") {
       return Promise.reject(new Error(`unknown gRPC method: ${methodName}`));
     }

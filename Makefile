@@ -22,7 +22,7 @@ MACOS_CGO_LDFLAGS := -L/opt/homebrew/Cellar/leptonica/1.87.0/lib -L/opt/homebrew
 
 .PHONY: help build build-all build-go build-go-api build-go-monitor build-stubs \
 	build-grpc-stubs build-node-stubs build-python-stubs build-lua-descriptor \
-	build-node build-node-binaries build-node-client build-python clean
+	build-node build-node-binaries build-node-client build-python local-verify integration-verify clean
 
 help:
 	@echo "Targets:"
@@ -31,6 +31,8 @@ help:
 	@echo "  make build-stubs      Generate Go/Node/Python/Lua protocol artifacts"
 	@echo "  make build-node       Build Node SDK + platform binaries"
 	@echo "  make build-python     Build Python distribution artifacts"
+	@echo "  make local-verify     Run local end-to-end CLI/client smoke verification"
+	@echo "  make integration-verify  Run local integration verification (all Sikuli RPCs + flows)"
 	@echo "  make clean            Remove build outputs"
 	@echo ""
 	@echo "Options:"
@@ -83,6 +85,12 @@ build-python:
 	cd "$(ROOT_DIR)" && \
 	SKIP_INSTALL=$$( [[ "$(PYTHON_INSTALL)" == "1" ]] && echo 0 || echo 1 ) \
 	./scripts/clients/release-python-client.sh
+
+local-verify:
+	cd "$(ROOT_DIR)" && ./scripts/clients/local-verify.sh
+
+integration-verify:
+	cd "$(ROOT_DIR)" && ./scripts/clients/integration-verify.sh
 
 clean:
 	cd "$(ROOT_DIR)" && \

@@ -33,6 +33,7 @@
   "files": [
     "dist",
     "generated",
+    "proto",
     "examples",
     "README.md"
   ],

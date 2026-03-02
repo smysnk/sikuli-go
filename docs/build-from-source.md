@@ -66,6 +66,30 @@ SKIP_INSTALL=1 ./scripts/clients/release-python-client.sh
 make
 ```
 
+## Local End-to-End Verification
+
+Run the local verifier:
+
+```bash
+make local-verify
+```
+
+What it checks:
+
+- Builds local `sikuligo` binary and Node client
+- Verifies CLI passthrough help output
+- Verifies `init:js-examples` scaffolds `.mjs`-only examples
+- Verifies `init:py-examples` scaffolds `requirements.txt` + Python examples
+- Runs a transport smoke check and fails on known regressions:
+  - `unknown gRPC method: ClickOnScreen`
+  - `Request message serialization failure`
+
+Optional: verify using packed tarball install flow (closest to published package install):
+
+```bash
+VERIFY_PACKED_INSTALL=1 make local-verify
+```
+
 ## Optional OCR-Tagged Tests
 
 ```bash
