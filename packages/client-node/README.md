@@ -33,9 +33,6 @@ try {
 ```
 
 ## Web Dashboard
-
-Launch with `yarn dlx` (ephemeral):
-
 ```bash
 yarn dlx @sikuligo/sikuligo -listen 127.0.0.1:50051 -admin-listen :8080
 ```

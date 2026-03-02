@@ -28,10 +28,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
-    "init-examples": "dist/src/init-examples.js",
-    "sikuligo": "dist/src/cli.js",
-    "sikuligo-doctor": "dist/src/doctor.js",
-    "sikuligo-init-examples": "dist/src/init-examples.js"
+    "sikuligo": "dist/src/cli.js"
   },
   "files": [
     "dist",

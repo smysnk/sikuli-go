@@ -15,15 +15,15 @@ Sikuli is an open-source tool for automating anything visible on a computer scre
 
 ### Node.js
 
-Install the Node client package:
+Scaffold and run Node.js examples:
 
 ```bash
 yarn dlx @sikuligo/sikuligo init:js-examples
 cd sikuligo-demo
 yarn node examples/click.mjs
 ```
+`init:js-examples` prompts for a target directory, scaffolds a `package.json` with the latest `@sikuligo/sikuligo` dependency, runs `yarn install`, and copies `.mjs` examples into `examples/`.
 
-Runs:
 ```js
 import { Screen, Pattern } from "@sikuligo/sikuligo";
 
@@ -46,7 +46,8 @@ cd sikuligo-demo
 python3 examples/click.py
 ```
 
-Runs:
+`init:py-examples` prompts for a target directory, writes `requirements.txt`, creates `.venv`, installs dependencies, and copies Python examples into `examples/`.
+
 ```python
 from sikuligo import Pattern, Screen
 

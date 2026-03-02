@@ -20,9 +20,9 @@ import (
 )
 
 func main() {
-	handled, err := maybeRunInitExamples(os.Args[1:])
+	handled, err := maybeRunUtilityCommands(os.Args[1:])
 	if err != nil {
-		log.Fatalf("init examples: %v", err)
+		log.Fatalf("command failed: %v", err)
 	}
 	if handled {
 		return

@@ -11,9 +11,8 @@ This directory contains the Python client for SikuliGO with Sikuli-style `Screen
 
 ## Quickstart
 
-`init:py-examples` prompts for the target directory, creates `.venv`, installs `requirements.txt`, and copies examples.
+`init:py-examples` prompts for the target directory, creates `requirements.txt`, installs into `.venv`, and copies examples.
 Each example bootstraps `sikuligo` into `./.sikuligo/bin` and prepends it to PATH for the process.
-To install `sikuligo` onto PATH persistently:
 
 ```bash
 pipx run sikuligo init:py-examples
@@ -35,11 +34,8 @@ finally:
 ```
 
 ## Web Dashboard
-
-Launch with `pipx run`:
-
 ```bash
-pipx run sikuligo sikuligo -listen 127.0.0.1:50051 -admin-listen :8080
+pipx run sikuligo -listen 127.0.0.1:50051 -admin-listen :8080
 ```
 
 Open:
