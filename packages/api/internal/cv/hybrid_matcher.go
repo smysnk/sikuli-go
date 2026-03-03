@@ -12,6 +12,8 @@ type HybridMatcher struct {
 	fallback core.Matcher
 }
 
+const hybridORBThresholdCeiling = 0.10
+
 func NewHybridMatcher(primary, fallback core.Matcher) *HybridMatcher {
 	return &HybridMatcher{
 		primary:  primary,
@@ -27,17 +29,37 @@ func (m *HybridMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, err
 		return nil, fmt.Errorf("no matcher backends configured")
 	}
 
-	results, err := runMatcher(m.primary, req)
-	if err == nil && len(results) > 0 {
-		return results, nil
+	primaryResults, primaryErr := runMatcher(m.primary, req)
+	if primaryErr == nil && len(primaryResults) > 0 {
+		return primaryResults, nil
 	}
-	if err == nil && len(results) == 0 {
-		return runMatcher(m.fallback, req)
+
+	fallbackReq := adjustedRequestForMatcher(m.fallback, req)
+	fallbackResults, fallbackErr := runMatcher(m.fallback, fallbackReq)
+	if fallbackErr == nil && len(fallbackResults) > 0 {
+		return fallbackResults, nil
 	}
-	if errors.Is(err, core.ErrMatcherUnsupported) {
-		return runMatcher(m.fallback, req)
+
+	if primaryErr == nil && len(primaryResults) == 0 {
+		if fallbackErr == nil {
+			return fallbackResults, nil
+		}
+		if errors.Is(fallbackErr, core.ErrMatcherUnsupported) {
+			return nil, nil
+		}
+		return nil, fallbackErr
 	}
-	return nil, err
+
+	if primaryErr != nil && fallbackErr != nil {
+		return nil, errors.Join(primaryErr, fallbackErr)
+	}
+	if primaryErr != nil {
+		return nil, primaryErr
+	}
+	if fallbackErr != nil {
+		return nil, fallbackErr
+	}
+	return nil, nil
 }
 
 func runMatcher(m core.Matcher, req core.SearchRequest) ([]core.MatchCandidate, error) {
@@ -45,4 +67,18 @@ func runMatcher(m core.Matcher, req core.SearchRequest) ([]core.MatchCandidate, 
 		return nil, nil
 	}
 	return m.Find(req)
+}
+
+func adjustedRequestForMatcher(m core.Matcher, req core.SearchRequest) core.SearchRequest {
+	if m == nil {
+		return req
+	}
+	adjusted := req
+	switch m.(type) {
+	case *ORBMatcher:
+		if adjusted.Threshold > hybridORBThresholdCeiling {
+			adjusted.Threshold = hybridORBThresholdCeiling
+		}
+	}
+	return adjusted
 }

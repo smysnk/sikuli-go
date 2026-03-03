@@ -11,7 +11,7 @@ func TestParseMatcherEngine(t *testing.T) {
 		want MatcherEngine
 		ok   bool
 	}{
-		{name: "default_empty", in: "", want: MatcherEngineTemplate, ok: true},
+		{name: "default_empty", in: "", want: MatcherEngineHybrid, ok: true},
 		{name: "template", in: "template", want: MatcherEngineTemplate, ok: true},
 		{name: "template_alias_ncc", in: "ncc", want: MatcherEngineTemplate, ok: true},
 		{name: "template_alias_opencv", in: "opencv", want: MatcherEngineTemplate, ok: true},

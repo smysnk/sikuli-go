@@ -19,7 +19,13 @@ import (
 
 type Server struct {
 	pb.UnimplementedSikuliServiceServer
+	captureScreen       func(context.Context, string) (*sikuli.Image, error)
+	clickOnScreen       func(int, int, sikuli.InputOptions) error
+	newFinder           func(*sikuli.Image) (*sikuli.Finder, error)
+	newFinderWithEngine func(*sikuli.Image, cv.MatcherEngine) (*sikuli.Finder, error)
 }
+
+type ServerOption func(*Server)
 
 var debugEnabled = func() bool {
 	v := strings.TrimSpace(os.Getenv("SIKULI_DEBUG"))
@@ -45,8 +51,69 @@ var clickOnScreenFn = func(x, y int, opts sikuli.InputOptions) error {
 	return c.Click(x, y, opts)
 }
 
-func NewServer() *Server {
-	return &Server{}
+var newFinderFn = sikuli.NewFinder
+var newFinderWithEngineFn = newFinderWithEngine
+
+func WithCaptureScreen(fn func(context.Context, string) (*sikuli.Image, error)) ServerOption {
+	return func(s *Server) {
+		s.captureScreen = fn
+	}
+}
+
+func WithClickOnScreen(fn func(int, int, sikuli.InputOptions) error) ServerOption {
+	return func(s *Server) {
+		s.clickOnScreen = fn
+	}
+}
+
+func WithFinderFactory(fn func(*sikuli.Image) (*sikuli.Finder, error)) ServerOption {
+	return func(s *Server) {
+		s.newFinder = fn
+	}
+}
+
+func WithFinderWithEngineFactory(fn func(*sikuli.Image, cv.MatcherEngine) (*sikuli.Finder, error)) ServerOption {
+	return func(s *Server) {
+		s.newFinderWithEngine = fn
+	}
+}
+
+func NewServer(opts ...ServerOption) *Server {
+	s := &Server{}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(s)
+		}
+	}
+	return s
+}
+
+func (s *Server) finder(source *sikuli.Image) (*sikuli.Finder, error) {
+	if s != nil && s.newFinder != nil {
+		return s.newFinder(source)
+	}
+	return newFinderFn(source)
+}
+
+func (s *Server) finderWithEngine(source *sikuli.Image, engine cv.MatcherEngine) (*sikuli.Finder, error) {
+	if s != nil && s.newFinderWithEngine != nil {
+		return s.newFinderWithEngine(source, engine)
+	}
+	return newFinderWithEngineFn(source, engine)
+}
+
+func (s *Server) capture(ctx context.Context, name string) (*sikuli.Image, error) {
+	if s != nil && s.captureScreen != nil {
+		return s.captureScreen(ctx, name)
+	}
+	return captureScreenFn(ctx, name)
+}
+
+func (s *Server) clickAt(x, y int, opts sikuli.InputOptions) error {
+	if s != nil && s.clickOnScreen != nil {
+		return s.clickOnScreen(x, y, opts)
+	}
+	return clickOnScreenFn(x, y, opts)
 }
 
 func (s *Server) Find(ctx context.Context, req *pb.FindRequest) (*pb.FindResponse, error) {
@@ -58,7 +125,7 @@ func (s *Server) Find(ctx context.Context, req *pb.FindRequest) (*pb.FindRespons
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
-	f, err := newFinderWithEngine(source, engine)
+	f, err := s.finderWithEngine(source, engine)
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
@@ -78,7 +145,7 @@ func (s *Server) FindAll(ctx context.Context, req *pb.FindRequest) (*pb.FindAllR
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
-	f, err := newFinderWithEngine(source, engine)
+	f, err := s.finderWithEngine(source, engine)
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
@@ -188,7 +255,7 @@ func (s *Server) ClickOnScreen(ctx context.Context, req *pb.ClickOnScreenRequest
 		return nil, status.Error(codes.Internal, "match target missing")
 	}
 	clickStart := time.Now()
-	if err := clickOnScreenFn(int(match.GetTarget().GetX()), int(match.GetTarget().GetY()), inputOptionsFromProto(req.GetClickOpts())); err != nil {
+	if err := s.clickAt(int(match.GetTarget().GetX()), int(match.GetTarget().GetY()), inputOptionsFromProto(req.GetClickOpts())); err != nil {
 		debugLogf("click_on_screen.click.error duration=%s err=%v", time.Since(clickStart), err)
 		return nil, mapStatusError(err)
 	}
@@ -204,7 +271,7 @@ func (s *Server) ReadText(_ context.Context, req *pb.ReadTextRequest) (*pb.ReadT
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
-	f, err := sikuli.NewFinder(source)
+	f, err := s.finder(source)
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
@@ -262,21 +329,23 @@ func waitInterval(interval time.Duration, deadline time.Time) time.Duration {
 
 func matcherEngineFromFindRequest(req *pb.FindRequest) (cv.MatcherEngine, error) {
 	if req == nil {
-		return cv.MatcherEngineTemplate, nil
+		return cv.MatcherEngineHybrid, nil
 	}
 	return matcherEngineFromProto(req.GetMatcherEngine())
 }
 
 func matcherEngineFromScreenOptions(opts *pb.ScreenQueryOptions) (cv.MatcherEngine, error) {
 	if opts == nil {
-		return cv.MatcherEngineTemplate, nil
+		return cv.MatcherEngineHybrid, nil
 	}
 	return matcherEngineFromProto(opts.GetMatcherEngine())
 }
 
 func matcherEngineFromProto(in pb.MatcherEngine) (cv.MatcherEngine, error) {
 	switch in {
-	case pb.MatcherEngine_MATCHER_ENGINE_UNSPECIFIED, pb.MatcherEngine_MATCHER_ENGINE_TEMPLATE:
+	case pb.MatcherEngine_MATCHER_ENGINE_UNSPECIFIED:
+		return cv.MatcherEngineHybrid, nil
+	case pb.MatcherEngine_MATCHER_ENGINE_TEMPLATE:
 		return cv.MatcherEngineTemplate, nil
 	case pb.MatcherEngine_MATCHER_ENGINE_ORB:
 		return cv.MatcherEngineORB, nil
@@ -309,7 +378,7 @@ func (s *Server) findOnScreenOnce(ctx context.Context, patternReq *pb.Pattern, o
 		return sikuli.Match{}, err
 	}
 	captureStart := time.Now()
-	source, err := captureScreenFn(ctx, "screen")
+	source, err := s.capture(ctx, "screen")
 	if err != nil {
 		debugLogf("find_on_screen.capture.error duration=%s total=%s err=%v", time.Since(captureStart), time.Since(start), err)
 		return sikuli.Match{}, err
@@ -319,7 +388,7 @@ func (s *Server) findOnScreenOnce(ctx context.Context, patternReq *pb.Pattern, o
 	opts := screenQueryFromProto(optsReq)
 	matchStart := time.Now()
 	if opts.Region.Empty() {
-		f, err := newFinderWithEngine(source, engine)
+		f, err := s.finderWithEngine(source, engine)
 		if err != nil {
 			debugLogf("find_on_screen.finder.error err=%v", err)
 			return sikuli.Match{}, err
@@ -337,7 +406,7 @@ func (s *Server) findOnScreenOnce(ctx context.Context, patternReq *pb.Pattern, o
 		debugLogf("find_on_screen.region_crop.error duration=%s total=%s err=%v", time.Since(matchStart), time.Since(start), err)
 		return sikuli.Match{}, err
 	}
-	f, err := newFinderWithEngine(regionSource, engine)
+	f, err := s.finderWithEngine(regionSource, engine)
 	if err != nil {
 		debugLogf("find_on_screen.region_finder.error duration=%s total=%s err=%v", time.Since(matchStart), time.Since(start), err)
 		return sikuli.Match{}, err
@@ -359,7 +428,7 @@ func (s *Server) FindText(_ context.Context, req *pb.FindTextRequest) (*pb.FindT
 	if err != nil {
 		return nil, mapStatusError(err)
 	}
-	f, err := sikuli.NewFinder(source)
+	f, err := s.finder(source)
 	if err != nil {
 		return nil, mapStatusError(err)
 	}

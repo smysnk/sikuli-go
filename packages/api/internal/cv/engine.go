@@ -18,7 +18,9 @@ const (
 func ParseMatcherEngine(raw string) (MatcherEngine, error) {
 	engine := strings.ToLower(strings.TrimSpace(raw))
 	switch engine {
-	case "", string(MatcherEngineTemplate), "ncc", "opencv":
+	case "":
+		return MatcherEngineHybrid, nil
+	case string(MatcherEngineTemplate), "ncc", "opencv":
 		return MatcherEngineTemplate, nil
 	case string(MatcherEngineORB):
 		return MatcherEngineORB, nil

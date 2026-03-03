@@ -74,11 +74,50 @@ func TestHybridMatcherFallbackOnUnsupported(t *testing.T) {
 	}
 }
 
+func TestHybridMatcherTreatsUnsupportedFallbackAsNoMatch(t *testing.T) {
+	m := NewHybridMatcher(
+		stubMatcher{results: nil},
+		stubMatcher{err: core.ErrMatcherUnsupported},
+	)
+	got, err := m.Find(core.SearchRequest{
+		Haystack:     image.NewGray(image.Rect(0, 0, 2, 2)),
+		Needle:       image.NewGray(image.Rect(0, 0, 1, 1)),
+		Threshold:    0,
+		ResizeFactor: 1,
+	})
+	if err != nil {
+		t.Fatalf("expected no-match result, got err=%v", err)
+	}
+	if len(got) != 0 {
+		t.Fatalf("expected no matches, got %+v", got)
+	}
+}
+
 func TestHybridMatcherReturnsPrimaryError(t *testing.T) {
 	wantErr := errors.New("boom")
 	m := NewHybridMatcher(
 		stubMatcher{err: wantErr},
 		stubMatcher{results: []core.MatchCandidate{{X: 1, Y: 1, W: 1, H: 1, Score: 0.8}}},
+	)
+	got, err := m.Find(core.SearchRequest{
+		Haystack:     image.NewGray(image.Rect(0, 0, 2, 2)),
+		Needle:       image.NewGray(image.Rect(0, 0, 1, 1)),
+		Threshold:    0,
+		ResizeFactor: 1,
+	})
+	if err != nil {
+		t.Fatalf("expected fallback success, got %v", err)
+	}
+	if len(got) != 1 || got[0].X != 1 || got[0].Y != 1 {
+		t.Fatalf("unexpected fallback result: %+v", got)
+	}
+}
+
+func TestHybridMatcherReturnsPrimaryErrorWhenFallbackNoMatch(t *testing.T) {
+	wantErr := errors.New("boom")
+	m := NewHybridMatcher(
+		stubMatcher{err: wantErr},
+		stubMatcher{results: nil},
 	)
 	_, err := m.Find(core.SearchRequest{
 		Haystack:     image.NewGray(image.Rect(0, 0, 2, 2)),
@@ -88,5 +127,46 @@ func TestHybridMatcherReturnsPrimaryError(t *testing.T) {
 	})
 	if !errors.Is(err, wantErr) {
 		t.Fatalf("expected primary error, got %v", err)
+	}
+}
+
+func TestHybridMatcherJoinsPrimaryAndFallbackErrors(t *testing.T) {
+	primaryErr := errors.New("primary boom")
+	fallbackErr := errors.New("fallback boom")
+	m := NewHybridMatcher(
+		stubMatcher{err: primaryErr},
+		stubMatcher{err: fallbackErr},
+	)
+	_, err := m.Find(core.SearchRequest{
+		Haystack:     image.NewGray(image.Rect(0, 0, 2, 2)),
+		Needle:       image.NewGray(image.Rect(0, 0, 1, 1)),
+		Threshold:    0,
+		ResizeFactor: 1,
+	})
+	if !errors.Is(err, primaryErr) {
+		t.Fatalf("expected joined error to include primary error, got %v", err)
+	}
+	if !errors.Is(err, fallbackErr) {
+		t.Fatalf("expected joined error to include fallback error, got %v", err)
+	}
+}
+
+func TestHybridMatcherAdjustsORBFallbackThreshold(t *testing.T) {
+	highThreshold := core.SearchRequest{
+		Haystack:     image.NewGray(image.Rect(0, 0, 2, 2)),
+		Needle:       image.NewGray(image.Rect(0, 0, 1, 1)),
+		Threshold:    0.99,
+		ResizeFactor: 1,
+	}
+	adjusted := adjustedRequestForMatcher(&ORBMatcher{}, highThreshold)
+	if adjusted.Threshold != hybridORBThresholdCeiling {
+		t.Fatalf("expected orb threshold to clamp to %.2f, got %.2f", hybridORBThresholdCeiling, adjusted.Threshold)
+	}
+
+	lowThreshold := highThreshold
+	lowThreshold.Threshold = 0.05
+	adjustedLow := adjustedRequestForMatcher(&ORBMatcher{}, lowThreshold)
+	if adjustedLow.Threshold != 0.05 {
+		t.Fatalf("expected low threshold to remain unchanged, got %.2f", adjustedLow.Threshold)
 	}
 }

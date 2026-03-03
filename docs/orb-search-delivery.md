@@ -175,7 +175,7 @@ Exit criteria:
 
 ## Recommended Initial Rollout
 
-- Server default: `template`
+- Server default: `hybrid`
 - Opt-in pilots: `hybrid` for selected scripts/suites
 - Advanced opt-in: `orb` per session or per call where template instability is known
 - Revisit default after phase 5 benchmark evidence

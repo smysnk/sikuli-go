@@ -22,7 +22,7 @@ MACOS_CGO_LDFLAGS := -L/opt/homebrew/Cellar/leptonica/1.87.0/lib -L/opt/homebrew
 
 .PHONY: help build build-all build-go build-go-api build-go-monitor build-stubs \
 	build-grpc-stubs build-node-stubs build-python-stubs build-lua-descriptor \
-	build-node build-node-binaries build-node-client build-python local-verify integration-verify clean
+	build-node build-node-binaries build-node-client build-python local-verify integration-verify real-desktop-e2e benchmark-find-on-screen-e2e clean
 
 help:
 	@echo "Targets:"
@@ -32,7 +32,9 @@ help:
 	@echo "  make build-node       Build Node SDK + platform binaries"
 	@echo "  make build-python     Build Python distribution artifacts"
 	@echo "  make local-verify     Run local end-to-end CLI/client smoke verification"
-	@echo "  make integration-verify  Run local integration verification (all Sikuli RPCs + flows)"
+	@echo "  make integration-verify  Run full local integration verification (RPC surface + API flows + Node/Python E2E)"
+	@echo "  make real-desktop-e2e Optional manual real desktop E2E (FindOnScreen + OCR)"
+	@echo "  make benchmark-find-on-screen-e2e  Benchmark FindOnScreen engines across size/orientation scenarios"
 	@echo "  make clean            Remove build outputs"
 	@echo ""
 	@echo "Options:"
@@ -91,6 +93,12 @@ local-verify:
 
 integration-verify:
 	cd "$(ROOT_DIR)" && ./scripts/clients/integration-verify.sh
+
+real-desktop-e2e:
+	cd "$(ROOT_DIR)" && REAL_DESKTOP_E2E=1 ./scripts/clients/real-desktop-e2e.sh
+
+benchmark-find-on-screen-e2e:
+	cd "$(ROOT_DIR)" && ./scripts/clients/benchmark-find-on-screen-e2e.sh
 
 clean:
 	cd "$(ROOT_DIR)" && \

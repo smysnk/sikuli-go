@@ -1,0 +1,1035 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${THIS_DIR}/paths.sh"
+
+BENCH_NAME="${FIND_BENCH_NAME:-BenchmarkFindOnScreenE2E}"
+BENCH_TIME="${FIND_BENCH_TIME:-200ms}"
+BENCH_COUNT="${FIND_BENCH_COUNT:-1}"
+BENCH_TAGS="${FIND_BENCH_TAGS:-opencv gocv_specific_modules gocv_features2d gocv_calib3d}"
+GO_TEST_ARGS="${FIND_BENCH_GO_TEST_ARGS:-}"
+REPORT_DIR="${FIND_BENCH_REPORT_DIR:-${ROOT_DIR}/.test-results/bench}"
+TEXT_OUT="${FIND_BENCH_TEXT_OUT:-${REPORT_DIR}/find-on-screen-e2e.txt}"
+JSON_OUT="${FIND_BENCH_JSON_OUT:-${REPORT_DIR}/find-on-screen-e2e.json}"
+MD_OUT="${FIND_BENCH_MD_OUT:-${REPORT_DIR}/find-on-screen-e2e.md}"
+PERF_SVG_OUT="${FIND_BENCH_PERF_SVG_OUT:-${REPORT_DIR}/find-on-screen-performance.svg}"
+ACCURACY_SVG_OUT="${FIND_BENCH_ACCURACY_SVG_OUT:-${REPORT_DIR}/find-on-screen-accuracy.svg}"
+RESOLUTION_TIME_SVG_OUT="${FIND_BENCH_RESOLUTION_TIME_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-time.svg}"
+RESOLUTION_MATCHES_SVG_OUT="${FIND_BENCH_RESOLUTION_MATCHES_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-matches.svg}"
+RESOLUTION_MISSES_SVG_OUT="${FIND_BENCH_RESOLUTION_MISSES_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-misses.svg}"
+RESOLUTION_FALSE_POS_SVG_OUT="${FIND_BENCH_RESOLUTION_FALSE_POS_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-false-positives.svg}"
+VISUAL_ENABLE="${FIND_BENCH_VISUAL:-1}"
+VISUAL_DIR="${FIND_BENCH_VISUAL_DIR:-${REPORT_DIR}/visuals}"
+VISUAL_MAX_ATTEMPTS="${FIND_BENCH_VISUAL_MAX_ATTEMPTS:-2}"
+VISUAL_TIMEOUT="${FIND_BENCH_VISUAL_TIMEOUT:-5s}"
+PATCH_READMES="${FIND_BENCH_PATCH_READMES:-1}"
+README_PATHS="${FIND_BENCH_README_PATHS:-${ROOT_DIR}/README.md,${ROOT_DIR}/packages/client-node/README.md,${ROOT_DIR}/packages/client-python/README.md}"
+README_SECTION_TITLE="${FIND_BENCH_README_SECTION_TITLE:-FindOnScreen Benchmark Test Results}"
+README_INLINE_IMAGES="${FIND_BENCH_README_INLINE_IMAGES:-6}"
+
+mkdir -p "${REPORT_DIR}"
+
+echo "[find-bench] package=${API_DIR}/internal/grpcv1"
+echo "[find-bench] bench=${BENCH_NAME} benchtime=${BENCH_TIME} count=${BENCH_COUNT}"
+if [[ -n "${BENCH_TAGS}" ]]; then
+  echo "[find-bench] tags=${BENCH_TAGS}"
+fi
+
+echo "[find-bench] text=${TEXT_OUT}"
+echo "[find-bench] json=${JSON_OUT}"
+echo "[find-bench] markdown=${MD_OUT}"
+echo "[find-bench] perf_svg=${PERF_SVG_OUT}"
+echo "[find-bench] accuracy_svg=${ACCURACY_SVG_OUT}"
+echo "[find-bench] resolution_time_svg=${RESOLUTION_TIME_SVG_OUT}"
+echo "[find-bench] resolution_matches_svg=${RESOLUTION_MATCHES_SVG_OUT}"
+echo "[find-bench] resolution_misses_svg=${RESOLUTION_MISSES_SVG_OUT}"
+echo "[find-bench] resolution_false_pos_svg=${RESOLUTION_FALSE_POS_SVG_OUT}"
+echo "[find-bench] visuals=${VISUAL_ENABLE} dir=${VISUAL_DIR} max_attempts=${VISUAL_MAX_ATTEMPTS} timeout=${VISUAL_TIMEOUT}"
+echo "[find-bench] patch_readmes=${PATCH_READMES} readmes=${README_PATHS} inline_images=${README_INLINE_IMAGES}"
+
+cd "${API_DIR}"
+
+cmd=(
+  go test
+  ./internal/grpcv1
+  -run '^$'
+  -bench "${BENCH_NAME}"
+  -benchmem
+  -benchtime "${BENCH_TIME}"
+  -count "${BENCH_COUNT}"
+)
+
+if [[ -n "${BENCH_TAGS}" ]]; then
+  cmd+=( -tags "${BENCH_TAGS}" )
+fi
+
+if [[ -n "${GO_TEST_ARGS}" ]]; then
+  # shellcheck disable=SC2206
+  extra=( ${GO_TEST_ARGS} )
+  cmd+=( "${extra[@]}" )
+fi
+
+FIND_BENCH_VISUAL="${VISUAL_ENABLE}" \
+FIND_BENCH_VISUAL_DIR="${VISUAL_DIR}" \
+FIND_BENCH_VISUAL_MAX_ATTEMPTS="${VISUAL_MAX_ATTEMPTS}" \
+FIND_BENCH_VISUAL_TIMEOUT="${VISUAL_TIMEOUT}" \
+"${cmd[@]}" | tee "${TEXT_OUT}"
+
+BENCH_NAME="${BENCH_NAME}" \
+BENCH_TIME="${BENCH_TIME}" \
+BENCH_COUNT="${BENCH_COUNT}" \
+BENCH_TAGS="${BENCH_TAGS}" \
+PROJECT_ROOT="${ROOT_DIR}" \
+VISUAL_ENABLE="${VISUAL_ENABLE}" \
+VISUAL_DIR="${VISUAL_DIR}" \
+VISUAL_MAX_ATTEMPTS="${VISUAL_MAX_ATTEMPTS}" \
+VISUAL_TIMEOUT="${VISUAL_TIMEOUT}" \
+PATCH_READMES="${PATCH_READMES}" \
+README_PATHS="${README_PATHS}" \
+README_SECTION_TITLE="${README_SECTION_TITLE}" \
+README_INLINE_IMAGES="${README_INLINE_IMAGES}" \
+TEXT_OUT="${TEXT_OUT}" \
+JSON_OUT="${JSON_OUT}" \
+MD_OUT="${MD_OUT}" \
+PERF_SVG_OUT="${PERF_SVG_OUT}" \
+ACCURACY_SVG_OUT="${ACCURACY_SVG_OUT}" \
+RESOLUTION_TIME_SVG_OUT="${RESOLUTION_TIME_SVG_OUT}" \
+RESOLUTION_MATCHES_SVG_OUT="${RESOLUTION_MATCHES_SVG_OUT}" \
+RESOLUTION_MISSES_SVG_OUT="${RESOLUTION_MISSES_SVG_OUT}" \
+RESOLUTION_FALSE_POS_SVG_OUT="${RESOLUTION_FALSE_POS_SVG_OUT}" \
+python3 - <<'PY'
+from __future__ import annotations
+
+import json
+import os
+import re
+from collections import defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+from statistics import median
+
+text_path = Path(os.environ["TEXT_OUT"])
+json_path = Path(os.environ["JSON_OUT"])
+md_path = Path(os.environ["MD_OUT"])
+perf_svg_path = Path(os.environ["PERF_SVG_OUT"])
+accuracy_svg_path = Path(os.environ["ACCURACY_SVG_OUT"])
+resolution_time_svg_path = Path(os.environ["RESOLUTION_TIME_SVG_OUT"])
+resolution_matches_svg_path = Path(os.environ["RESOLUTION_MATCHES_SVG_OUT"])
+resolution_misses_svg_path = Path(os.environ["RESOLUTION_MISSES_SVG_OUT"])
+resolution_false_pos_svg_path = Path(os.environ["RESOLUTION_FALSE_POS_SVG_OUT"])
+
+bench_name = os.environ["BENCH_NAME"]
+bench_time = os.environ["BENCH_TIME"]
+bench_count = os.environ["BENCH_COUNT"]
+bench_tags = os.environ.get("BENCH_TAGS", "")
+visual_enable = os.environ.get("VISUAL_ENABLE", "")
+visual_dir = os.environ.get("VISUAL_DIR", "")
+visual_max_attempts = os.environ.get("VISUAL_MAX_ATTEMPTS", "")
+visual_timeout = os.environ.get("VISUAL_TIMEOUT", "")
+patch_readmes = os.environ.get("PATCH_READMES", "")
+readme_paths = os.environ.get("README_PATHS", "")
+readme_section_title = os.environ.get("README_SECTION_TITLE", "FindOnScreen Benchmark Test Results")
+readme_inline_images = int(os.environ.get("README_INLINE_IMAGES", "6"))
+root_dir = Path(os.environ.get("PROJECT_ROOT", "")).resolve()
+
+content = text_path.read_text(encoding="utf-8", errors="replace").splitlines()
+
+meta = {
+    "goos": "",
+    "goarch": "",
+    "package": "",
+    "cpu": "",
+    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    "bench_name": bench_name,
+    "benchtime": bench_time,
+    "count": int(bench_count),
+    "tags": bench_tags,
+}
+
+label_re = re.compile(r"^Benchmark[^/]+/engine=([^/]+)/(.+)-\d+$")
+
+def as_float(value: str) -> float | None:
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+def write_svg(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+def svg_escape(s: str) -> str:
+    return (
+        s.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#39;")
+    )
+
+def render_single_series_bar_chart_svg(
+    title: str,
+    y_label: str,
+    labels: list[str],
+    values: list[float],
+    fill: str,
+) -> str:
+    width, height = 980, 520
+    left, right, top, bottom = 90, 40, 65, 90
+    plot_w = width - left - right
+    plot_h = height - top - bottom
+    max_v = max(values) if values else 1.0
+    ymax = max(1.0, max_v * 1.15)
+    n = max(1, len(values))
+    gap = 20
+    bar_w = max(18, int((plot_w - gap * (n + 1)) / n))
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        '<style>text{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;fill:#0f172a} .muted{fill:#475569}</style>',
+        '<rect x="0" y="0" width="100%" height="100%" fill="#f8fafc"/>',
+        f'<text x="{width/2:.0f}" y="34" font-size="22" text-anchor="middle">{svg_escape(title)}</text>',
+        f'<text x="{left - 55}" y="{top + plot_h/2:.0f}" font-size="14" text-anchor="middle" transform="rotate(-90 {left - 55},{top + plot_h/2:.0f})" class="muted">{svg_escape(y_label)}</text>',
+        f'<line x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_h}" stroke="#334155" stroke-width="2"/>',
+        f'<line x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}" stroke="#334155" stroke-width="2"/>',
+    ]
+
+    ticks = 5
+    for i in range(ticks + 1):
+        t = i / ticks
+        y = top + plot_h - (plot_h * t)
+        v = ymax * t
+        parts.append(f'<line x1="{left}" y1="{y:.1f}" x2="{left + plot_w}" y2="{y:.1f}" stroke="#e2e8f0" stroke-width="1"/>')
+        parts.append(f'<text x="{left - 10}" y="{y + 5:.1f}" font-size="12" text-anchor="end" class="muted">{v:.1f}</text>')
+
+    for i, (label, value) in enumerate(zip(labels, values)):
+        x = left + gap + i * (bar_w + gap)
+        h = 0 if ymax <= 0 else (value / ymax) * plot_h
+        y = top + plot_h - h
+        parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_w}" height="{h:.1f}" fill="{fill}" rx="4"/>')
+        parts.append(f'<text x="{x + bar_w/2:.1f}" y="{y - 6:.1f}" font-size="12" text-anchor="middle">{value:.2f}</text>')
+        parts.append(f'<text x="{x + bar_w/2:.1f}" y="{top + plot_h + 20:.1f}" font-size="11" text-anchor="middle" class="muted">{svg_escape(label)}</text>')
+
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+def render_grouped_accuracy_chart_svg(
+    title: str,
+    labels: list[str],
+    success_vals: list[float],
+    false_pos_vals: list[float],
+) -> str:
+    width, height = 980, 560
+    left, right, top, bottom = 90, 40, 65, 110
+    plot_w = width - left - right
+    plot_h = height - top - bottom
+    n = max(1, len(labels))
+    group_gap = 24
+    bar_w = max(14, int((plot_w - group_gap * (n + 1)) / (n * 2)))
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        '<style>text{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;fill:#0f172a} .muted{fill:#475569}</style>',
+        '<rect x="0" y="0" width="100%" height="100%" fill="#f8fafc"/>',
+        f'<text x="{width/2:.0f}" y="34" font-size="22" text-anchor="middle">{svg_escape(title)}</text>',
+        f'<line x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_h}" stroke="#334155" stroke-width="2"/>',
+        f'<line x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}" stroke="#334155" stroke-width="2"/>',
+    ]
+
+    ticks = 5
+    for i in range(ticks + 1):
+        t = i / ticks
+        y = top + plot_h - (plot_h * t)
+        v = 100 * t
+        parts.append(f'<line x1="{left}" y1="{y:.1f}" x2="{left + plot_w}" y2="{y:.1f}" stroke="#e2e8f0" stroke-width="1"/>')
+        parts.append(f'<text x="{left - 10}" y="{y + 5:.1f}" font-size="12" text-anchor="end" class="muted">{v:.0f}</text>')
+
+    for i, label in enumerate(labels):
+        x0 = left + group_gap + i * (2 * bar_w + group_gap)
+        s = success_vals[i]
+        f = false_pos_vals[i]
+        sh = (s / 100.0) * plot_h
+        fh = (f / 100.0) * plot_h
+        sy = top + plot_h - sh
+        fy = top + plot_h - fh
+        parts.append(f'<rect x="{x0:.1f}" y="{sy:.1f}" width="{bar_w}" height="{sh:.1f}" fill="#16a34a" rx="3"/>')
+        parts.append(f'<rect x="{x0 + bar_w + 6:.1f}" y="{fy:.1f}" width="{bar_w}" height="{fh:.1f}" fill="#dc2626" rx="3"/>')
+        parts.append(f'<text x="{x0 + bar_w/2:.1f}" y="{sy - 6:.1f}" font-size="11" text-anchor="middle">{s:.1f}</text>')
+        parts.append(f'<text x="{x0 + bar_w + 6 + bar_w/2:.1f}" y="{fy - 6:.1f}" font-size="11" text-anchor="middle">{f:.1f}</text>')
+        parts.append(f'<text x="{x0 + bar_w + 3:.1f}" y="{top + plot_h + 20:.1f}" font-size="11" text-anchor="middle" class="muted">{svg_escape(label)}</text>')
+
+    legend_y = height - 32
+    parts.append(f'<rect x="{left}" y="{legend_y}" width="14" height="14" fill="#16a34a" rx="2"/>')
+    parts.append(f'<text x="{left + 22}" y="{legend_y + 12}" font-size="12" class="muted">Success %</text>')
+    parts.append(f'<rect x="{left + 130}" y="{legend_y}" width="14" height="14" fill="#dc2626" rx="2"/>')
+    parts.append(f'<text x="{left + 152}" y="{legend_y + 12}" font-size="12" class="muted">False Positive %</text>')
+
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+def ordered_engines(raw_engines: list[str]) -> list[str]:
+    preferred = ["orb", "template", "hybrid"]
+    known = [e for e in preferred if e in raw_engines]
+    rest = sorted([e for e in raw_engines if e not in preferred])
+    return known + rest
+
+def scenario_resolution(scenario: str) -> str:
+    m = re.search(r"(\d+x\d+)$", scenario)
+    if m:
+        return m.group(1)
+    return "unknown"
+
+def resolution_sort_key(res: str) -> tuple[int, int, str]:
+    m = re.match(r"^(\d+)x(\d+)$", res)
+    if not m:
+        return (10**9, 10**9, res)
+    w = int(m.group(1))
+    h = int(m.group(2))
+    return (w * h, w, res)
+
+def engine_color(name: str, idx: int) -> str:
+    palette = {
+        "orb": "#ea580c",
+        "template": "#2563eb",
+        "hybrid": "#16a34a",
+    }
+    fallback = ["#0f766e", "#c2410c", "#4f46e5", "#0ea5e9", "#64748b"]
+    if name in palette:
+        return palette[name]
+    return fallback[idx % len(fallback)]
+
+def render_grouped_multi_series_bar_chart_svg(
+    title: str,
+    y_label: str,
+    group_labels: list[str],
+    series: list[tuple[str, list[float], str]],
+) -> str:
+    width, height = 1160, 580
+    left, right, top, bottom = 90, 40, 70, 130
+    plot_w = width - left - right
+    plot_h = height - top - bottom
+
+    n_groups = max(1, len(group_labels))
+    n_series = max(1, len(series))
+    group_gap = 24
+    slot_w = (plot_w - group_gap * (n_groups + 1)) / n_groups
+    inner_pad = 8
+    bar_gap = 5
+    usable = max(1.0, slot_w - inner_pad * 2 - bar_gap * (n_series - 1))
+    bar_w = max(8.0, usable / n_series)
+
+    max_v = 0.0
+    for _, vals, _ in series:
+        if vals:
+            max_v = max(max_v, max(vals))
+    ymax = max(1.0, max_v * 1.15)
+
+    parts = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
+        '<style>text{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;fill:#0f172a} .muted{fill:#475569}</style>',
+        '<rect x="0" y="0" width="100%" height="100%" fill="#f8fafc"/>',
+        f'<text x="{width/2:.0f}" y="36" font-size="22" text-anchor="middle">{svg_escape(title)}</text>',
+        f'<text x="{left - 58}" y="{top + plot_h/2:.0f}" font-size="14" text-anchor="middle" transform="rotate(-90 {left - 58},{top + plot_h/2:.0f})" class="muted">{svg_escape(y_label)}</text>',
+        f'<line x1="{left}" y1="{top}" x2="{left}" y2="{top + plot_h}" stroke="#334155" stroke-width="2"/>',
+        f'<line x1="{left}" y1="{top + plot_h}" x2="{left + plot_w}" y2="{top + plot_h}" stroke="#334155" stroke-width="2"/>',
+    ]
+
+    ticks = 5
+    for i in range(ticks + 1):
+        t = i / ticks
+        y = top + plot_h - (plot_h * t)
+        v = ymax * t
+        parts.append(f'<line x1="{left}" y1="{y:.1f}" x2="{left + plot_w}" y2="{y:.1f}" stroke="#e2e8f0" stroke-width="1"/>')
+        parts.append(f'<text x="{left - 10}" y="{y + 5:.1f}" font-size="12" text-anchor="end" class="muted">{v:.1f}</text>')
+
+    for gi, g_label in enumerate(group_labels):
+        group_x = left + group_gap + gi * (slot_w + group_gap)
+        gx_center = group_x + slot_w / 2.0
+        parts.append(f'<text x="{gx_center:.1f}" y="{top + plot_h + 24:.1f}" font-size="11" text-anchor="middle" class="muted">{svg_escape(g_label)}</text>')
+        for si, (_, vals, color) in enumerate(series):
+            value = vals[gi] if gi < len(vals) else 0.0
+            x = group_x + inner_pad + si * (bar_w + bar_gap)
+            h = 0 if ymax <= 0 else (value / ymax) * plot_h
+            y = top + plot_h - h
+            parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_w:.1f}" height="{h:.1f}" fill="{color}" rx="3"/>')
+            if value > 0:
+                parts.append(f'<text x="{x + bar_w/2:.1f}" y="{max(top + 12, y - 4):.1f}" font-size="10" text-anchor="middle">{value:.2f}</text>')
+
+    legend_x = left
+    legend_y = height - 44
+    for si, (name, _, color) in enumerate(series):
+        x = legend_x + si * 170
+        parts.append(f'<rect x="{x}" y="{legend_y}" width="14" height="14" fill="{color}" rx="2"/>')
+        parts.append(f'<text x="{x + 22}" y="{legend_y + 12}" font-size="12" class="muted">{svg_escape(name)}</text>')
+
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+def derive_status(metrics: dict[str, float]) -> str:
+    success = metrics.get("success/op", 1.0)
+    not_found = metrics.get("not_found/op", 0.0)
+    unsupported = metrics.get("unsupported/op", 0.0)
+    error = metrics.get("error/op", 0.0)
+    overlap_miss = metrics.get("overlap_miss/op", 0.0)
+
+    if success >= 0.999 and not_found == 0.0 and unsupported == 0.0 and error == 0.0 and overlap_miss == 0.0:
+        return "ok"
+    if unsupported > 0.0 and success == 0.0:
+        return "unsupported"
+    if error > 0.0 and success == 0.0:
+        return "error"
+    if overlap_miss > 0.0 and success == 0.0:
+        return "overlap_miss"
+    if not_found > 0.0 and success == 0.0:
+        return "not_found"
+    return "partial"
+
+results: list[dict[str, object]] = []
+for line in content:
+    if line.startswith("goos:"):
+        meta["goos"] = line.split(":", 1)[1].strip()
+        continue
+    if line.startswith("goarch:"):
+        meta["goarch"] = line.split(":", 1)[1].strip()
+        continue
+    if line.startswith("pkg:"):
+        meta["package"] = line.split(":", 1)[1].strip()
+        continue
+    if line.startswith("cpu:"):
+        meta["cpu"] = line.split(":", 1)[1].strip()
+        continue
+
+    raw = line.strip()
+    if not raw.startswith("Benchmark"):
+        continue
+    parts = raw.split()
+    if len(parts) < 4:
+        continue
+
+    label = parts[0]
+    iter_val = as_float(parts[1])
+    if iter_val is None:
+        continue
+    iters = int(iter_val)
+
+    metrics: dict[str, float] = {}
+    idx = 2
+    while idx + 1 < len(parts):
+        value = as_float(parts[idx])
+        metric = parts[idx + 1]
+        if value is None:
+            idx += 1
+            continue
+        metrics[metric] = value
+        idx += 2
+
+    ns_per_op = metrics.get("ns/op")
+    if ns_per_op is None:
+        continue
+    bytes_per_op = metrics.get("B/op")
+    allocs_per_op = metrics.get("allocs/op")
+
+    engine = "unknown"
+    scenario = label
+    lm = label_re.match(label)
+    if lm:
+        engine = lm.group(1)
+        scenario = lm.group(2)
+
+    results.append(
+        {
+            "label": label,
+            "engine": engine,
+            "scenario": scenario,
+            "iterations": iters,
+            "ns_per_op": ns_per_op,
+            "ms_per_op": ns_per_op / 1_000_000.0,
+            "bytes_per_op": bytes_per_op,
+            "allocs_per_op": allocs_per_op,
+            "status": derive_status(metrics),
+            "metrics": metrics,
+        }
+    )
+
+if not results:
+    raise SystemExit(f"No benchmark rows parsed from {text_path}")
+
+engines: dict[str, list[dict[str, object]]] = defaultdict(list)
+for r in results:
+    engines[str(r["engine"])].append(r)
+for rows in engines.values():
+    rows.sort(key=lambda x: float(x["ns_per_op"]))
+
+summary_rows: list[dict[str, object]] = []
+for engine, rows in sorted(engines.items()):
+    ms_values = [float(r["ms_per_op"]) for r in rows]
+    best = min(rows, key=lambda r: float(r["ms_per_op"]))
+    worst = max(rows, key=lambda r: float(r["ms_per_op"]))
+    status_counts: dict[str, int] = defaultdict(int)
+    for row in rows:
+        status_counts[str(row["status"])] += 1
+    summary_rows.append(
+        {
+            "engine": engine,
+            "cases": len(rows),
+            "status_counts": dict(status_counts),
+            "avg_ms_per_op": sum(ms_values) / len(ms_values),
+            "median_ms_per_op": float(median(ms_values)),
+            "best_scenario": str(best["scenario"]),
+            "best_ms_per_op": float(best["ms_per_op"]),
+            "worst_scenario": str(worst["scenario"]),
+            "worst_ms_per_op": float(worst["ms_per_op"]),
+        }
+    )
+
+metrics_chart_rows: list[dict[str, object]] = []
+for engine, rows in sorted(engines.items()):
+    success_vals = [float(r.get("metrics", {}).get("success/op", 1.0)) for r in rows]
+    false_positive_vals = [float(r.get("metrics", {}).get("overlap_miss/op", 0.0)) for r in rows]
+    not_found_vals = [float(r.get("metrics", {}).get("not_found/op", 0.0)) for r in rows]
+    unsupported_vals = [float(r.get("metrics", {}).get("unsupported/op", 0.0)) for r in rows]
+    error_vals = [float(r.get("metrics", {}).get("error/op", 0.0)) for r in rows]
+    ms_vals = [float(r["ms_per_op"]) for r in rows]
+    metrics_chart_rows.append(
+        {
+            "engine": engine,
+            "cases": len(rows),
+            "avg_ms_per_op": sum(ms_vals) / len(ms_vals),
+            "median_ms_per_op": float(median(ms_vals)),
+            "success_rate_pct": (sum(success_vals) / len(success_vals)) * 100.0,
+            "false_positive_rate_pct": (sum(false_positive_vals) / len(false_positive_vals)) * 100.0,
+            "not_found_rate_pct": (sum(not_found_vals) / len(not_found_vals)) * 100.0,
+            "unsupported_rate_pct": (sum(unsupported_vals) / len(unsupported_vals)) * 100.0,
+            "error_rate_pct": (sum(error_vals) / len(error_vals)) * 100.0,
+        }
+    )
+
+engine_names = ordered_engines(sorted(engines.keys()))
+resolution_buckets: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(lambda: {
+    "ms_sum": 0.0,
+    "n": 0.0,
+    "matches": 0.0,
+    "misses": 0.0,
+    "false_pos": 0.0,
+}))
+for row in results:
+    scenario = str(row.get("scenario", ""))
+    engine = str(row.get("engine", "unknown"))
+    res_group = scenario_resolution(scenario)
+    metrics = row.get("metrics", {})
+    success = float(metrics.get("success/op", 1.0))
+    miss = float(metrics.get("not_found/op", 0.0))
+    false_pos = float(metrics.get("overlap_miss/op", 0.0))
+    bucket = resolution_buckets[res_group][engine]
+    bucket["ms_sum"] += float(row.get("ms_per_op", 0.0))
+    bucket["n"] += 1.0
+    bucket["matches"] += success
+    bucket["misses"] += miss
+    bucket["false_pos"] += false_pos
+
+resolution_groups = sorted(resolution_buckets.keys(), key=resolution_sort_key)
+resolution_rows: list[dict[str, object]] = []
+for res in resolution_groups:
+    engines_map: dict[str, dict[str, float]] = {}
+    for eng in engine_names:
+        b = resolution_buckets[res].get(eng)
+        if b is None or b["n"] <= 0:
+            engines_map[eng] = {
+                "avg_ms_per_op": 0.0,
+                "match_count": 0.0,
+                "miss_count": 0.0,
+                "false_positive_count": 0.0,
+                "cases": 0.0,
+            }
+            continue
+        n = b["n"]
+        engines_map[eng] = {
+            "avg_ms_per_op": b["ms_sum"] / n,
+            "match_count": b["matches"],
+            "miss_count": b["misses"],
+            "false_positive_count": b["false_pos"],
+            "cases": n,
+        }
+    resolution_rows.append({"resolution": res, "engines": engines_map})
+
+report = {
+    "metadata": meta,
+    "summary": {
+        "total_rows": len(results),
+        "engines": sorted(engines.keys()),
+        "by_engine": summary_rows,
+        "metrics_chart": metrics_chart_rows,
+        "by_resolution": resolution_rows,
+    },
+    "results": results,
+}
+json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+lines: list[str] = []
+lines.append("# FindOnScreen Benchmark Report")
+lines.append("")
+lines.append(f"Generated: `{meta['timestamp_utc']}`")
+lines.append("")
+lines.append("## Run Metadata")
+lines.append("")
+lines.append(f"- Package: `{meta['package']}`")
+lines.append(f"- Target: `{meta['bench_name']}`")
+lines.append(f"- Benchtime: `{meta['benchtime']}`")
+lines.append(f"- Count: `{meta['count']}`")
+lines.append(f"- Tags: `{meta['tags'] or '(none)'}`")
+lines.append(f"- Platform: `{meta['goos']}/{meta['goarch']}`")
+lines.append(f"- CPU: `{meta['cpu']}`")
+lines.append(f"- Visuals Enabled: `{visual_enable}`")
+lines.append(f"- Visual Output: `{visual_dir}`")
+lines.append(f"- Visual Max Attempts: `{visual_max_attempts}`")
+lines.append(f"- Visual Timeout: `{visual_timeout}`")
+lines.append("")
+if visual_enable.lower() in {"1", "true", "yes", "on"} and visual_dir:
+    visual_path = Path(visual_dir)
+    attempt_count = 0
+    summary_count = 0
+    mega_summary = visual_path / "summaries" / "summary-run-mega.png"
+    if visual_path.exists():
+        attempt_count = len(list((visual_path / "attempts").glob("**/*.png")))
+        summary_count = len(list((visual_path / "summaries").glob("*.png")))
+    lines.append("## Visual Artifacts")
+    lines.append("")
+    lines.append(f"- Directory: `{visual_dir}`")
+    lines.append(f"- Per-attempt screenshots: `{attempt_count}`")
+    lines.append(f"- Per-scenario summary screenshots: `{summary_count}`")
+    lines.append(f"- Run-level mega summary: `{mega_summary}`")
+    lines.append("")
+
+lines.append("## Engine Summary")
+lines.append("")
+lines.append("| Engine | Cases | OK | Partial | Not Found | Unsupported | Error | Overlap Miss | Avg ms/op | Median ms/op | Best Scenario | Best ms/op | Worst Scenario | Worst ms/op |")
+lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|---|---:|")
+for row in summary_rows:
+    counts = row["status_counts"]
+    lines.append(
+        "| {engine} | {cases} | {ok} | {partial} | {not_found} | {unsupported} | {error} | {overlap_miss} | {avg:.3f} | {med:.3f} | `{best_s}` | {best:.3f} | `{worst_s}` | {worst:.3f} |".format(
+            engine=row["engine"],
+            cases=row["cases"],
+            ok=counts.get("ok", 0),
+            partial=counts.get("partial", 0),
+            not_found=counts.get("not_found", 0),
+            unsupported=counts.get("unsupported", 0),
+            error=counts.get("error", 0),
+            overlap_miss=counts.get("overlap_miss", 0),
+            avg=row["avg_ms_per_op"],
+            med=row["median_ms_per_op"],
+            best_s=row["best_scenario"],
+            best=row["best_ms_per_op"],
+            worst_s=row["worst_scenario"],
+            worst=row["worst_ms_per_op"],
+        )
+    )
+
+lines.append("")
+lines.append("## Summary Metrics Chart")
+lines.append("")
+lines.append("| Engine | Cases | Avg ms/op | Median ms/op | Success % | False Positive % | No Match % | Unsupported % | Error % |")
+lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+for row in metrics_chart_rows:
+    lines.append(
+        "| {engine} | {cases} | {avg:.3f} | {med:.3f} | {success:.1f} | {fp:.1f} | {nf:.1f} | {unsup:.1f} | {err:.1f} |".format(
+            engine=row["engine"],
+            cases=row["cases"],
+            avg=row["avg_ms_per_op"],
+            med=row["median_ms_per_op"],
+            success=row["success_rate_pct"],
+            fp=row["false_positive_rate_pct"],
+            nf=row["not_found_rate_pct"],
+            unsup=row["unsupported_rate_pct"],
+            err=row["error_rate_pct"],
+        )
+    )
+
+if metrics_chart_rows:
+    engines_axis = [str(r["engine"]) for r in metrics_chart_rows]
+    perf_vals = [round(float(r["avg_ms_per_op"]), 3) for r in metrics_chart_rows]
+    success_vals = [round(float(r["success_rate_pct"]), 1) for r in metrics_chart_rows]
+    false_positive_vals = [round(float(r["false_positive_rate_pct"]), 1) for r in metrics_chart_rows]
+    axis_labels = ", ".join([f'"{e}"' for e in engines_axis])
+    perf_max = max(perf_vals) if perf_vals else 1.0
+    perf_ymax = max(1, int((perf_max + 1.0) // 1 + 1))
+
+    lines.append("")
+    lines.append("## Performance Graph")
+    lines.append("")
+    lines.append("```mermaid")
+    lines.append("xychart-beta")
+    lines.append('  title "Engine Average Latency (ms/op)"')
+    lines.append(f"  x-axis [{axis_labels}]")
+    lines.append(f'  y-axis "ms/op" 0 --> {perf_ymax}')
+    lines.append(f'  bar [{", ".join([str(v) for v in perf_vals])}]')
+    lines.append("```")
+
+    lines.append("")
+    lines.append("## Accuracy Graph")
+    lines.append("")
+    lines.append("```mermaid")
+    lines.append("xychart-beta")
+    lines.append('  title "Engine Accuracy and False Positive Rate (%)"')
+    lines.append(f"  x-axis [{axis_labels}]")
+    lines.append('  y-axis "percent" 0 --> 100')
+    lines.append(f'  bar [{", ".join([str(v) for v in success_vals])}]')
+    lines.append(f'  line [{", ".join([str(v) for v in false_positive_vals])}]')
+    lines.append("```")
+
+    perf_svg = render_single_series_bar_chart_svg(
+        title="Engine Average Latency (ms/op)",
+        y_label="ms/op",
+        labels=engines_axis,
+        values=perf_vals,
+        fill="#2563eb",
+    )
+    acc_svg = render_grouped_accuracy_chart_svg(
+        title="Engine Accuracy vs False Positive Rate (%)",
+        labels=engines_axis,
+        success_vals=success_vals,
+        false_pos_vals=false_positive_vals,
+    )
+    write_svg(perf_svg_path, perf_svg)
+    write_svg(accuracy_svg_path, acc_svg)
+    rel_perf_md = os.path.relpath(perf_svg_path, md_path.parent).replace(os.sep, "/")
+    rel_acc_md = os.path.relpath(accuracy_svg_path, md_path.parent).replace(os.sep, "/")
+
+    lines.append("")
+    lines.append("## Static Graphs (SVG)")
+    lines.append("")
+    lines.append(f"- [Performance SVG]({rel_perf_md})")
+    lines.append(f"- [Accuracy SVG]({rel_acc_md})")
+    lines.append("")
+    lines.append(f"![Performance SVG]({rel_perf_md})")
+    lines.append("")
+    lines.append(f"![Accuracy SVG]({rel_acc_md})")
+
+if resolution_rows and engine_names:
+    res_labels = [str(r["resolution"]) for r in resolution_rows]
+    time_series: list[tuple[str, list[float], str]] = []
+    match_series: list[tuple[str, list[float], str]] = []
+    miss_series: list[tuple[str, list[float], str]] = []
+    false_pos_series: list[tuple[str, list[float], str]] = []
+
+    for i, eng in enumerate(engine_names):
+        color = engine_color(eng, i)
+        t_vals: list[float] = []
+        ok_vals: list[float] = []
+        miss_vals: list[float] = []
+        fp_vals: list[float] = []
+        for res_row in resolution_rows:
+            emap = res_row["engines"]
+            stats = emap.get(eng, {})
+            t_vals.append(round(float(stats.get("avg_ms_per_op", 0.0)), 3))
+            ok_vals.append(round(float(stats.get("match_count", 0.0)), 3))
+            miss_vals.append(round(float(stats.get("miss_count", 0.0)), 3))
+            fp_vals.append(round(float(stats.get("false_positive_count", 0.0)), 3))
+        time_series.append((eng, t_vals, color))
+        match_series.append((eng, ok_vals, color))
+        miss_series.append((eng, miss_vals, color))
+        false_pos_series.append((eng, fp_vals, color))
+
+    write_svg(
+        resolution_time_svg_path,
+        render_grouped_multi_series_bar_chart_svg(
+            title="Resolution Groups: Match Time by Engine",
+            y_label="ms/op",
+            group_labels=res_labels,
+            series=time_series,
+        ),
+    )
+    write_svg(
+        resolution_matches_svg_path,
+        render_grouped_multi_series_bar_chart_svg(
+            title="Resolution Groups: Matches by Engine",
+            y_label="match count",
+            group_labels=res_labels,
+            series=match_series,
+        ),
+    )
+    write_svg(
+        resolution_misses_svg_path,
+        render_grouped_multi_series_bar_chart_svg(
+            title="Resolution Groups: Misses by Engine",
+            y_label="miss count",
+            group_labels=res_labels,
+            series=miss_series,
+        ),
+    )
+    write_svg(
+        resolution_false_pos_svg_path,
+        render_grouped_multi_series_bar_chart_svg(
+            title="Resolution Groups: False Positives by Engine",
+            y_label="false positive count",
+            group_labels=res_labels,
+            series=false_pos_series,
+        ),
+    )
+
+    rel_time_md = os.path.relpath(resolution_time_svg_path, md_path.parent).replace(os.sep, "/")
+    rel_match_md = os.path.relpath(resolution_matches_svg_path, md_path.parent).replace(os.sep, "/")
+    rel_miss_md = os.path.relpath(resolution_misses_svg_path, md_path.parent).replace(os.sep, "/")
+    rel_fp_md = os.path.relpath(resolution_false_pos_svg_path, md_path.parent).replace(os.sep, "/")
+
+    lines.append("")
+    lines.append("## Resolution Group Graphs (SVG)")
+    lines.append("")
+    lines.append(f"- [Resolution Match Time]({rel_time_md})")
+    lines.append(f"- [Resolution Matches]({rel_match_md})")
+    lines.append(f"- [Resolution Misses]({rel_miss_md})")
+    lines.append(f"- [Resolution False Positives]({rel_fp_md})")
+    lines.append("")
+    lines.append(f"![Resolution Match Time]({rel_time_md})")
+    lines.append("")
+    lines.append(f"![Resolution Matches]({rel_match_md})")
+    lines.append("")
+    lines.append(f"![Resolution Misses]({rel_miss_md})")
+    lines.append("")
+    lines.append(f"![Resolution False Positives]({rel_fp_md})")
+
+for engine in sorted(engines.keys()):
+    lines.append("")
+    lines.append(f"## Engine: `{engine}`")
+    lines.append("")
+    lines.append("| Scenario | Status | Iterations | ms/op | ns/op | Success % | Not Found % | Unsupported % | Error % | Overlap Miss % | KB/op | allocs/op |")
+    lines.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    for row in engines[engine]:
+        bytes_per_op = row.get("bytes_per_op")
+        allocs_per_op = row.get("allocs_per_op")
+        metrics = row.get("metrics", {})
+        success_rate = float(metrics.get("success/op", 1.0)) * 100.0
+        not_found_rate = float(metrics.get("not_found/op", 0.0)) * 100.0
+        unsupported_rate = float(metrics.get("unsupported/op", 0.0)) * 100.0
+        error_rate = float(metrics.get("error/op", 0.0)) * 100.0
+        overlap_miss_rate = float(metrics.get("overlap_miss/op", 0.0)) * 100.0
+        kb = ""
+        if isinstance(bytes_per_op, (int, float)):
+            kb = f"{float(bytes_per_op)/1024.0:.2f}"
+        allocs = ""
+        if isinstance(allocs_per_op, (int, float)):
+            allocs = f"{float(allocs_per_op):.2f}"
+        lines.append(
+            "| `{scenario}` | `{status}` | {iters} | {ms:.3f} | {ns:.0f} | {success:.1f} | {not_found:.1f} | {unsupported:.1f} | {error:.1f} | {overlap_miss:.1f} | {kb} | {allocs} |".format(
+                scenario=row["scenario"],
+                status=row["status"],
+                iters=row["iterations"],
+                ms=row["ms_per_op"],
+                ns=row["ns_per_op"],
+                success=success_rate,
+                not_found=not_found_rate,
+                unsupported=unsupported_rate,
+                error=error_rate,
+                overlap_miss=overlap_miss_rate,
+                kb=kb,
+                allocs=allocs,
+            )
+        )
+
+md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+def env_true(raw: str) -> bool:
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+def to_rel_link(base_dir: Path, target: Path) -> str:
+    try:
+        rel = os.path.relpath(target, base_dir)
+    except ValueError:
+        rel = str(target)
+    return rel.replace(os.sep, "/")
+
+def patch_readme(path: Path, block_lines: list[str]) -> None:
+    begin = "<!-- BEGIN: FIND_ON_SCREEN_BENCH_AUTOGEN -->"
+    end = "<!-- END: FIND_ON_SCREEN_BENCH_AUTOGEN -->"
+    block = "\n".join([begin, *block_lines, end]) + "\n"
+
+    original = ""
+    if path.exists():
+        original = path.read_text(encoding="utf-8", errors="replace")
+        original = re.sub(
+            rf"\n?{re.escape(begin)}.*?{re.escape(end)}\n?",
+            "\n",
+            original,
+            flags=re.S,
+        ).rstrip()
+
+    if original:
+        updated = f"{original}\n\n{block}"
+    else:
+        updated = block
+    path.write_text(updated, encoding="utf-8")
+
+if env_true(patch_readmes):
+    root_visual = Path(visual_dir) if visual_dir else None
+    mega_summary = None
+    scenario_summaries: list[Path] = []
+    attempt_images: list[Path] = []
+    if root_visual and root_visual.exists():
+        maybe_mega = root_visual / "summaries" / "summary-run-mega.png"
+        if maybe_mega.exists():
+            mega_summary = maybe_mega
+        scenario_summaries = sorted(
+            p for p in (root_visual / "summaries").glob("summary-*.png")
+            if p.name != "summary-run-mega.png"
+        )
+        attempt_images = sorted((root_visual / "attempts").glob("**/*.png"))
+
+    readmes: list[Path] = []
+    for raw_path in readme_paths.split(","):
+        raw_path = raw_path.strip()
+        if not raw_path:
+            continue
+        p = Path(raw_path)
+        if not p.is_absolute():
+            p = (root_dir / p).resolve()
+        readmes.append(p)
+    for readme in readmes:
+        if not readme.exists():
+            print(f"[find-bench] skip missing readme: {readme}")
+            continue
+        section: list[str] = []
+        section.append(f"## {readme_section_title}")
+        section.append("")
+        section.append(f"Generated: `{meta['timestamp_utc']}`")
+        section.append("")
+        section.append("### Reports")
+        section.append("")
+        section.append(f"- [Markdown Summary]({to_rel_link(readme.parent, md_path)})")
+        section.append(f"- [JSON Report]({to_rel_link(readme.parent, json_path)})")
+        section.append(f"- [Raw go test Output]({to_rel_link(readme.parent, text_path)})")
+        if perf_svg_path.exists():
+            section.append(f"- [Performance SVG]({to_rel_link(readme.parent, perf_svg_path)})")
+        if accuracy_svg_path.exists():
+            section.append(f"- [Accuracy SVG]({to_rel_link(readme.parent, accuracy_svg_path)})")
+        if resolution_time_svg_path.exists():
+            section.append(f"- [Resolution Match Time SVG]({to_rel_link(readme.parent, resolution_time_svg_path)})")
+        if resolution_matches_svg_path.exists():
+            section.append(f"- [Resolution Matches SVG]({to_rel_link(readme.parent, resolution_matches_svg_path)})")
+        if resolution_misses_svg_path.exists():
+            section.append(f"- [Resolution Misses SVG]({to_rel_link(readme.parent, resolution_misses_svg_path)})")
+        if resolution_false_pos_svg_path.exists():
+            section.append(f"- [Resolution False Positives SVG]({to_rel_link(readme.parent, resolution_false_pos_svg_path)})")
+        section.append("")
+        section.append("### Engine Summary")
+        section.append("")
+        section.append("| Engine | Cases | OK | Partial | Not Found | Unsupported | Error | Overlap Miss | Avg ms/op | Median ms/op |")
+        section.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+        for row in summary_rows:
+            counts = row["status_counts"]
+            section.append(
+                "| {engine} | {cases} | {ok} | {partial} | {not_found} | {unsupported} | {error} | {overlap_miss} | {avg:.3f} | {med:.3f} |".format(
+                    engine=row["engine"],
+                    cases=row["cases"],
+                    ok=counts.get("ok", 0),
+                    partial=counts.get("partial", 0),
+                    not_found=counts.get("not_found", 0),
+                    unsupported=counts.get("unsupported", 0),
+                    error=counts.get("error", 0),
+                    overlap_miss=counts.get("overlap_miss", 0),
+                    avg=row["avg_ms_per_op"],
+                    med=row["median_ms_per_op"],
+                )
+            )
+
+        if mega_summary is not None:
+            section.append("")
+            section.append("### Run Mega Summary")
+            section.append("")
+            section.append(f"![Run Mega Summary]({to_rel_link(readme.parent, mega_summary)})")
+            section.append("")
+            section.append(f"- [Open run mega summary image]({to_rel_link(readme.parent, mega_summary)})")
+
+        if perf_svg_path.exists() or accuracy_svg_path.exists():
+            section.append("")
+            section.append("### Benchmark Graphs")
+            section.append("")
+            if perf_svg_path.exists():
+                rel_perf = to_rel_link(readme.parent, perf_svg_path)
+                section.append(f"![Performance Graph]({rel_perf})")
+                section.append("")
+                section.append(f"- [Open performance graph]({rel_perf})")
+            if accuracy_svg_path.exists():
+                rel_acc = to_rel_link(readme.parent, accuracy_svg_path)
+                section.append("")
+                section.append(f"![Accuracy Graph]({rel_acc})")
+                section.append("")
+                section.append(f"- [Open accuracy graph]({rel_acc})")
+
+        if resolution_time_svg_path.exists() or resolution_matches_svg_path.exists() or resolution_misses_svg_path.exists() or resolution_false_pos_svg_path.exists():
+            section.append("")
+            section.append("### Resolution Group Graphs")
+            section.append("")
+            if resolution_time_svg_path.exists():
+                rel = to_rel_link(readme.parent, resolution_time_svg_path)
+                section.append(f"![Resolution Match Time]({rel})")
+                section.append("")
+                section.append(f"- [Open resolution match time graph]({rel})")
+                section.append("")
+            if resolution_matches_svg_path.exists():
+                rel = to_rel_link(readme.parent, resolution_matches_svg_path)
+                section.append(f"![Resolution Matches]({rel})")
+                section.append("")
+                section.append(f"- [Open resolution matches graph]({rel})")
+                section.append("")
+            if resolution_misses_svg_path.exists():
+                rel = to_rel_link(readme.parent, resolution_misses_svg_path)
+                section.append(f"![Resolution Misses]({rel})")
+                section.append("")
+                section.append(f"- [Open resolution misses graph]({rel})")
+                section.append("")
+            if resolution_false_pos_svg_path.exists():
+                rel = to_rel_link(readme.parent, resolution_false_pos_svg_path)
+                section.append(f"![Resolution False Positives]({rel})")
+                section.append("")
+                section.append(f"- [Open resolution false positives graph]({rel})")
+
+        if scenario_summaries:
+            inline_n = max(0, readme_inline_images)
+            section.append("")
+            section.append(f"### Scenario Summary Images ({len(scenario_summaries)})")
+            section.append("")
+            for img in scenario_summaries[:inline_n]:
+                name = img.stem.replace("summary-", "")
+                rel = to_rel_link(readme.parent, img)
+                section.append(f"#### `{name}`")
+                section.append("")
+                section.append(f"![{name}]({rel})")
+                section.append("")
+                section.append(f"- [Open `{name}` image]({rel})")
+                section.append("")
+            if len(scenario_summaries) > inline_n:
+                section.append(f"- {len(scenario_summaries) - inline_n} additional scenario images are linked below.")
+                section.append("")
+            section.append("### Scenario Image Links")
+            section.append("")
+            for img in scenario_summaries:
+                name = img.stem.replace("summary-", "")
+                section.append(f"- [`{name}`]({to_rel_link(readme.parent, img)})")
+
+        if attempt_images:
+            sample_n = min(len(attempt_images), max(6, readme_inline_images * 2))
+            section.append("")
+            section.append(f"### Attempt Image Links (sample {sample_n} of {len(attempt_images)})")
+            section.append("")
+            for img in attempt_images[:sample_n]:
+                section.append(f"- [{img.name}]({to_rel_link(readme.parent, img)})")
+
+        patch_readme(readme, section)
+        print(f"[find-bench] patched readme: {readme}")
+
+print(f"[find-bench] wrote json report: {json_path}")
+print(f"[find-bench] wrote markdown report: {md_path}")
+if perf_svg_path.exists():
+    print(f"[find-bench] wrote performance graph: {perf_svg_path}")
+if accuracy_svg_path.exists():
+    print(f"[find-bench] wrote accuracy graph: {accuracy_svg_path}")
+if resolution_time_svg_path.exists():
+    print(f"[find-bench] wrote resolution time graph: {resolution_time_svg_path}")
+if resolution_matches_svg_path.exists():
+    print(f"[find-bench] wrote resolution matches graph: {resolution_matches_svg_path}")
+if resolution_misses_svg_path.exists():
+    print(f"[find-bench] wrote resolution misses graph: {resolution_misses_svg_path}")
+if resolution_false_pos_svg_path.exists():
+    print(f"[find-bench] wrote resolution false positive graph: {resolution_false_pos_svg_path}")
+PY

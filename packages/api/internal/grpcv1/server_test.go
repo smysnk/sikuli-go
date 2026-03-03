@@ -5,6 +5,7 @@ import (
 	"image"
 	"testing"
 
+	"github.com/smysnk/sikuligo/internal/cv"
 	pb "github.com/smysnk/sikuligo/internal/grpcv1/pb"
 	"github.com/smysnk/sikuligo/pkg/sikuli"
 	"google.golang.org/grpc/codes"
@@ -410,6 +411,42 @@ func TestFindOnScreenInvalidMatcherEngineMapsToInvalidArgument(t *testing.T) {
 	}
 	if code := status.Code(err); code != codes.InvalidArgument {
 		t.Fatalf("expected invalid argument code, got %s", code)
+	}
+}
+
+func TestMatcherEngineDefaultsToHybrid(t *testing.T) {
+	engine, err := matcherEngineFromFindRequest(nil)
+	if err != nil {
+		t.Fatalf("unexpected error for nil find request: %v", err)
+	}
+	if engine != cv.MatcherEngineHybrid {
+		t.Fatalf("nil find request default mismatch got=%q want=%q", engine, cv.MatcherEngineHybrid)
+	}
+
+	engine, err = matcherEngineFromScreenOptions(nil)
+	if err != nil {
+		t.Fatalf("unexpected error for nil screen options: %v", err)
+	}
+	if engine != cv.MatcherEngineHybrid {
+		t.Fatalf("nil screen options default mismatch got=%q want=%q", engine, cv.MatcherEngineHybrid)
+	}
+
+	engine, err = matcherEngineFromProto(pb.MatcherEngine_MATCHER_ENGINE_UNSPECIFIED)
+	if err != nil {
+		t.Fatalf("unexpected error for unspecified enum: %v", err)
+	}
+	if engine != cv.MatcherEngineHybrid {
+		t.Fatalf("unspecified enum default mismatch got=%q want=%q", engine, cv.MatcherEngineHybrid)
+	}
+}
+
+func TestMatcherEngineTemplateEnumStillUsesTemplate(t *testing.T) {
+	engine, err := matcherEngineFromProto(pb.MatcherEngine_MATCHER_ENGINE_TEMPLATE)
+	if err != nil {
+		t.Fatalf("unexpected error for template enum: %v", err)
+	}
+	if engine != cv.MatcherEngineTemplate {
+		t.Fatalf("template enum mismatch got=%q want=%q", engine, cv.MatcherEngineTemplate)
 	}
 }
 
