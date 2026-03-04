@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	"math"
 	"net"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
+	_ "github.com/gen2brain/avif"
 	pb "github.com/smysnk/sikuligo/internal/grpcv1/pb"
 	"github.com/smysnk/sikuligo/pkg/sikuli"
 	"google.golang.org/grpc"
@@ -25,19 +29,103 @@ type findBenchEngine struct {
 }
 
 type findBenchScenario struct {
-	name          string
-	variant       string
-	size          int
-	rotation      int
-	screenW       int
-	screenH       int
-	tolerance     float64
-	maxAreaRatio  float64
-	transformKind string
-	transformA    float64
-	transformB    float64
-	transformC    float64
-	queryFromBase bool
+	name               string
+	kind               string
+	variant            string
+	scenarioTypeID     string
+	targetSource       string
+	targetAsset        string
+	sourceImagePath    string
+	benchmarkImagePath string
+	sourceTargets      []findBenchTargetRegion
+	benchmarkTargets   []findBenchTargetRegion
+	size               int
+	rotation           int
+	screenW            int
+	screenH            int
+	tolerance          float64
+	maxAreaRatio       float64
+	transformKind      string
+	transformA         float64
+	transformB         float64
+	transformC         float64
+	queryFromBase      bool
+	seed               uint64
+
+	// Expected matching behavior.
+	expectedPositive bool
+	allowPartial     bool
+	strictBBox       bool
+
+	// Runtime knobs from manifest defaults.
+	retryAttempts int
+	rpcTimeout    time.Duration
+
+	// Background controls.
+	backgroundContinuousCanvas bool
+	backgroundClutterDensity   float64
+	backgroundPalette          string
+	backgroundTextureSeed      int
+
+	// Photometric perturbations.
+	brightnessDelta  float64
+	contrastFactor   float64
+	gammaFactor      float64
+	blurSigma        float64
+	jpegQuality      int
+	noiseGaussian    float64
+	noisePoisson     float64
+	noiseSaltPepper  float64
+	noiseBanding     float64
+	noiseCompression float64
+
+	// Occlusion controls.
+	occlusionEnabled  bool
+	occlusionCoverage float64
+
+	// Decoy controls.
+	decoyEnabled    bool
+	decoyCount      int
+	decoySimilarity float64
+	decoyPlacement  string
+
+	// Monitor profile simulation.
+	monitorID         string
+	monitorMode       string
+	monitorGamma      float64
+	monitorSharpness  float64
+	monitorColorShift int
+
+	// Hybrid policy metadata (influences scenario transform planning).
+	hybridMustConsiderAll bool
+	hybridSelectBy        string
+	hybridFallbackOrder   []string
+}
+
+type findBenchTargetRegion struct {
+	ID    string
+	Label string
+	X     int
+	Y     int
+	W     int
+	H     int
+}
+
+type findBenchFixtureQuery struct {
+	Pattern  *pb.GrayImage
+	Expected *pb.Rect
+	Label    string
+}
+
+type findBenchResolutionPack struct {
+	screenW      int
+	screenH      int
+	baseSize     int
+	tolerance    float64
+	maxAreaRatio float64
+	rotateDeg    float64
+	resizeDown   float64
+	resizeUp     float64
 }
 
 func BenchmarkFindOnScreenE2E(b *testing.B) {
@@ -47,25 +135,40 @@ func BenchmarkFindOnScreenE2E(b *testing.B) {
 	engines := []findBenchEngine{
 		{name: "template", enum: pb.MatcherEngine_MATCHER_ENGINE_TEMPLATE},
 		{name: "orb", enum: pb.MatcherEngine_MATCHER_ENGINE_ORB},
+		{name: "akaze", enum: pb.MatcherEngine_MATCHER_ENGINE_AKAZE},
+		{name: "brisk", enum: pb.MatcherEngine_MATCHER_ENGINE_BRISK},
+		{name: "kaze", enum: pb.MatcherEngine_MATCHER_ENGINE_KAZE},
+		{name: "sift", enum: pb.MatcherEngine_MATCHER_ENGINE_SIFT},
 		{name: "hybrid", enum: pb.MatcherEngine_MATCHER_ENGINE_HYBRID},
 	}
 
-	scenarios := []findBenchScenario{
-		{name: "grid_small_r0_480x270", variant: "grid", size: 32, rotation: 0, screenW: 480, screenH: 270, tolerance: 0.30, maxAreaRatio: 1.50},
-		{name: "grid_medium_r90_640x360", variant: "grid", size: 48, rotation: 90, screenW: 640, screenH: 360, tolerance: 0.30, maxAreaRatio: 1.50},
-		{name: "grid_large_r180_800x450", variant: "grid", size: 64, rotation: 180, screenW: 800, screenH: 450, tolerance: 0.30, maxAreaRatio: 1.50},
-		{name: "glyph_small_r270_480x270", variant: "glyph", size: 32, rotation: 270, screenW: 480, screenH: 270, tolerance: 0.30, maxAreaRatio: 1.50},
-		{name: "glyph_medium_r0_640x360", variant: "glyph", size: 48, rotation: 0, screenW: 640, screenH: 360, tolerance: 0.30, maxAreaRatio: 1.50},
-		{name: "glyph_large_r90_800x450", variant: "glyph", size: 64, rotation: 90, screenW: 800, screenH: 450, tolerance: 0.30, maxAreaRatio: 1.50},
-		{name: "noise_medium_r180_800x450", variant: "noise", size: 96, rotation: 180, screenW: 800, screenH: 450, tolerance: 0.25, maxAreaRatio: 1.50},
-		{name: "noise_large_r270_960x540", variant: "noise", size: 128, rotation: 270, screenW: 960, screenH: 540, tolerance: 0.25, maxAreaRatio: 1.50},
-		{name: "orbtex_medium_r0_800x450", variant: "orbtex", size: 96, rotation: 0, screenW: 800, screenH: 450, tolerance: 0.25, maxAreaRatio: 1.50},
-		{name: "orbtex_large_r90_960x540", variant: "orbtex", size: 128, rotation: 90, screenW: 960, screenH: 540, tolerance: 0.25, maxAreaRatio: 1.50},
-		{name: "orbtex_large_r180_1024x576", variant: "orbtex", size: 128, rotation: 180, screenW: 1024, screenH: 576, tolerance: 0.25, maxAreaRatio: 1.50},
-		{name: "orbx_resize_115_960x540", variant: "orbtex", size: 160, rotation: 0, screenW: 960, screenH: 540, tolerance: 0.22, maxAreaRatio: 2.20, transformKind: "scale", transformA: 1.15, queryFromBase: true},
-		{name: "orbx_rotate_12deg_960x540", variant: "orbtex", size: 160, rotation: 0, screenW: 960, screenH: 540, tolerance: 0.20, maxAreaRatio: 2.40, transformKind: "rotate", transformA: 12.0, queryFromBase: true},
-		{name: "orbx_perspective_960x540", variant: "orbtex", size: 160, rotation: 0, screenW: 960, screenH: 540, tolerance: 0.18, maxAreaRatio: 2.60, transformKind: "perspective", transformA: 0.90, transformB: 1.08, transformC: 0.05, queryFromBase: true},
-		{name: "orbx_skewx_010_960x540", variant: "orbtex", size: 160, rotation: 0, screenW: 960, screenH: 540, tolerance: 0.18, maxAreaRatio: 2.60, transformKind: "skewx", transformA: 0.10, queryFromBase: true},
+	highResEnabled := true
+	ultraResEnabled := true
+	scenarios := []findBenchScenario{}
+	if strings.TrimSpace(os.Getenv("FIND_BENCH_SCENARIO_MANIFEST")) != "" {
+		loaded, sourcePath, err := loadFindBenchScenariosFromManifest(highResEnabled, ultraResEnabled)
+		if err != nil {
+			b.Fatalf("load benchmark scenarios from manifest: %v", err)
+		}
+		scenarios = loaded
+		b.Logf(
+			"find bench scenario config count=%d source=manifest path=%s high_res=%v ultra_res=%v",
+			len(scenarios),
+			sourcePath,
+			highResEnabled,
+			ultraResEnabled,
+		)
+	} else {
+		scenarios = defaultFindBenchScenarios(highResEnabled, ultraResEnabled)
+		b.Logf(
+			"find bench scenario config count=%d source=default high_res=%v ultra_res=%v",
+			len(scenarios),
+			highResEnabled,
+			ultraResEnabled,
+		)
+	}
+	if len(scenarios) == 0 {
+		b.Fatalf("no benchmark scenarios configured")
 	}
 
 	for _, engine := range engines {
@@ -87,8 +190,127 @@ func BenchmarkFindOnScreenE2E(b *testing.B) {
 	}
 }
 
+func defaultFindBenchScenarios(highResEnabled, ultraResEnabled bool) []findBenchScenario {
+	scenarios := []findBenchScenario{}
+	basePacks := []findBenchResolutionPack{
+		{screenW: 480, screenH: 270, baseSize: 32, tolerance: 0.30, maxAreaRatio: 1.50, rotateDeg: 8, resizeDown: 0.78, resizeUp: 1.25},
+		{screenW: 640, screenH: 360, baseSize: 48, tolerance: 0.30, maxAreaRatio: 1.50, rotateDeg: 10, resizeDown: 0.76, resizeUp: 1.28},
+		{screenW: 800, screenH: 450, baseSize: 64, tolerance: 0.28, maxAreaRatio: 1.60, rotateDeg: 12, resizeDown: 0.74, resizeUp: 1.30},
+		{screenW: 960, screenH: 540, baseSize: 80, tolerance: 0.26, maxAreaRatio: 1.70, rotateDeg: 14, resizeDown: 0.72, resizeUp: 1.35},
+		{screenW: 1024, screenH: 576, baseSize: 96, tolerance: 0.24, maxAreaRatio: 1.80, rotateDeg: 16, resizeDown: 0.70, resizeUp: 1.40},
+	}
+	for _, pack := range basePacks {
+		scenarios = append(scenarios, resolutionScenarioPack(pack)...)
+	}
+	if highResEnabled {
+		highResPacks := []findBenchResolutionPack{
+			{screenW: 1280, screenH: 720, baseSize: 112, tolerance: 0.22, maxAreaRatio: 2.00, rotateDeg: 18, resizeDown: 0.68, resizeUp: 1.45},
+			{screenW: 1920, screenH: 1080, baseSize: 144, tolerance: 0.18, maxAreaRatio: 2.80, rotateDeg: 22, resizeDown: 0.64, resizeUp: 1.55},
+		}
+		for _, pack := range highResPacks {
+			scenarios = append(scenarios, resolutionScenarioPack(pack)...)
+		}
+	}
+	if ultraResEnabled {
+		scenarios = append(
+			scenarios,
+			resolutionScenarioPack(
+				findBenchResolutionPack{
+					screenW:      2560,
+					screenH:      1440,
+					baseSize:     176,
+					tolerance:    0.16,
+					maxAreaRatio: 3.00,
+					rotateDeg:    26,
+					resizeDown:   0.60,
+					resizeUp:     1.65,
+				},
+			)...,
+		)
+	}
+	return scenarios
+}
+
+func resolutionScenarioPack(cfg findBenchResolutionPack) []findBenchScenario {
+	res := fmt.Sprintf("%dx%d", cfg.screenW, cfg.screenH)
+	styleTol := maxFloat(0.14, cfg.tolerance-0.02)
+	transformTol := maxFloat(0.12, cfg.tolerance-0.08)
+	styleSize := cfg.baseSize + 16
+	transformSize := cfg.baseSize + 48
+
+	base := func(kind, name, variant string, size, rotation int, tol, area float64) findBenchScenario {
+		return findBenchScenario{
+			name:                       name,
+			kind:                       kind,
+			variant:                    variant,
+			size:                       size,
+			rotation:                   rotation,
+			screenW:                    cfg.screenW,
+			screenH:                    cfg.screenH,
+			tolerance:                  tol,
+			maxAreaRatio:               area,
+			queryFromBase:              true,
+			expectedPositive:           true,
+			allowPartial:               false,
+			strictBBox:                 true,
+			retryAttempts:              1,
+			rpcTimeout:                 5 * time.Second,
+			backgroundContinuousCanvas: true,
+			backgroundClutterDensity:   0.84,
+			backgroundPalette:          "mixed",
+			brightnessDelta:            0.0,
+			contrastFactor:             1.0,
+			gammaFactor:                1.0,
+			decoyEnabled:               true,
+			decoyCount:                 24,
+			decoySimilarity:            0.90,
+			decoyPlacement:             "grid",
+		}
+	}
+
+	vector := base("vector_ui", "vector_r0_"+res, "vector", styleSize, 0, styleTol, cfg.maxAreaRatio)
+	vector.backgroundPalette = "ui_light"
+	vector.decoyCount = 18
+
+	photo := base("photographic", "photo_r90_"+res, "photo", styleSize, 90, styleTol, cfg.maxAreaRatio)
+	photo.decoyPlacement = "mixed"
+	photo.decoyCount = 30
+	photo.noiseGaussian = 0.06
+
+	ui := base("template_control", "ui_r180_"+res, "ui", styleSize, 180, styleTol, cfg.maxAreaRatio)
+	ui.backgroundPalette = "ui_dark"
+	ui.decoySimilarity = 0.92
+
+	resizeDown := base("scale_rotate", fmt.Sprintf("mix_resize_%03d_%s", int(cfg.resizeDown*100), res), "photo", transformSize, 0, transformTol, cfg.maxAreaRatio+1.30)
+	resizeDown.transformKind = "scale"
+	resizeDown.transformA = cfg.resizeDown
+	resizeDown.allowPartial = true
+	resizeDown.decoyPlacement = "mixed"
+	resizeDown.noiseCompression = 0.06
+
+	resizeUp := base("scale_rotate", fmt.Sprintf("mix_resize_%03d_%s", int(cfg.resizeUp*100), res), "photo", transformSize, 0, transformTol, cfg.maxAreaRatio+1.30)
+	resizeUp.transformKind = "scale"
+	resizeUp.transformA = cfg.resizeUp
+	resizeUp.allowPartial = true
+	resizeUp.decoyPlacement = "mixed"
+	resizeUp.noiseCompression = 0.06
+
+	rotate := base("scale_rotate", fmt.Sprintf("mix_rotate_%ddeg_%s", int(cfg.rotateDeg), res), "ui", transformSize, 0, transformTol, cfg.maxAreaRatio+1.10)
+	rotate.transformKind = "rotate"
+	rotate.transformA = cfg.rotateDeg
+	rotate.allowPartial = true
+	rotate.decoyPlacement = "clustered"
+	rotate.occlusionEnabled = true
+	rotate.occlusionCoverage = 0.12
+
+	return []findBenchScenario{vector, photo, ui, resizeDown, resizeUp, rotate}
+}
+
 func runFindOnScreenScenarioBenchmark(b *testing.B, engine findBenchEngine, scenario findBenchScenario, visuals *findBenchVisualCollector) {
-	source, patternImage, expectedRect := buildFindBenchFixture(b, scenario)
+	source, queries := buildFindBenchFixture(b, scenario)
+	if len(queries) == 0 {
+		b.Fatalf("empty benchmark query set scenario=%s", scenario.name)
+	}
 
 	svc := NewServer(WithCaptureScreen(func(_ context.Context, _ string) (*sikuli.Image, error) {
 		return source, nil
@@ -124,22 +346,33 @@ func runFindOnScreenScenarioBenchmark(b *testing.B, engine findBenchEngine, scen
 	b.Cleanup(func() { _ = conn.Close() })
 
 	client := pb.NewSikuliServiceClient(conn)
-	pattern := &pb.Pattern{
-		Image:      patternImage,
-		Similarity: benchSimilarityPtr(engine.name),
-	}
-	request := &pb.FindOnScreenRequest{
-		Pattern: pattern,
-		Opts: &pb.ScreenQueryOptions{
-			MatcherEngine: engine.enum,
-		},
+	requests := make([]*pb.FindOnScreenRequest, 0, len(queries))
+	visualQueries := make([]findBenchVisualQuery, 0, len(queries))
+	for _, q := range queries {
+		request := &pb.FindOnScreenRequest{
+			Pattern: &pb.Pattern{
+				Image:      q.Pattern,
+				Similarity: benchSimilarityPtr(engine.name),
+			},
+			Opts: &pb.ScreenQueryOptions{
+				MatcherEngine: engine.enum,
+			},
+		}
+		requests = append(requests, request)
+		visualQueries = append(visualQueries, findBenchVisualQuery{
+			Request:  request,
+			Expected: q.Expected,
+			Label:    q.Label,
+		})
 	}
 
-	if visuals != nil {
-		visuals.CaptureAttempts(b, client, request, source.Gray(), expectedRect, engine, scenario)
+	if visuals != nil && len(visualQueries) > 0 {
+		visuals.CaptureAttempts(b, client, visualQueries, source.Gray(), engine, scenario)
 	}
 
-	_, _ = client.FindOnScreen(context.Background(), request)
+	for _, request := range requests {
+		_, _ = benchFindOnScreenCall(client, request, scenario)
+	}
 
 	successCount := 0
 	notFoundCount := 0
@@ -149,28 +382,73 @@ func runFindOnScreenScenarioBenchmark(b *testing.B, engine findBenchEngine, scen
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		res, err := client.FindOnScreen(context.Background(), request)
-		if err != nil {
-			code := status.Code(err)
-			switch code {
-			case codes.NotFound:
-				notFoundCount++
-			case codes.Unimplemented:
-				unsupportedCount++
-			default:
-				errorCount++
+		iterationOK := true
+
+		if !scenario.expectedPositive {
+			for _, request := range requests {
+				_, err := benchFindOnScreenCall(client, request, scenario)
+				if err == nil {
+					overlapMissCount++
+					iterationOK = false
+					break
+				}
+				switch status.Code(err) {
+				case codes.NotFound:
+					// expected for negative scenarios.
+				case codes.Unimplemented:
+					unsupportedCount++
+					iterationOK = false
+				default:
+					errorCount++
+					iterationOK = false
+				}
+				if !iterationOK {
+					break
+				}
+			}
+			if iterationOK {
+				successCount++
 			}
 			continue
 		}
-		if res.GetMatch() == nil || res.GetMatch().GetRect() == nil {
-			errorCount++
-			continue
+
+		for queryIdx, request := range requests {
+			res, err := benchFindOnScreenCall(client, request, scenario)
+			if err != nil {
+				switch status.Code(err) {
+				case codes.NotFound:
+					notFoundCount++
+				case codes.Unimplemented:
+					unsupportedCount++
+				default:
+					errorCount++
+				}
+				iterationOK = false
+				break
+			}
+			if res.GetMatch() == nil || res.GetMatch().GetRect() == nil {
+				errorCount++
+				iterationOK = false
+				break
+			}
+			expectedRect := queries[queryIdx].Expected
+			if expectedRect == nil {
+				errorCount++
+				iterationOK = false
+				break
+			}
+			if !rectMatchSatisfies(res.GetMatch().GetRect(), expectedRect, scenario.tolerance, scenario.maxAreaRatio) {
+				if scenario.allowPartial && rectMatchSatisfies(res.GetMatch().GetRect(), expectedRect, scenario.tolerance*0.60, scenario.maxAreaRatio*1.20) {
+					continue
+				}
+				overlapMissCount++
+				iterationOK = false
+				break
+			}
 		}
-		if !rectMatchSatisfies(res.GetMatch().GetRect(), expectedRect, scenario.tolerance, scenario.maxAreaRatio) {
-			overlapMissCount++
-			continue
+		if iterationOK {
+			successCount++
 		}
-		successCount++
 	}
 	if b.N > 0 {
 		denom := float64(b.N)
@@ -182,13 +460,52 @@ func runFindOnScreenScenarioBenchmark(b *testing.B, engine findBenchEngine, scen
 	}
 }
 
-func buildFindBenchFixture(t testing.TB, scenario findBenchScenario) (*sikuli.Image, *pb.GrayImage, *pb.Rect) {
+func benchFindOnScreenCall(client pb.SikuliServiceClient, request *pb.FindOnScreenRequest, scenario findBenchScenario) (*pb.FindResponse, error) {
+	retries := scenario.retryAttempts
+	if retries < 0 {
+		retries = 0
+	}
+	timeout := scenario.rpcTimeout
+	if timeout <= 0 {
+		timeout = 5 * time.Second
+	}
+
+	var lastResp *pb.FindResponse
+	var lastErr error
+	for attempt := 0; attempt <= retries; attempt++ {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		resp, err := client.FindOnScreen(ctx, request)
+		cancel()
+		lastResp, lastErr = resp, err
+		if err == nil {
+			return resp, nil
+		}
+		code := status.Code(err)
+		if code != codes.NotFound && code != codes.DeadlineExceeded {
+			return resp, err
+		}
+	}
+	return lastResp, lastErr
+}
+
+func buildFindBenchFixture(t testing.TB, scenario findBenchScenario) (*sikuli.Image, []findBenchFixtureQuery) {
 	t.Helper()
+
+	if source, queries, ok := buildFindBenchFixtureFromRegionSpec(t, scenario); ok {
+		return source, queries
+	}
+
+	if source, queries, ok := buildFindBenchFixtureFromPhotoAsset(t, scenario); ok {
+		return source, queries
+	}
 
 	basePattern := buildBenchPattern(scenario.variant, scenario.size)
 	queryPattern := rotateGrayByQuarterTurns(basePattern, scenario.rotation)
 	targetPattern := applyBenchTransform(queryPattern, scenario)
-	haystack := buildBenchHaystack(scenario.screenW, scenario.screenH, scenario.variant)
+	haystack := buildBenchHaystack(scenario.screenW, scenario.screenH, scenario)
+
+	// Apply monitor profile simulation first to the capture plane.
+	applyMonitorProfile(haystack, scenario)
 
 	pbounds := targetPattern.Bounds()
 	insertX := (scenario.screenW - pbounds.Dx()) / 3
@@ -200,6 +517,9 @@ func buildFindBenchFixture(t testing.TB, scenario findBenchScenario) (*sikuli.Im
 	populateNearMatchDecoys(haystack, targetPattern, insertX, insertY, scenario)
 	// Blend target edges slightly into local context, then use the inserted patch as the query pattern.
 	blitGrayFeather(haystack, targetPattern, insertX, insertY, maxInt(2, scenario.size/20))
+	applyTargetOcclusion(haystack, insertX, insertY, pbounds.Dx(), pbounds.Dy(), scenario)
+	applyPhotometricProfile(haystack, scenario, true)
+	applyPhotometricProfile(targetPattern, scenario, false)
 	applySeamSmoothing(haystack, scenario.variant)
 
 	source, err := sikuli.NewImageFromGray(fmt.Sprintf("bench-%s-source", scenario.name), haystack)
@@ -207,13 +527,658 @@ func buildFindBenchFixture(t testing.TB, scenario findBenchScenario) (*sikuli.Im
 		t.Fatalf("new source image: %v", err)
 	}
 
-	patternGray := cropGray(haystack, image.Rect(insertX, insertY, insertX+pbounds.Dx(), insertY+pbounds.Dy()))
-	if scenario.queryFromBase {
-		patternGray = queryPattern
-	}
+	// Benchmark query always comes from source image-1, then is searched in modified image-2.
+	patternGray := queryPattern
 	pattern := grayProtoFromGray(fmt.Sprintf("bench-%s-pattern", scenario.name), patternGray)
 	expected := &pb.Rect{X: int32(insertX), Y: int32(insertY), W: int32(pbounds.Dx()), H: int32(pbounds.Dy())}
-	return source, pattern, expected
+	return source, []findBenchFixtureQuery{
+		{
+			Pattern:  pattern,
+			Expected: expected,
+			Label:    "primary",
+		},
+	}
+}
+
+func buildFindBenchFixtureFromPhotoAsset(t testing.TB, scenario findBenchScenario) (*sikuli.Image, []findBenchFixtureQuery, bool) {
+	t.Helper()
+
+	assetPath := strings.TrimSpace(scenario.targetAsset)
+	if assetPath == "" {
+		return nil, nil, false
+	}
+	if !(strings.EqualFold(scenario.kind, "photographic") || strings.EqualFold(scenario.targetSource, "asset") || strings.EqualFold(scenario.targetSource, "mixed")) {
+		return nil, nil, false
+	}
+
+	assetGray, err := loadGrayFromFile(assetPath)
+	if err != nil {
+		t.Logf("find bench photo asset load failed path=%s err=%v fallback=synthetic", assetPath, err)
+		return nil, nil, false
+	}
+
+	haystack := buildPhotoHaystackFromAsset(assetGray, scenario.screenW, scenario.screenH, scenario.seed)
+	if haystack == nil {
+		t.Logf("find bench photo asset haystack failed path=%s fallback=synthetic", assetPath)
+		return nil, nil, false
+	}
+
+	hb := haystack.Bounds()
+	assetSize := minInt(minInt(hb.Dx(), hb.Dy()), maxInt(16, scenario.size))
+	if assetSize < 16 {
+		t.Logf("find bench photo asset too small path=%s fallback=synthetic", assetPath)
+		return nil, nil, false
+	}
+
+	cropX, cropY := chooseBenchCropOrigin(hb.Dx(), hb.Dy(), assetSize, scenario.seed)
+	basePattern := cropGray(haystack, image.Rect(cropX, cropY, cropX+assetSize, cropY+assetSize))
+	queryPattern := rotateGrayByQuarterTurns(basePattern, scenario.rotation)
+	targetPattern := applyBenchTransform(queryPattern, scenario)
+	pbounds := targetPattern.Bounds()
+
+	insertX := (scenario.screenW - pbounds.Dx()) / 3
+	insertY := (scenario.screenH - pbounds.Dy()) / 2
+	if insertX < 0 || insertY < 0 {
+		t.Logf("find bench photo asset transformed target does not fit scenario=%s path=%s fallback=synthetic", scenario.name, assetPath)
+		return nil, nil, false
+	}
+
+	populateNearMatchDecoys(haystack, targetPattern, insertX, insertY, scenario)
+	blitGrayFeather(haystack, targetPattern, insertX, insertY, maxInt(2, scenario.size/20))
+	applyTargetOcclusion(haystack, insertX, insertY, pbounds.Dx(), pbounds.Dy(), scenario)
+	applyPhotometricProfile(haystack, scenario, true)
+	applyPhotometricProfile(targetPattern, scenario, false)
+	applySeamSmoothing(haystack, scenario.variant)
+
+	source, err := sikuli.NewImageFromGray(fmt.Sprintf("bench-%s-source", scenario.name), haystack)
+	if err != nil {
+		t.Logf("find bench photo asset source image failed scenario=%s path=%s err=%v fallback=synthetic", scenario.name, assetPath, err)
+		return nil, nil, false
+	}
+
+	// Benchmark query always comes from source image-1, then is searched in modified image-2.
+	patternGray := queryPattern
+	pattern := grayProtoFromGray(fmt.Sprintf("bench-%s-pattern", scenario.name), patternGray)
+	expected := &pb.Rect{X: int32(insertX), Y: int32(insertY), W: int32(pbounds.Dx()), H: int32(pbounds.Dy())}
+	return source, []findBenchFixtureQuery{
+		{
+			Pattern:  pattern,
+			Expected: expected,
+			Label:    "primary",
+		},
+	}, true
+}
+
+type benchPointF struct {
+	X float64
+	Y float64
+}
+
+func buildFindBenchFixtureFromRegionSpec(t testing.TB, scenario findBenchScenario) (*sikuli.Image, []findBenchFixtureQuery, bool) {
+	t.Helper()
+
+	sourcePath := strings.TrimSpace(scenario.sourceImagePath)
+	if sourcePath == "" || len(scenario.sourceTargets) == 0 {
+		return nil, nil, false
+	}
+
+	raw, err := loadGrayFromFile(sourcePath)
+	if err != nil {
+		t.Logf("find bench region-spec source load failed path=%s err=%v fallback=synthetic", sourcePath, err)
+		return nil, nil, false
+	}
+
+	sourceScene, sourceRegions := normalizeSceneAndRegions(raw, scenario.screenW, scenario.screenH, scenario.sourceTargets)
+	if sourceScene == nil || len(sourceRegions) == 0 {
+		t.Logf("find bench region-spec normalize failed scenario=%s path=%s fallback=synthetic", scenario.name, sourcePath)
+		return nil, nil, false
+	}
+
+	benchScene := sourceScene
+	benchRegions := append([]findBenchTargetRegion(nil), sourceRegions...)
+	if len(scenario.benchmarkTargets) > 0 {
+		if _, candidateRegions := normalizeSceneAndRegions(raw, scenario.screenW, scenario.screenH, scenario.benchmarkTargets); len(candidateRegions) > 0 {
+			benchRegions = candidateRegions
+		}
+	}
+	benchPath := strings.TrimSpace(scenario.benchmarkImagePath)
+	if benchPath != "" && benchPath != sourcePath {
+		benchRaw, benchErr := loadGrayFromFile(benchPath)
+		if benchErr != nil {
+			t.Logf("find bench region-spec benchmark load failed path=%s err=%v fallback=source", benchPath, benchErr)
+		} else {
+			regionsForBenchmark := scenario.sourceTargets
+			if len(scenario.benchmarkTargets) > 0 {
+				regionsForBenchmark = scenario.benchmarkTargets
+			}
+			candidateScene, candidateRegions := normalizeSceneAndRegions(benchRaw, scenario.screenW, scenario.screenH, regionsForBenchmark)
+			if candidateScene == nil || len(candidateRegions) == 0 {
+				t.Logf("find bench region-spec benchmark normalize failed scenario=%s path=%s fallback=source", scenario.name, benchPath)
+			} else {
+				benchScene = candidateScene
+				benchRegions = candidateRegions
+			}
+		}
+	}
+
+	source, err := sikuli.NewImageFromGray(fmt.Sprintf("bench-%s-source", scenario.name), benchScene)
+	if err != nil {
+		t.Logf("find bench region-spec source image failed scenario=%s err=%v fallback=synthetic", scenario.name, err)
+		return nil, nil, false
+	}
+
+	queries := make([]findBenchFixtureQuery, 0, len(sourceRegions))
+	for idx, sourceRegion := range sourceRegions {
+		if sourceRegion.W <= 0 || sourceRegion.H <= 0 {
+			continue
+		}
+		sourcePattern := cropGray(sourceScene, image.Rect(sourceRegion.X, sourceRegion.Y, sourceRegion.X+sourceRegion.W, sourceRegion.Y+sourceRegion.H))
+		if sourcePattern.Bounds().Dx() < 4 || sourcePattern.Bounds().Dy() < 4 {
+			continue
+		}
+		benchRegion, ok := findScenarioTargetRegionByID(benchRegions, sourceRegion.ID)
+		if !ok && idx < len(benchRegions) {
+			benchRegion = benchRegions[idx]
+			ok = true
+		}
+		if !ok && len(benchRegions) > 0 {
+			benchRegion = chooseScenarioTargetRegion(benchRegions, scenario.seed+uint64(idx))
+			ok = true
+		}
+		if !ok || benchRegion.W <= 0 || benchRegion.H <= 0 {
+			continue
+		}
+		label := strings.TrimSpace(sourceRegion.Label)
+		if label == "" {
+			label = strings.TrimSpace(sourceRegion.ID)
+		}
+		if label == "" {
+			label = fmt.Sprintf("target-%02d", idx+1)
+		}
+		queries = append(queries, findBenchFixtureQuery{
+			Pattern:  grayProtoFromGray(fmt.Sprintf("bench-%s-pattern-%02d", scenario.name, idx+1), sourcePattern),
+			Expected: benchRectFromTargetRegion(benchRegion),
+			Label:    label,
+		})
+	}
+	if len(queries) == 0 {
+		t.Logf("find bench region-spec no valid mapped queries scenario=%s fallback=synthetic", scenario.name)
+		return nil, nil, false
+	}
+	return source, queries, true
+}
+
+func chooseScenarioTargetRegionPair(regions []findBenchTargetRegion, seed uint64) (findBenchTargetRegion, findBenchTargetRegion) {
+	if len(regions) == 0 {
+		return findBenchTargetRegion{}, findBenchTargetRegion{}
+	}
+	firstIdx := int(seed % uint64(len(regions)))
+	if firstIdx < 0 || firstIdx >= len(regions) {
+		firstIdx = 0
+	}
+	secondIdx := firstIdx
+	if len(regions) > 1 {
+		offset := 1 + int((seed>>17)%uint64(len(regions)-1))
+		secondIdx = (firstIdx + offset) % len(regions)
+	}
+	return regions[firstIdx], regions[secondIdx]
+}
+
+func benchRectFromTargetRegion(region findBenchTargetRegion) *pb.Rect {
+	if region.W <= 0 || region.H <= 0 {
+		return &pb.Rect{}
+	}
+	return &pb.Rect{
+		X: int32(region.X),
+		Y: int32(region.Y),
+		W: int32(region.W),
+		H: int32(region.H),
+	}
+}
+
+func composeMultiMonitorDPISceneFromSource(
+	sourceScene *image.Gray,
+	sourceRegions []findBenchTargetRegion,
+	scenario findBenchScenario,
+) (*image.Gray, []findBenchTargetRegion, []findBenchTargetRegion) {
+	if sourceScene == nil || scenario.screenW < 4 || scenario.screenH < 4 {
+		return nil, nil, nil
+	}
+
+	out := image.NewGray(image.Rect(0, 0, scenario.screenW, scenario.screenH))
+	setRect(out, 0, 0, scenario.screenW, scenario.screenH, 214)
+
+	gap := maxInt(8, scenario.screenW/120)
+	leftW := maxInt(1, (scenario.screenW-gap)/2)
+	rightW := maxInt(1, scenario.screenW-gap-leftW)
+	leftRect := image.Rect(0, 0, leftW, scenario.screenH)
+	rightRect := image.Rect(leftW+gap, 0, leftW+gap+rightW, scenario.screenH)
+	setRect(out, leftRect.Min.X, leftRect.Min.Y, leftRect.Dx(), leftRect.Dy(), 226)
+	setRect(out, rightRect.Min.X, rightRect.Min.Y, rightRect.Dx(), rightRect.Dy(), 226)
+	setRect(out, leftW, 0, gap, scenario.screenH, 168)
+
+	leftScale := 0.98 + (float64(int((scenario.seed>>3)%5)-2) * 0.01)
+	rightScale := 1.22 + (float64(int((scenario.seed>>9)%5)-2) * 0.02)
+	leftMapped := blitScaledSceneIntoMonitorRect(out, leftRect, sourceScene, sourceRegions, leftScale)
+	rightMapped := blitScaledSceneIntoMonitorRect(out, rightRect, sourceScene, sourceRegions, rightScale)
+	return out, leftMapped, rightMapped
+}
+
+func blitScaledSceneIntoMonitorRect(
+	dst *image.Gray,
+	dstRect image.Rectangle,
+	src *image.Gray,
+	srcRegions []findBenchTargetRegion,
+	scaleFactor float64,
+) []findBenchTargetRegion {
+	if dst == nil || src == nil || dstRect.Dx() < 1 || dstRect.Dy() < 1 {
+		return nil
+	}
+	sb := src.Bounds()
+	sw := maxInt(1, sb.Dx())
+	sh := maxInt(1, sb.Dy())
+	fit := math.Min(float64(dstRect.Dx())/float64(sw), float64(dstRect.Dy())/float64(sh))
+	if fit <= 0 {
+		fit = 1
+	}
+	scale := fit * scaleFactor
+	if scale <= 0 {
+		scale = fit
+	}
+	scaled := scaleGrayNearestBench(src, scale)
+	swb := scaled.Bounds()
+	offX := dstRect.Min.X + (dstRect.Dx()-swb.Dx())/2
+	offY := dstRect.Min.Y + (dstRect.Dy()-swb.Dy())/2
+	blitGray(dst, scaled, offX, offY)
+
+	mapped := make([]findBenchTargetRegion, 0, len(srcRegions))
+	for _, region := range srcRegions {
+		if region.W <= 0 || region.H <= 0 {
+			continue
+		}
+		x := offX + int(math.Round(float64(region.X)*scale))
+		y := offY + int(math.Round(float64(region.Y)*scale))
+		w := maxInt(1, int(math.Round(float64(region.W)*scale)))
+		h := maxInt(1, int(math.Round(float64(region.H)*scale)))
+		rr := image.Rect(x, y, x+w, y+h).Intersect(dstRect).Intersect(dst.Bounds())
+		if rr.Empty() || rr.Dx() < 2 || rr.Dy() < 2 {
+			continue
+		}
+		mapped = append(mapped, findBenchTargetRegion{
+			ID:    region.ID,
+			Label: region.Label,
+			X:     rr.Min.X,
+			Y:     rr.Min.Y,
+			W:     rr.Dx(),
+			H:     rr.Dy(),
+		})
+	}
+	return mapped
+}
+
+func chooseScenarioTargetRegion(regions []findBenchTargetRegion, seed uint64) findBenchTargetRegion {
+	if len(regions) == 0 {
+		return findBenchTargetRegion{}
+	}
+	idx := int(seed % uint64(len(regions)))
+	if idx < 0 || idx >= len(regions) {
+		idx = 0
+	}
+	return regions[idx]
+}
+
+func findScenarioTargetRegionByID(regions []findBenchTargetRegion, id string) (findBenchTargetRegion, bool) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return findBenchTargetRegion{}, false
+	}
+	for _, region := range regions {
+		if strings.TrimSpace(region.ID) == id {
+			return region, true
+		}
+	}
+	return findBenchTargetRegion{}, false
+}
+
+func normalizeSceneAndRegions(src *image.Gray, screenW, screenH int, regions []findBenchTargetRegion) (*image.Gray, []findBenchTargetRegion) {
+	if src == nil {
+		return nil, nil
+	}
+	sb := src.Bounds()
+	sw := maxInt(1, sb.Dx())
+	sh := maxInt(1, sb.Dy())
+	if screenW < 1 || screenH < 1 {
+		return nil, nil
+	}
+	scale := math.Max(float64(screenW)/float64(sw), float64(screenH)/float64(sh))
+	if scale <= 0 {
+		scale = 1
+	}
+	scaled := scaleGrayNearestBench(src, scale)
+	scaledW := maxInt(1, scaled.Bounds().Dx())
+	scaledH := maxInt(1, scaled.Bounds().Dy())
+	cropX := maxInt(0, (scaledW-screenW)/2)
+	cropY := maxInt(0, (scaledH-screenH)/2)
+	scene := cropGray(scaled, image.Rect(cropX, cropY, cropX+screenW, cropY+screenH))
+
+	out := make([]findBenchTargetRegion, 0, len(regions))
+	for _, r := range regions {
+		if r.W <= 0 || r.H <= 0 {
+			continue
+		}
+		x := int(math.Round(float64(r.X)*scale)) - cropX
+		y := int(math.Round(float64(r.Y)*scale)) - cropY
+		w := maxInt(1, int(math.Round(float64(r.W)*scale)))
+		h := maxInt(1, int(math.Round(float64(r.H)*scale)))
+		rr := image.Rect(x, y, x+w, y+h).Intersect(scene.Bounds())
+		if rr.Empty() || rr.Dx() < 2 || rr.Dy() < 2 {
+			continue
+		}
+		out = append(out, findBenchTargetRegion{
+			ID:    r.ID,
+			Label: r.Label,
+			X:     rr.Min.X,
+			Y:     rr.Min.Y,
+			W:     rr.Dx(),
+			H:     rr.Dy(),
+		})
+	}
+	return scene, out
+}
+
+func applyGlobalTransformToSceneAndRegion(scene *image.Gray, region findBenchTargetRegion, scenario findBenchScenario) (*image.Gray, *pb.Rect, bool) {
+	if scene == nil || region.W <= 0 || region.H <= 0 {
+		return nil, nil, false
+	}
+	current := cloneGray(scene)
+	corners := regionToCorners(region)
+
+	turns := ((scenario.rotation % 360) + 360) % 360 / 90
+	for i := 0; i < turns; i++ {
+		current, corners = rotateSceneAndCorners90(current, corners)
+	}
+
+	switch scenario.transformKind {
+	case "":
+		// no-op
+	case "scale":
+		f := scenario.transformA
+		if f <= 0 {
+			f = 1
+		}
+		current = scaleGrayNearestBench(current, f)
+		for i := range corners {
+			corners[i].X *= f
+			corners[i].Y *= f
+		}
+	case "rotate":
+		current, corners = rotateSceneAndCornersArbitrary(current, corners, scenario.transformA)
+	case "skewx":
+		current, corners = skewSceneAndCorners(current, corners, scenario.transformA)
+	case "perspective":
+		topScale := scenario.transformA
+		bottomScale := scenario.transformB
+		shift := scenario.transformC
+		if topScale <= 0 {
+			topScale = 0.90
+		}
+		if bottomScale <= 0 {
+			bottomScale = 1.08
+		}
+		current, corners = perspectiveSceneAndCorners(current, corners, topScale, bottomScale, shift)
+	default:
+		current = applyBenchTransform(current, scenario)
+	}
+
+	finalScene, finalCorners := fitSceneAndCornersToScreen(current, corners, scenario.screenW, scenario.screenH)
+	rect := cornersToRect(finalCorners, finalScene.Bounds())
+	if rect.GetW() < 2 || rect.GetH() < 2 {
+		return nil, nil, false
+	}
+	return finalScene, rect, true
+}
+
+func rotateSceneAndCorners90(src *image.Gray, corners []benchPointF) (*image.Gray, []benchPointF) {
+	sb := src.Bounds()
+	sw := sb.Dx()
+	sh := sb.Dy()
+	dst := rotate90Gray(src)
+	out := make([]benchPointF, 0, len(corners))
+	for _, p := range corners {
+		x := float64(sh-1) - p.Y
+		y := p.X
+		out = append(out, benchPointF{X: x, Y: y})
+	}
+	if sw <= 0 || sh <= 0 {
+		return dst, corners
+	}
+	return dst, out
+}
+
+func rotateSceneAndCornersArbitrary(src *image.Gray, corners []benchPointF, degrees float64) (*image.Gray, []benchPointF) {
+	sb := src.Bounds()
+	sw, sh := sb.Dx(), sb.Dy()
+	if sw <= 0 || sh <= 0 {
+		return rotateGrayBilinearBench(src, degrees, 128), corners
+	}
+	theta := degrees * math.Pi / 180.0
+	cosT := math.Cos(theta)
+	sinT := math.Sin(theta)
+	cx := (float64(sw) - 1) / 2.0
+	cy := (float64(sh) - 1) / 2.0
+	imageCorners := [][2]float64{
+		{-cx, -cy},
+		{float64(sw-1) - cx, -cy},
+		{float64(sw-1) - cx, float64(sh-1) - cy},
+		{-cx, float64(sh-1) - cy},
+	}
+	minX, maxX := math.MaxFloat64, -math.MaxFloat64
+	minY, maxY := math.MaxFloat64, -math.MaxFloat64
+	for _, c := range imageCorners {
+		x := cosT*c[0] - sinT*c[1]
+		y := sinT*c[0] + cosT*c[1]
+		minX = math.Min(minX, x)
+		maxX = math.Max(maxX, x)
+		minY = math.Min(minY, y)
+		maxY = math.Max(maxY, y)
+	}
+	dst := rotateGrayBilinearBench(src, degrees, 128)
+	out := make([]benchPointF, 0, len(corners))
+	for _, p := range corners {
+		xr := p.X - cx
+		yr := p.Y - cy
+		rx := cosT*xr - sinT*yr
+		ry := sinT*xr + cosT*yr
+		out = append(out, benchPointF{X: rx - minX, Y: ry - minY})
+	}
+	_ = maxX
+	_ = maxY
+	return dst, out
+}
+
+func skewSceneAndCorners(src *image.Gray, corners []benchPointF, skew float64) (*image.Gray, []benchPointF) {
+	sb := src.Bounds()
+	sw, sh := sb.Dx(), sb.Dy()
+	cx := (float64(sw) - 1) / 2.0
+	cy := (float64(sh) - 1) / 2.0
+	cornersImg := [][2]float64{
+		{-cx + skew*(-cy), -cy},
+		{float64(sw-1) - cx + skew*(-cy), -cy},
+		{float64(sw-1) - cx + skew*(float64(sh-1)-cy), float64(sh-1) - cy},
+		{-cx + skew*(float64(sh-1)-cy), float64(sh-1) - cy},
+	}
+	minX := math.MaxFloat64
+	for _, c := range cornersImg {
+		minX = math.Min(minX, c[0])
+	}
+	dst := skewGrayXBench(src, skew, 128)
+	out := make([]benchPointF, 0, len(corners))
+	for _, p := range corners {
+		yr := p.Y - cy
+		xr := (p.X - cx) + skew*yr
+		out = append(out, benchPointF{
+			X: xr - minX,
+			Y: p.Y,
+		})
+	}
+	return dst, out
+}
+
+func perspectiveSceneAndCorners(src *image.Gray, corners []benchPointF, topScale, bottomScale, shift float64) (*image.Gray, []benchPointF) {
+	sb := src.Bounds()
+	sw, sh := sb.Dx(), sb.Dy()
+	cx := (float64(sw) - 1) / 2.0
+	dst := perspectiveKeystoneBench(src, topScale, bottomScale, shift, 128)
+	out := make([]benchPointF, 0, len(corners))
+	for _, p := range corners {
+		t := 0.0
+		if sh > 1 {
+			t = p.Y / float64(sh-1)
+		}
+		scale := topScale*(1-t) + bottomScale*t
+		shiftX := shift * (0.5 - t) * float64(sw)
+		x := (p.X-cx)*scale + cx + shiftX
+		out = append(out, benchPointF{X: x, Y: p.Y})
+	}
+	return dst, out
+}
+
+func fitSceneAndCornersToScreen(src *image.Gray, corners []benchPointF, screenW, screenH int) (*image.Gray, []benchPointF) {
+	sb := src.Bounds()
+	sw, sh := sb.Dx(), sb.Dy()
+	out := image.NewGray(image.Rect(0, 0, screenW, screenH))
+	for y := 0; y < screenH; y++ {
+		for x := 0; x < screenW; x++ {
+			out.Pix[out.PixOffset(x, y)] = 128
+		}
+	}
+
+	cropX := maxInt(0, (sw-screenW)/2)
+	cropY := maxInt(0, (sh-screenH)/2)
+	padX := maxInt(0, (screenW-sw)/2)
+	padY := maxInt(0, (screenH-sh)/2)
+
+	for y := 0; y < screenH; y++ {
+		sy := y + cropY - padY
+		if sy < 0 || sy >= sh {
+			continue
+		}
+		for x := 0; x < screenW; x++ {
+			sx := x + cropX - padX
+			if sx < 0 || sx >= sw {
+				continue
+			}
+			out.Pix[out.PixOffset(x, y)] = src.Pix[src.PixOffset(sx, sy)]
+		}
+	}
+
+	shiftX := float64(-cropX + padX)
+	shiftY := float64(-cropY + padY)
+	adjusted := make([]benchPointF, 0, len(corners))
+	for _, p := range corners {
+		adjusted = append(adjusted, benchPointF{X: p.X + shiftX, Y: p.Y + shiftY})
+	}
+	return out, adjusted
+}
+
+func regionToCorners(r findBenchTargetRegion) []benchPointF {
+	return []benchPointF{
+		{X: float64(r.X), Y: float64(r.Y)},
+		{X: float64(r.X + r.W), Y: float64(r.Y)},
+		{X: float64(r.X + r.W), Y: float64(r.Y + r.H)},
+		{X: float64(r.X), Y: float64(r.Y + r.H)},
+	}
+}
+
+func cornersToRect(corners []benchPointF, bounds image.Rectangle) *pb.Rect {
+	if len(corners) == 0 {
+		return &pb.Rect{}
+	}
+	minX, minY := math.MaxFloat64, math.MaxFloat64
+	maxX, maxY := -math.MaxFloat64, -math.MaxFloat64
+	for _, p := range corners {
+		minX = math.Min(minX, p.X)
+		minY = math.Min(minY, p.Y)
+		maxX = math.Max(maxX, p.X)
+		maxY = math.Max(maxY, p.Y)
+	}
+	x0 := maxInt(bounds.Min.X, int(math.Floor(minX)))
+	y0 := maxInt(bounds.Min.Y, int(math.Floor(minY)))
+	x1 := minInt(bounds.Max.X, int(math.Ceil(maxX)))
+	y1 := minInt(bounds.Max.Y, int(math.Ceil(maxY)))
+	if x1 <= x0 {
+		x1 = minInt(bounds.Max.X, x0+1)
+	}
+	if y1 <= y0 {
+		y1 = minInt(bounds.Max.Y, y0+1)
+	}
+	return &pb.Rect{
+		X: int32(x0),
+		Y: int32(y0),
+		W: int32(maxInt(1, x1-x0)),
+		H: int32(maxInt(1, y1-y0)),
+	}
+}
+
+func loadGrayFromFile(path string) (*image.Gray, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	img, _, err := image.Decode(f)
+	if err != nil {
+		return nil, err
+	}
+	b := img.Bounds()
+	out := image.NewGray(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(out, out.Bounds(), img, b.Min, draw.Src)
+	return out, nil
+}
+
+func buildPhotoHaystackFromAsset(asset *image.Gray, screenW, screenH int, seed uint64) *image.Gray {
+	if asset == nil {
+		return nil
+	}
+	working := asset
+	b := working.Bounds()
+	if b.Dx() <= 0 || b.Dy() <= 0 {
+		return nil
+	}
+
+	if b.Dx() < screenW || b.Dy() < screenH {
+		fx := float64(screenW) / float64(maxInt(1, b.Dx()))
+		fy := float64(screenH) / float64(maxInt(1, b.Dy()))
+		working = scaleGrayNearestBench(working, math.Max(fx, fy))
+		b = working.Bounds()
+	}
+	if b.Dx() < screenW || b.Dy() < screenH {
+		return nil
+	}
+
+	x, y := chooseBenchCropOrigin(b.Dx(), b.Dy(), minInt(screenW, screenH), seed^0x9e3779b97f4a7c15)
+	if x+screenW > b.Dx() {
+		x = maxInt(0, b.Dx()-screenW)
+	}
+	if y+screenH > b.Dy() {
+		y = maxInt(0, b.Dy()-screenH)
+	}
+	return cropGray(working, image.Rect(x, y, x+screenW, y+screenH))
+}
+
+func chooseBenchCropOrigin(width, height, size int, seed uint64) (int, int) {
+	maxX := maxInt(0, width-size)
+	maxY := maxInt(0, height-size)
+	x := 0
+	y := 0
+	if maxX > 0 {
+		x = int((seed ^ (seed >> 11)) % uint64(maxX+1))
+	}
+	if maxY > 0 {
+		y = int(((seed >> 23) ^ (seed << 7)) % uint64(maxY+1))
+	}
+	return x, y
 }
 
 func buildBenchPattern(variant string, size int) *image.Gray {
@@ -234,6 +1199,38 @@ func buildBenchPattern(variant string, size int) *image.Gray {
 	}
 
 	switch variant {
+	case "vector":
+		// Hard edges / flat fills similar to vector iconography.
+		setRect(img, size/8, size/8, size*3/4, size/6, 28)
+		setRect(img, size/7, size/2, size*5/7, size/7, 210)
+		for i := 0; i < size; i += maxInt(3, size/14) {
+			setRect(img, i, (i*3)%size, maxInt(1, size/28), maxInt(1, size/16), 245)
+			setRect(img, size-1-i, (i*5)%size, maxInt(1, size/30), maxInt(1, size/20), 15)
+		}
+		setRect(img, size/3, size/3, size/5, size/5, 128)
+	case "photo":
+		// Smooth gradients and textured patches approximating photographic content.
+		for y := 0; y < size; y++ {
+			for x := 0; x < size; x++ {
+				gx := (x * 255) / maxInt(1, size-1)
+				gy := (y * 255) / maxInt(1, size-1)
+				v := (gx*3 + gy*2) / 5
+				noise := (x*41 + y*29 + (x*y)%97 + size*13) & 31
+				img.Pix[img.PixOffset(x, y)] = uint8(minInt(255, maxInt(0, v+noise-16)))
+			}
+		}
+		setRect(img, size/6, size/6, size/4, size/3, 180)
+		setRect(img, size/2, size/3, size/3, size/4, 70)
+	case "ui":
+		// Panels, controls, and text-like bars similar to UI screenshots.
+		setRect(img, size/12, size/12, size*10/12, size*10/12, 235)
+		setRect(img, size/8, size/6, size*3/4, size/8, 190)
+		setRect(img, size/8, size*2/5, size/3, size/10, 120)
+		setRect(img, size/2, size*2/5, size*3/8, size/10, 140)
+		for i := 0; i < 5; i++ {
+			y := size*3/5 + i*maxInt(2, size/16)
+			setRect(img, size/6, y, size*2/3, maxInt(1, size/40), uint8(70+i*12))
+		}
 	case "glyph":
 		step := maxInt(6, size/6)
 		for y := step; y < size-step; y += step {
@@ -291,7 +1288,13 @@ func buildBenchPattern(variant string, size int) *image.Gray {
 	}
 
 	seed := 43
-	if variant == "glyph" {
+	if variant == "vector" {
+		seed = 67
+	} else if variant == "photo" {
+		seed = 131
+	} else if variant == "ui" {
+		seed = 173
+	} else if variant == "glyph" {
 		seed = 97
 	} else if variant == "noise" {
 		seed = 157
@@ -303,7 +1306,7 @@ func buildBenchPattern(variant string, size int) *image.Gray {
 	return img
 }
 
-func buildBenchHaystack(w, h int, variant string) *image.Gray {
+func buildBenchHaystack(w, h int, scenario findBenchScenario) *image.Gray {
 	if w < 64 {
 		w = 64
 	}
@@ -311,26 +1314,44 @@ func buildBenchHaystack(w, h int, variant string) *image.Gray {
 		h = 64
 	}
 	img := image.NewGray(image.Rect(0, 0, w, h))
-	seed := 37
-	if variant == "glyph" {
-		seed = 91
-	} else if variant == "noise" {
-		seed = 149
-	} else if variant == "orbtex" {
-		seed = 227
+	variant := scenario.variant
+	seed := scenario.backgroundTextureSeed
+	if seed == 0 {
+		seed = 37
+		if variant == "vector" {
+			seed = 61
+		} else if variant == "photo" {
+			seed = 119
+		} else if variant == "ui" {
+			seed = 181
+		} else if variant == "glyph" {
+			seed = 91
+		} else if variant == "noise" {
+			seed = 149
+		} else if variant == "orbtex" {
+			seed = 227
+		}
 	}
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
 			v := uint8(90 + ((x*13 + y*7 + seed) % 41))
+			if scenario.backgroundPalette == "ui_dark" {
+				v = uint8(maxInt(20, int(v)-55))
+			} else if scenario.backgroundPalette == "ui_light" {
+				v = uint8(minInt(245, int(v)+40))
+			}
 			img.Pix[img.PixOffset(x, y)] = v
 		}
 	}
-	applyDenseArtifactField(img, seed, variant)
+	applyDenseArtifactField(img, seed, variant, scenario.backgroundClutterDensity, scenario.backgroundContinuousCanvas)
 	return img
 }
 
 func populateNearMatchDecoys(haystack *image.Gray, target *image.Gray, targetX, targetY int, scenario findBenchScenario) {
 	if haystack == nil || target == nil {
+		return
+	}
+	if !scenario.decoyEnabled {
 		return
 	}
 	hb := haystack.Bounds()
@@ -341,44 +1362,108 @@ func populateNearMatchDecoys(haystack *image.Gray, target *image.Gray, targetX, 
 		return
 	}
 
-	seed := len(scenario.name)*31 + scenario.rotation*7 + scenario.screenW + scenario.screenH + tw*11 + th*13
-	stepX := maxInt(6, tw/3)
-	stepY := maxInt(6, th/3)
-	index := 0
-	for y := hb.Min.Y - th/2; y < hb.Max.Y+th/2; y += stepY {
-		for x := hb.Min.X - tw/2; x < hb.Max.X+tw/2; x += stepX {
-			jx := ((seed + x*13 + y*7 + index*5) % maxInt(2, stepX)) - stepX/2
-			jy := ((seed + x*11 + y*17 + index*3) % maxInt(2, stepY)) - stepY/2
-			px := x + jx
-			py := y + jy
-			// Keep exact target location unique.
-			if px == targetX && py == targetY {
-				continue
-			}
-			if (index+seed)%19 == 0 {
-				index++
-				continue
-			}
-			decoy := makeNearMatchVariant(target, seed+index*17)
-			blitGrayFeather(haystack, decoy, px, py, maxInt(2, minInt(tw, th)/10))
-			index++
+	decoyCount := scenario.decoyCount
+	if decoyCount <= 0 {
+		decoyCount = maxInt(8, (scenario.screenW*scenario.screenH)/maxInt(1, tw*th*2))
+	}
+	if decoyCount > 400 {
+		decoyCount = 400
+	}
+	similarity := scenario.decoySimilarity
+	if similarity <= 0 || similarity > 1 {
+		similarity = 0.90
+	}
+	placement := strings.ToLower(strings.TrimSpace(scenario.decoyPlacement))
+	if placement == "" {
+		placement = "grid"
+	}
+
+	seed := hashKey(fmt.Sprintf("%d:%s:%s:%dx%d", scenario.seed, scenario.name, placement, tw, th))
+	next := func(max int) int {
+		seed = seed*6364136223846793005 + 1442695040888963407
+		if max <= 0 {
+			return 0
 		}
+		return int(seed % uint64(max))
+	}
+
+	gridCols := maxInt(1, int(math.Ceil(math.Sqrt(float64(decoyCount)))))
+	gridRows := maxInt(1, int(math.Ceil(float64(decoyCount)/float64(gridCols))))
+	stepX := maxInt(4, (hb.Dx()-tw)/maxInt(1, gridCols))
+	stepY := maxInt(4, (hb.Dy()-th)/maxInt(1, gridRows))
+
+	clusterCount := maxInt(2, minInt(6, decoyCount/8))
+	clusterCenters := make([]image.Point, 0, clusterCount)
+	for i := 0; i < clusterCount; i++ {
+		cx := hb.Min.X + next(maxInt(1, hb.Dx()-tw))
+		cy := hb.Min.Y + next(maxInt(1, hb.Dy()-th))
+		clusterCenters = append(clusterCenters, image.Point{X: cx, Y: cy})
+	}
+
+	placed := 0
+	maxAttempts := decoyCount * 8
+	for attempt := 0; attempt < maxAttempts && placed < decoyCount; attempt++ {
+		var px, py int
+		switch placement {
+		case "random":
+			px = hb.Min.X + next(maxInt(1, hb.Dx()-tw))
+			py = hb.Min.Y + next(maxInt(1, hb.Dy()-th))
+		case "clustered":
+			center := clusterCenters[next(len(clusterCenters))]
+			px = center.X + (next(maxInt(2, tw)) - tw/2)
+			py = center.Y + (next(maxInt(2, th)) - th/2)
+		case "mixed":
+			switch attempt % 3 {
+			case 0:
+				px = hb.Min.X + next(maxInt(1, hb.Dx()-tw))
+				py = hb.Min.Y + next(maxInt(1, hb.Dy()-th))
+			case 1:
+				col := placed % gridCols
+				row := placed / gridCols
+				px = hb.Min.X + col*stepX + (next(maxInt(2, tw/3)) - tw/6)
+				py = hb.Min.Y + row*stepY + (next(maxInt(2, th/3)) - th/6)
+			default:
+				center := clusterCenters[next(len(clusterCenters))]
+				px = center.X + (next(maxInt(2, tw)) - tw/2)
+				py = center.Y + (next(maxInt(2, th)) - th/2)
+			}
+		default: // grid
+			col := placed % gridCols
+			row := placed / gridCols
+			px = hb.Min.X + col*stepX + (next(maxInt(2, tw/4)) - tw/8)
+			py = hb.Min.Y + row*stepY + (next(maxInt(2, th/4)) - th/8)
+		}
+
+		if px < hb.Min.X || py < hb.Min.Y || px+tw >= hb.Max.X || py+th >= hb.Max.Y {
+			continue
+		}
+		if rectsOverlapInt(px, py, tw, th, targetX, targetY, tw, th) {
+			continue
+		}
+
+		decoy := makeNearMatchVariant(target, int(seed&0x7fffffff), similarity)
+		blitGrayFeather(haystack, decoy, px, py, maxInt(2, minInt(tw, th)/10))
+		placed++
 	}
 }
 
-func makeNearMatchVariant(src *image.Gray, seed int) *image.Gray {
+func makeNearMatchVariant(src *image.Gray, seed int, similarity float64) *image.Gray {
 	dst := cloneGray(src)
 	b := dst.Bounds()
 	w := b.Dx()
 	h := b.Dy()
 	total := maxInt(1, w*h)
+	similarity = clampFloat(similarity, 0.50, 0.999)
+	mutationScale := 1.0 - similarity
 
-	// Spread subtle brightness deltas across ~10-14% of pixels.
-	mutationCount := total/9 + (seed % maxInt(1, total/20+1))
+	// Spread subtle brightness deltas based on similarity (higher similarity => fewer mutations).
+	mutationCount := maxInt(1, int(float64(total)*(0.03+0.22*mutationScale)))
+	mutationCount += seed % maxInt(1, total/25+1)
 	for i := 0; i < mutationCount; i++ {
 		x := (i*73 + seed*19 + (i*i)%137) % w
 		y := (i*97 + seed*11 + (i*i)%149) % h
-		delta := ((i*17 + seed*7) % 19) - 9
+		maxDelta := maxInt(2, int(18*mutationScale))
+		delta := ((i*17 + seed*7) % (maxDelta*2 + 1)) - maxDelta
 		off := dst.PixOffset(b.Min.X+x, b.Min.Y+y)
 		v := int(dst.Pix[off]) + delta
 		if v < 0 {
@@ -389,13 +1474,14 @@ func makeNearMatchVariant(src *image.Gray, seed int) *image.Gray {
 		dst.Pix[off] = uint8(v)
 	}
 
-	// Add faint line cuts that remain visually subtle but break exact identity.
+	// Add faint line cuts that remain subtle but reduce exact identity.
 	if w > 6 && h > 6 {
 		lineY := 1 + ((seed*13 + w) % maxInt(1, h-2))
 		lineX := 1 + ((seed*17 + h) % maxInt(1, w-2))
 		for x := 1; x < w-1; x++ {
 			off := dst.PixOffset(b.Min.X+x, b.Min.Y+lineY)
-			v := int(dst.Pix[off]) + ((x+seed)%7 - 3)
+			delta := int(float64(((x+seed)%7)-3) * (0.5 + mutationScale))
+			v := int(dst.Pix[off]) + delta
 			if v < 0 {
 				v = 0
 			} else if v > 255 {
@@ -405,7 +1491,8 @@ func makeNearMatchVariant(src *image.Gray, seed int) *image.Gray {
 		}
 		for y := 1; y < h-1; y++ {
 			off := dst.PixOffset(b.Min.X+lineX, b.Min.Y+y)
-			v := int(dst.Pix[off]) + ((y+seed)%7 - 3)
+			delta := int(float64(((y+seed)%7)-3) * (0.5 + mutationScale))
+			v := int(dst.Pix[off]) + delta
 			if v < 0 {
 				v = 0
 			} else if v > 255 {
@@ -418,19 +1505,42 @@ func makeNearMatchVariant(src *image.Gray, seed int) *image.Gray {
 	return dst
 }
 
-func applyDenseArtifactField(img *image.Gray, seed int, variant string) {
+func rectsOverlapInt(ax, ay, aw, ah, bx, by, bw, bh int) bool {
+	ax1, ay1 := ax+aw, ay+ah
+	bx1, by1 := bx+bw, by+bh
+	return ax < bx1 && ax1 > bx && ay < by1 && ay1 > by
+}
+
+func applyDenseArtifactField(img *image.Gray, seed int, variant string, clutterDensity float64, continuousCanvas bool) {
 	if img == nil {
 		return
 	}
+	if clutterDensity <= 0 {
+		clutterDensity = 0.75
+	}
+	if clutterDensity > 1 {
+		clutterDensity = 1
+	}
+	artifactGate := int((1.0 - clutterDensity) * 7.0)
+	if artifactGate < 0 {
+		artifactGate = 0
+	}
+
 	b := img.Bounds()
 	for y := b.Min.Y; y < b.Max.Y; y++ {
 		for x := b.Min.X; x < b.Max.X; x++ {
 			off := img.PixOffset(x, y)
 			v := int(img.Pix[off])
 			hash := (x*29 + y*41 + seed*17 + (x*y)%233) & 0xFF
+			if artifactGate > 0 && (hash%8) < artifactGate {
+				continue
+			}
 			delta := (hash % 9) - 4
-			if variant == "noise" || variant == "orbtex" {
+			if variant == "noise" || variant == "orbtex" || variant == "photo" {
 				delta += (hash % 7) - 3
+			}
+			if variant == "ui" || variant == "vector" {
+				delta = (hash % 5) - 2
 			}
 			v += delta
 			if v < 0 {
@@ -445,10 +1555,19 @@ func applyDenseArtifactField(img *image.Gray, seed int, variant string) {
 	spacing := 8
 	if variant == "noise" || variant == "orbtex" {
 		spacing = 6
+	} else if variant == "photo" {
+		spacing = 10
+	} else if variant == "ui" || variant == "vector" {
+		spacing = 12
 	}
 	for y := b.Min.Y + 2; y < b.Max.Y-2; y += spacing {
 		for x := b.Min.X + 2; x < b.Max.X-2; x += spacing {
 			base := uint8((x*11 + y*13 + seed*23) & 0xFF)
+			if !continuousCanvas {
+				if (x+y+seed)%2 == 0 {
+					continue
+				}
+			}
 			img.Pix[img.PixOffset(x, y)] = base
 			img.Pix[img.PixOffset(x+1, y)] = 255 - base/2
 			img.Pix[img.PixOffset(x, y+1)] = base / 2
@@ -537,6 +1656,149 @@ func applySeamSmoothing(img *image.Gray, variant string) {
 				mix := (c*5 + u + d + l + r) / 9
 				img.Pix[img.PixOffset(x, y)] = uint8(mix)
 			}
+		}
+	}
+}
+
+func applyTargetOcclusion(img *image.Gray, x, y, w, h int, scenario findBenchScenario) {
+	if img == nil || !scenario.occlusionEnabled || scenario.occlusionCoverage <= 0 {
+		return
+	}
+	coverage := clampFloat(scenario.occlusionCoverage, 0.0, 0.95)
+	targetArea := maxInt(1, w*h)
+	occArea := maxInt(1, int(float64(targetArea)*coverage))
+
+	seed := hashKey(fmt.Sprintf("occ:%d:%s:%d:%d:%d:%d", scenario.seed, scenario.name, x, y, w, h))
+	next := func(max int) int {
+		seed = seed*6364136223846793005 + 1442695040888963407
+		if max <= 0 {
+			return 0
+		}
+		return int(seed % uint64(max))
+	}
+
+	remaining := occArea
+	for remaining > 0 {
+		blockW := maxInt(2, minInt(w, int(math.Sqrt(float64(remaining)))))
+		blockH := maxInt(2, minInt(h, maxInt(2, remaining/maxInt(1, blockW))))
+		blockX := x + next(maxInt(1, w-blockW+1))
+		blockY := y + next(maxInt(1, h-blockH+1))
+		fill := uint8(64 + next(128))
+		setRect(img, blockX, blockY, blockW, blockH, fill)
+		remaining -= blockW * blockH
+	}
+}
+
+func applyPhotometricProfile(img *image.Gray, scenario findBenchScenario, isCapture bool) {
+	if img == nil {
+		return
+	}
+	brightness := scenario.brightnessDelta
+	contrast := scenario.contrastFactor
+	gamma := scenario.gammaFactor
+	if contrast <= 0 {
+		contrast = 1.0
+	}
+	if gamma <= 0 {
+		gamma = 1.0
+	}
+
+	b := img.Bounds()
+	seed := hashKey(fmt.Sprintf("photo:%d:%s:%t", scenario.seed, scenario.name, isCapture))
+	nextUnit := func() float64 {
+		seed = seed*6364136223846793005 + 1442695040888963407
+		return float64(seed%10000) / 9999.0
+	}
+	nextSigned := func() float64 {
+		return nextUnit()*2.0 - 1.0
+	}
+
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			off := img.PixOffset(x, y)
+			v := float64(img.Pix[off])
+
+			v = (v-128.0)*contrast + 128.0 + brightness*255.0
+			if gamma != 1.0 {
+				n := clampFloat(v/255.0, 0.0, 1.0)
+				v = math.Pow(n, 1.0/gamma) * 255.0
+			}
+
+			if scenario.noiseGaussian > 0 {
+				v += nextSigned() * 255.0 * scenario.noiseGaussian * 0.25
+			}
+			if scenario.noisePoisson > 0 {
+				v += (math.Sqrt(clampFloat(v, 0.0, 255.0)) / 16.0) * nextSigned() * 255.0 * scenario.noisePoisson * 0.15
+			}
+			if scenario.noiseSaltPepper > 0 && nextUnit() < scenario.noiseSaltPepper*0.02 {
+				if nextUnit() < 0.5 {
+					v = 0
+				} else {
+					v = 255
+				}
+			}
+			if scenario.noiseBanding > 0 {
+				band := math.Sin(float64(y)*0.2+float64(x)*0.03) * 20.0 * scenario.noiseBanding
+				v += band
+			}
+			if scenario.noiseCompression > 0 {
+				q := maxInt(2, int(2.0+scenario.noiseCompression*18.0))
+				v = math.Round(v/float64(q)) * float64(q)
+			}
+
+			if v < 0 {
+				v = 0
+			} else if v > 255 {
+				v = 255
+			}
+			img.Pix[off] = uint8(v)
+		}
+	}
+
+	if scenario.blurSigma > 0 {
+		passes := maxInt(1, int(math.Round(scenario.blurSigma)))
+		for i := 0; i < passes; i++ {
+			applySeamSmoothing(img, scenario.variant)
+		}
+	}
+}
+
+func applyMonitorProfile(img *image.Gray, scenario findBenchScenario) {
+	if img == nil {
+		return
+	}
+	if scenario.monitorGamma == 0 && scenario.monitorSharpness == 0 && scenario.monitorColorShift == 0 {
+		return
+	}
+	gamma := scenario.monitorGamma
+	if gamma <= 0 {
+		gamma = 1.0
+	}
+	shift := clampFloat(float64(scenario.monitorColorShift)/2000.0, -1.0, 1.0) * 18.0
+	sharpness := scenario.monitorSharpness
+	if sharpness <= 0 {
+		sharpness = 1.0
+	}
+
+	b := img.Bounds()
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			off := img.PixOffset(x, y)
+			v := float64(img.Pix[off]) + shift
+			n := clampFloat(v/255.0, 0.0, 1.0)
+			v = math.Pow(n, 1.0/gamma) * 255.0
+			if v < 0 {
+				v = 0
+			} else if v > 255 {
+				v = 255
+			}
+			img.Pix[off] = uint8(v)
+		}
+	}
+	if sharpness < 1.0 {
+		passes := maxInt(1, int(math.Round((1.0-sharpness)*3.0)))
+		for i := 0; i < passes; i++ {
+			applySeamSmoothing(img, scenario.variant)
 		}
 	}
 }
@@ -905,8 +2167,31 @@ func min32(a, b int32) int32 {
 
 func benchSimilarityPtr(engine string) *float64 {
 	v := 0.99
-	if engine == "orb" {
+	switch engine {
+	case "orb", "akaze", "brisk", "kaze", "sift":
 		v = 0.10
 	}
 	return &v
+}
+
+func maxFloat(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func benchEnvEnabled(name string, defaultValue bool) bool {
+	raw := strings.TrimSpace(strings.ToLower(os.Getenv(name)))
+	if raw == "" {
+		return defaultValue
+	}
+	switch raw {
+	case "1", "true", "yes", "on":
+		return true
+	case "0", "false", "no", "off":
+		return false
+	default:
+		return defaultValue
+	}
 }

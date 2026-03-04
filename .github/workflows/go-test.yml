@@ -33,6 +33,28 @@ permissions:
   pull-requests: write
 
 jobs:
+  manifest-validate:
+    name: Find Bench Manifest Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up GoLang
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: packages/api/go.mod
+          cache: true
+
+      - name: Validate benchmark manifest fixtures
+        run: |
+          cd packages/api
+          go test ./internal/grpcv1 -run '^TestFindBenchManifestFixtureRegression$|^TestValidateFindBenchSchemaVersion$|^TestResolveFindBenchManifestPathExampleAlias$' -count=1
+
+      - name: Preflight validate example manifest from env
+        run: |
+          cd packages/api
+          FIND_BENCH_SCENARIO_MANIFEST=example go test ./internal/grpcv1 -run '^TestFindBenchManifestPreflightFromEnv$' -count=1 -v
+
   protocol-matrix:
     name: Protocol Matrix (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

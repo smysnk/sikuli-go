@@ -1,0 +1,52 @@
+name: FindOnScreen Nightly Benchmark
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nightly-benchmark:
+    name: Nightly FindOnScreen Benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up GoLang
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: packages/api/go.mod
+          cache: true
+
+      - name: Install OpenCV native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libopencv-dev libopencv-contrib-dev
+
+      - name: Manifest preflight
+        run: |
+          cd packages/api
+          FIND_BENCH_SCENARIO_MANIFEST=example go test ./internal/grpcv1 -run '^TestFindBenchManifestPreflightFromEnv$' -count=1 -v
+
+      - name: Run manifest benchmark matrix
+        run: |
+          FIND_BENCH_SCENARIO_MANIFEST=example \
+          FIND_BENCH_PATCH_READMES=0 \
+          FIND_BENCH_TIME=1x \
+          FIND_BENCH_COUNT=1 \
+          FIND_BENCH_SEED=20260303 \
+          FIND_BENCH_OUTPUT_BY_SEED=1 \
+          FIND_BENCH_DETERMINISTIC_REPORT=1 \
+          ./scripts/clients/benchmark-find-on-screen-e2e.sh
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: nightly-find-on-screen-bench
+          path: .test-results/bench
+          retention-days: 14

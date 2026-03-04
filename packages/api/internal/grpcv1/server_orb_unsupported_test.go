@@ -11,29 +11,41 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func TestFindORBWithoutOpenCVMapsToUnimplemented(t *testing.T) {
+func TestFindFeatureMatchersWithoutOpenCVMapToUnimplemented(t *testing.T) {
 	srv := NewServer()
-	req := &pb.FindRequest{
-		Source: grayImage("source", [][]uint8{
-			{10, 10, 10, 10},
-			{10, 0, 255, 10},
-			{10, 255, 0, 10},
-			{10, 10, 10, 10},
-		}),
-		Pattern: &pb.Pattern{
-			Image: grayImage("needle", [][]uint8{
-				{0, 255},
-				{255, 0},
-			}),
-			Exact: boolPtr(true),
-		},
-		MatcherEngine: pb.MatcherEngine_MATCHER_ENGINE_ORB,
+	featureEngines := []pb.MatcherEngine{
+		pb.MatcherEngine_MATCHER_ENGINE_ORB,
+		pb.MatcherEngine_MATCHER_ENGINE_AKAZE,
+		pb.MatcherEngine_MATCHER_ENGINE_BRISK,
+		pb.MatcherEngine_MATCHER_ENGINE_KAZE,
+		pb.MatcherEngine_MATCHER_ENGINE_SIFT,
 	}
-	_, err := srv.Find(context.Background(), req)
-	if err == nil {
-		t.Fatalf("expected unimplemented error")
-	}
-	if code := status.Code(err); code != codes.Unimplemented {
-		t.Fatalf("expected unimplemented code, got %s", code)
+	for _, engine := range featureEngines {
+		engine := engine
+		t.Run(engine.String(), func(t *testing.T) {
+			req := &pb.FindRequest{
+				Source: grayImage("source", [][]uint8{
+					{10, 10, 10, 10},
+					{10, 0, 255, 10},
+					{10, 255, 0, 10},
+					{10, 10, 10, 10},
+				}),
+				Pattern: &pb.Pattern{
+					Image: grayImage("needle", [][]uint8{
+						{0, 255},
+						{255, 0},
+					}),
+					Exact: boolPtr(true),
+				},
+				MatcherEngine: engine,
+			}
+			_, err := srv.Find(context.Background(), req)
+			if err == nil {
+				t.Fatalf("expected unimplemented error")
+			}
+			if code := status.Code(err); code != codes.Unimplemented {
+				t.Fatalf("expected unimplemented code, got %s", code)
+			}
+		})
 	}
 }

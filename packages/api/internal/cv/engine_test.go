@@ -16,6 +16,10 @@ func TestParseMatcherEngine(t *testing.T) {
 		{name: "template_alias_ncc", in: "ncc", want: MatcherEngineTemplate, ok: true},
 		{name: "template_alias_opencv", in: "opencv", want: MatcherEngineTemplate, ok: true},
 		{name: "orb", in: "orb", want: MatcherEngineORB, ok: true},
+		{name: "akaze", in: "akaze", want: MatcherEngineAKAZE, ok: true},
+		{name: "brisk", in: "brisk", want: MatcherEngineBRISK, ok: true},
+		{name: "kaze", in: "kaze", want: MatcherEngineKAZE, ok: true},
+		{name: "sift", in: "sift", want: MatcherEngineSIFT, ok: true},
 		{name: "hybrid", in: "hybrid", want: MatcherEngineHybrid, ok: true},
 		{name: "invalid", in: "unknown", want: "", ok: false},
 	}
@@ -45,6 +49,10 @@ func TestNewMatcherForEngine(t *testing.T) {
 	}{
 		{name: "template", engine: MatcherEngineTemplate, ok: true},
 		{name: "orb", engine: MatcherEngineORB, ok: true},
+		{name: "akaze", engine: MatcherEngineAKAZE, ok: true},
+		{name: "brisk", engine: MatcherEngineBRISK, ok: true},
+		{name: "kaze", engine: MatcherEngineKAZE, ok: true},
+		{name: "sift", engine: MatcherEngineSIFT, ok: true},
 		{name: "hybrid", engine: MatcherEngineHybrid, ok: true},
 		{name: "invalid", engine: MatcherEngine("invalid"), ok: false},
 	}

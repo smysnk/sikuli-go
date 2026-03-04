@@ -25,12 +25,12 @@ PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 ImageInput = str | bytes | bytearray | memoryview
 RegionInput = tuple[int, int, int, int]
 PointInput = tuple[int, int]
-MatcherEngine = Literal["template", "orb", "hybrid"]
+MatcherEngine = Literal["template", "orb", "akaze", "brisk", "kaze", "sift", "hybrid"]
 
 
 def _normalize_matcher_engine(raw: str | None) -> MatcherEngine:
     normalized = str(raw or "").strip().lower()
-    if normalized in ("orb", "hybrid"):
+    if normalized in ("orb", "akaze", "brisk", "kaze", "sift", "hybrid"):
         return normalized  # type: ignore[return-value]
     return "template"
 
@@ -39,6 +39,14 @@ def _matcher_engine_proto_value(raw: str | None) -> int:
     normalized = _normalize_matcher_engine(raw)
     if normalized == "orb":
         return int(pb.MATCHER_ENGINE_ORB)
+    if normalized == "akaze":
+        return int(pb.MATCHER_ENGINE_AKAZE)
+    if normalized == "brisk":
+        return int(pb.MATCHER_ENGINE_BRISK)
+    if normalized == "kaze":
+        return int(pb.MATCHER_ENGINE_KAZE)
+    if normalized == "sift":
+        return int(pb.MATCHER_ENGINE_SIFT)
     if normalized == "hybrid":
         return int(pb.MATCHER_ENGINE_HYBRID)
     return int(pb.MATCHER_ENGINE_TEMPLATE)

@@ -1,0 +1,1256 @@
+{
+  "$schema": "./find-on-screen-scenario.schema.json",
+  "schema_version": "1.0.0",
+  "name": "find-on-screen-benchmark-v1",
+  "description": "Concrete benchmark matrix for all scenario kinds used in FindOnScreen evaluation.",
+  "seed": 20260303,
+  "scenario_region_spec": "packages/api/internal/grpcv1/testdata/find-bench-assets/regions.json",
+  "metadata": {
+    "owner": "sikuligo",
+    "created_utc": "2026-03-03T00:00:00Z",
+    "notes": "Keep six scenarios per resolution in base matrix; high/ultra extend via overrides.",
+    "tags": [
+      "opencv",
+      "features2d",
+      "ocr",
+      "benchmark",
+      "find_on_screen"
+    ]
+  },
+  "engines": [
+    "template",
+    "orb",
+    "akaze",
+    "brisk",
+    "kaze",
+    "sift",
+    "hybrid"
+  ],
+  "resolution_groups": [
+    {
+      "id": "r800x600",
+      "width": 800,
+      "height": 600,
+      "dpi_scale": 1.0,
+      "enabled": true
+    },
+    {
+      "id": "r1024x768",
+      "width": 1024,
+      "height": 768,
+      "dpi_scale": 1.0,
+      "enabled": true
+    },
+    {
+      "id": "r1280x720",
+      "width": 1280,
+      "height": 720,
+      "dpi_scale": 1.0,
+      "enabled": true
+    },
+    {
+      "id": "r1920x1080",
+      "width": 1920,
+      "height": 1080,
+      "dpi_scale": 1.5,
+      "enabled": true
+    }
+  ],
+  "monitor_profiles": [
+    {
+      "id": "mon-0",
+      "label": "Primary",
+      "width": 1920,
+      "height": 1080,
+      "dpi_scale": 1.0,
+      "gamma": 1.0,
+      "color_temperature_shift": 0,
+      "sharpness": 1.0
+    },
+    {
+      "id": "mon-1",
+      "label": "HiDPI",
+      "width": 2560,
+      "height": 1440,
+      "dpi_scale": 2.0,
+      "gamma": 1.08,
+      "color_temperature_shift": 250,
+      "sharpness": 0.9
+    }
+  ],
+  "defaults": {
+    "target_size_px": 96,
+    "iterations": 1,
+    "retry_attempts": 1,
+    "rpc_timeout_ms": 5000,
+    "query_from_base": true,
+    "tolerance_overlap_min": 0.22,
+    "max_area_ratio": 2.5,
+    "strict_bbox": true
+  },
+  "scenario_types": [
+    {
+      "id": "vector_ui_baseline",
+      "kind": "vector_ui",
+      "enabled": true,
+      "style": "vector",
+      "target": {
+        "source": "synthetic",
+        "size_px": {
+          "min": 48,
+          "max": 160
+        },
+        "rotation_degrees": {
+          "min": 0,
+          "max": 180
+        },
+        "aspect_jitter": 0.05,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.72,
+        "palette": "ui_light",
+        "texture_seed": 9001
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.9,
+          "max": 1.2
+        },
+        "rotate": {
+          "min": -5,
+          "max": 5
+        },
+        "perspective": {
+          "enabled": false,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "skew_x": {
+          "min": 0.0,
+          "max": 0.0
+        },
+        "skew_y": {
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.08,
+          "max": 0.08
+        },
+        "contrast": {
+          "min": 0.9,
+          "max": 1.12
+        },
+        "gamma": {
+          "min": 0.95,
+          "max": 1.06
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 0.6
+        },
+        "jpeg_quality": {
+          "min": 88,
+          "max": 100
+        },
+        "noise": [
+          {
+            "type": "compression_blocks",
+            "amount": {
+              "min": 0.0,
+              "max": 0.08
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": false,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 14,
+          "max": 34
+        },
+        "similarity": {
+          "min": 0.86,
+          "max": 0.97
+        },
+        "placement": "grid"
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.92,
+        "area_ratio_max": 1.25,
+        "allow_partial": false
+      }
+    },
+    {
+      "id": "photo_clutter",
+      "kind": "photographic",
+      "enabled": true,
+      "style": "photo",
+      "target": {
+        "source": "asset",
+        "asset_pool": [
+          "docs/bench/assets/photo/4256_clutter_crop_zoom.jpg",
+          "docs/bench/assets/photo/4256_clutter_cool_grain.jpg",
+          "docs/bench/assets/photo/4256_clutter_warm_soft.jpg",
+          "docs/bench/assets/photo/4256_clutter_lowlight.jpg",
+          "docs/bench/assets/photo/4256_clutter_highiso.jpg"
+        ],
+        "size_px": {
+          "min": 56,
+          "max": 176
+        },
+        "rotation_degrees": {
+          "min": -25,
+          "max": 25
+        },
+        "aspect_jitter": 0.18,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.88,
+        "palette": "mixed",
+        "texture_seed": 9002
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.75,
+          "max": 1.35
+        },
+        "rotate": {
+          "min": -20,
+          "max": 20
+        },
+        "perspective": {
+          "enabled": false,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "skew_x": {
+          "min": -1.0,
+          "max": 1.0
+        },
+        "skew_y": {
+          "min": -1.0,
+          "max": 1.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.2,
+          "max": 0.2
+        },
+        "contrast": {
+          "min": 0.7,
+          "max": 1.4
+        },
+        "gamma": {
+          "min": 0.8,
+          "max": 1.3
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 2.0
+        },
+        "jpeg_quality": {
+          "min": 45,
+          "max": 100
+        },
+        "noise": [
+          {
+            "type": "gaussian",
+            "amount": {
+              "min": 0.0,
+              "max": 0.16
+            }
+          },
+          {
+            "type": "poisson",
+            "amount": {
+              "min": 0.0,
+              "max": 0.12
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": true,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.25
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 20,
+          "max": 56
+        },
+        "similarity": {
+          "min": 0.8,
+          "max": 0.95
+        },
+        "placement": "mixed"
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.75,
+        "area_ratio_max": 1.6,
+        "allow_partial": true
+      }
+    },
+    {
+      "id": "repetitive_grid_camouflage",
+      "kind": "repetitive_grid",
+      "enabled": true,
+      "style": "grid",
+      "target": {
+        "source": "synthetic",
+        "size_px": {
+          "min": 48,
+          "max": 160
+        },
+        "rotation_degrees": {
+          "min": -15,
+          "max": 15
+        },
+        "aspect_jitter": 0.08,
+        "subpixel_offset": false
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.96,
+        "palette": "grayscale",
+        "texture_seed": 9003
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.85,
+          "max": 1.2
+        },
+        "rotate": {
+          "min": -15,
+          "max": 15
+        },
+        "perspective": {
+          "enabled": false,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "skew_x": {
+          "min": -2.0,
+          "max": 2.0
+        },
+        "skew_y": {
+          "min": -1.0,
+          "max": 1.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.12,
+          "max": 0.12
+        },
+        "contrast": {
+          "min": 0.85,
+          "max": 1.2
+        },
+        "gamma": {
+          "min": 0.9,
+          "max": 1.15
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 1.0
+        },
+        "jpeg_quality": {
+          "min": 60,
+          "max": 100
+        },
+        "noise": [
+          {
+            "type": "banding",
+            "amount": {
+              "min": 0.0,
+              "max": 0.15
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": false,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 36,
+          "max": 120
+        },
+        "similarity": {
+          "min": 0.9,
+          "max": 0.99
+        },
+        "placement": "grid"
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.85,
+        "area_ratio_max": 1.35,
+        "allow_partial": false
+      }
+    },
+    {
+      "id": "noise_stress_random",
+      "kind": "noise_stress",
+      "enabled": true,
+      "style": "noise",
+      "target": {
+        "source": "synthetic",
+        "size_px": {
+          "min": 64,
+          "max": 176
+        },
+        "rotation_degrees": {
+          "min": -45,
+          "max": 45
+        },
+        "aspect_jitter": 0.15,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.93,
+        "palette": "grayscale",
+        "texture_seed": 9004
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.7,
+          "max": 1.5
+        },
+        "rotate": {
+          "min": -30,
+          "max": 30
+        },
+        "perspective": {
+          "enabled": false,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "skew_x": {
+          "min": -2.0,
+          "max": 2.0
+        },
+        "skew_y": {
+          "min": -2.0,
+          "max": 2.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.25,
+          "max": 0.25
+        },
+        "contrast": {
+          "min": 0.65,
+          "max": 1.45
+        },
+        "gamma": {
+          "min": 0.75,
+          "max": 1.35
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 2.2
+        },
+        "jpeg_quality": {
+          "min": 40,
+          "max": 95
+        },
+        "noise": [
+          {
+            "type": "gaussian",
+            "amount": {
+              "min": 0.05,
+              "max": 0.25
+            }
+          },
+          {
+            "type": "salt_pepper",
+            "amount": {
+              "min": 0.0,
+              "max": 0.08
+            }
+          },
+          {
+            "type": "compression_blocks",
+            "amount": {
+              "min": 0.0,
+              "max": 0.2
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": true,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.35
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 24,
+          "max": 92
+        },
+        "similarity": {
+          "min": 0.75,
+          "max": 0.94
+        },
+        "placement": "random"
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.7,
+        "area_ratio_max": 1.8,
+        "allow_partial": true
+      }
+    },
+    {
+      "id": "scale_rotate_sweep",
+      "kind": "scale_rotate",
+      "enabled": true,
+      "style": "mixed",
+      "target": {
+        "source": "mixed",
+        "size_px": {
+          "min": 48,
+          "max": 180
+        },
+        "rotation_degrees": {
+          "min": -180,
+          "max": 180
+        },
+        "aspect_jitter": 0.2,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.82,
+        "palette": "mixed",
+        "texture_seed": 9005
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.4,
+          "max": 2.2
+        },
+        "rotate": {
+          "min": -180,
+          "max": 180
+        },
+        "perspective": {
+          "enabled": false,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "skew_x": {
+          "min": -4.0,
+          "max": 4.0
+        },
+        "skew_y": {
+          "min": -2.0,
+          "max": 2.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.16,
+          "max": 0.16
+        },
+        "contrast": {
+          "min": 0.78,
+          "max": 1.28
+        },
+        "gamma": {
+          "min": 0.85,
+          "max": 1.2
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 1.6
+        },
+        "jpeg_quality": {
+          "min": 55,
+          "max": 100
+        },
+        "noise": [
+          {
+            "type": "gaussian",
+            "amount": {
+              "min": 0.0,
+              "max": 0.12
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": true,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.2
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 16,
+          "max": 44
+        },
+        "similarity": {
+          "min": 0.8,
+          "max": 0.96
+        },
+        "placement": "mixed"
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.68,
+        "area_ratio_max": 2.2,
+        "allow_partial": true
+      }
+    },
+    {
+      "id": "perspective_skew_sweep",
+      "kind": "perspective_skew",
+      "enabled": true,
+      "style": "mixed",
+      "target": {
+        "source": "mixed",
+        "size_px": {
+          "min": 56,
+          "max": 176
+        },
+        "rotation_degrees": {
+          "min": -45,
+          "max": 45
+        },
+        "aspect_jitter": 0.22,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.86,
+        "palette": "mixed",
+        "texture_seed": 9006
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.75,
+          "max": 1.35
+        },
+        "rotate": {
+          "min": -45,
+          "max": 45
+        },
+        "perspective": {
+          "enabled": true,
+          "corner_shift_pct": {
+            "min": 0.02,
+            "max": 0.24
+          }
+        },
+        "skew_x": {
+          "min": -10.0,
+          "max": 10.0
+        },
+        "skew_y": {
+          "min": -4.0,
+          "max": 4.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.14,
+          "max": 0.14
+        },
+        "contrast": {
+          "min": 0.8,
+          "max": 1.3
+        },
+        "gamma": {
+          "min": 0.84,
+          "max": 1.24
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 1.5
+        },
+        "jpeg_quality": {
+          "min": 55,
+          "max": 100
+        },
+        "noise": [
+          {
+            "type": "compression_blocks",
+            "amount": {
+              "min": 0.0,
+              "max": 0.12
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": true,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.28
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 14,
+          "max": 42
+        },
+        "similarity": {
+          "min": 0.78,
+          "max": 0.95
+        },
+        "placement": "random"
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.66,
+        "area_ratio_max": 2.4,
+        "allow_partial": true
+      }
+    },
+    {
+      "id": "orb_feature_rich",
+      "kind": "orb_feature_rich",
+      "enabled": true,
+      "style": "orbtex",
+      "target": {
+        "source": "synthetic",
+        "size_px": {
+          "min": 56,
+          "max": 176
+        },
+        "rotation_degrees": {
+          "min": -180,
+          "max": 180
+        },
+        "aspect_jitter": 0.16,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.9,
+        "palette": "grayscale",
+        "texture_seed": 9007
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.65,
+          "max": 1.7
+        },
+        "rotate": {
+          "min": -180,
+          "max": 180
+        },
+        "perspective": {
+          "enabled": true,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.18
+          }
+        },
+        "skew_x": {
+          "min": -8.0,
+          "max": 8.0
+        },
+        "skew_y": {
+          "min": -4.0,
+          "max": 4.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.15,
+          "max": 0.15
+        },
+        "contrast": {
+          "min": 0.7,
+          "max": 1.5
+        },
+        "gamma": {
+          "min": 0.8,
+          "max": 1.25
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 1.3
+        },
+        "jpeg_quality": {
+          "min": 45,
+          "max": 100
+        },
+        "noise": [
+          {
+            "type": "gaussian",
+            "amount": {
+              "min": 0.0,
+              "max": 0.1
+            }
+          },
+          {
+            "type": "banding",
+            "amount": {
+              "min": 0.0,
+              "max": 0.12
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": true,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.18
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 22,
+          "max": 84
+        },
+        "similarity": {
+          "min": 0.72,
+          "max": 0.93
+        },
+        "placement": "clustered"
+      },
+      "engine_expectations": {
+        "orb": {
+          "min_success_rate": 0.65,
+          "max_false_positive_rate": 0.15,
+          "max_avg_latency_ms": 40
+        },
+        "template": {
+          "min_success_rate": 0.25
+        }
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.64,
+        "area_ratio_max": 2.0,
+        "allow_partial": true
+      }
+    },
+    {
+      "id": "template_control_exact",
+      "kind": "template_control",
+      "enabled": true,
+      "style": "ui",
+      "target": {
+        "source": "synthetic",
+        "size_px": {
+          "min": 48,
+          "max": 144
+        },
+        "rotation_degrees": {
+          "min": 0,
+          "max": 0
+        },
+        "aspect_jitter": 0.0,
+        "subpixel_offset": false
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.55,
+        "palette": "ui_dark",
+        "texture_seed": 9008
+      },
+      "transforms": {
+        "scale": {
+          "min": 1.0,
+          "max": 1.0
+        },
+        "rotate": {
+          "min": 0.0,
+          "max": 0.0
+        },
+        "perspective": {
+          "enabled": false,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "skew_x": {
+          "min": 0.0,
+          "max": 0.0
+        },
+        "skew_y": {
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.04,
+          "max": 0.04
+        },
+        "contrast": {
+          "min": 0.95,
+          "max": 1.08
+        },
+        "gamma": {
+          "min": 0.98,
+          "max": 1.04
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 0.3
+        },
+        "jpeg_quality": {
+          "min": 95,
+          "max": 100
+        },
+        "noise": []
+      },
+      "occlusion": {
+        "enabled": false,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 8,
+          "max": 24
+        },
+        "similarity": {
+          "min": 0.85,
+          "max": 0.95
+        },
+        "placement": "grid"
+      },
+      "engine_expectations": {
+        "template": {
+          "min_success_rate": 0.9,
+          "max_false_positive_rate": 0.1,
+          "max_avg_latency_ms": 25
+        }
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.95,
+        "area_ratio_max": 1.15,
+        "allow_partial": false
+      }
+    },
+    {
+      "id": "hybrid_gate_conflicts",
+      "kind": "hybrid_gate",
+      "enabled": true,
+      "style": "mixed",
+      "target": {
+        "source": "mixed",
+        "size_px": {
+          "min": 56,
+          "max": 176
+        },
+        "rotation_degrees": {
+          "min": -60,
+          "max": 60
+        },
+        "aspect_jitter": 0.2,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.92,
+        "palette": "mixed",
+        "texture_seed": 9009
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.7,
+          "max": 1.6
+        },
+        "rotate": {
+          "min": -80,
+          "max": 80
+        },
+        "perspective": {
+          "enabled": true,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.16
+          }
+        },
+        "skew_x": {
+          "min": -7.0,
+          "max": 7.0
+        },
+        "skew_y": {
+          "min": -3.0,
+          "max": 3.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.2,
+          "max": 0.2
+        },
+        "contrast": {
+          "min": 0.75,
+          "max": 1.35
+        },
+        "gamma": {
+          "min": 0.82,
+          "max": 1.22
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 1.8
+        },
+        "jpeg_quality": {
+          "min": 50,
+          "max": 100
+        },
+        "noise": [
+          {
+            "type": "gaussian",
+            "amount": {
+              "min": 0.0,
+              "max": 0.12
+            }
+          },
+          {
+            "type": "compression_blocks",
+            "amount": {
+              "min": 0.0,
+              "max": 0.14
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": true,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.3
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 24,
+          "max": 96
+        },
+        "similarity": {
+          "min": 0.82,
+          "max": 0.99
+        },
+        "placement": "mixed"
+      },
+      "hybrid_policy": {
+        "must_consider_all_engines": true,
+        "select_by": "score_then_iou",
+        "fallback_order": [
+          "orb",
+          "akaze",
+          "brisk",
+          "kaze",
+          "sift",
+          "template"
+        ]
+      },
+      "engine_expectations": {
+        "hybrid": {
+          "min_success_rate": 0.75,
+          "max_false_positive_rate": 0.1,
+          "max_avg_latency_ms": 60
+        }
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.72,
+        "area_ratio_max": 1.9,
+        "allow_partial": true
+      }
+    },
+    {
+      "id": "multi_monitor_dpi_shift",
+      "kind": "multi_monitor_dpi",
+      "enabled": true,
+      "style": "mixed",
+      "target": {
+        "source": "mixed",
+        "size_px": {
+          "min": 56,
+          "max": 176
+        },
+        "rotation_degrees": {
+          "min": -30,
+          "max": 30
+        },
+        "aspect_jitter": 0.12,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.8,
+        "palette": "mixed",
+        "texture_seed": 9010
+      },
+      "transforms": {
+        "scale": {
+          "min": 0.8,
+          "max": 1.3
+        },
+        "rotate": {
+          "min": -25,
+          "max": 25
+        },
+        "perspective": {
+          "enabled": false,
+          "corner_shift_pct": {
+            "min": 0.0,
+            "max": 0.0
+          }
+        },
+        "skew_x": {
+          "min": -2.0,
+          "max": 2.0
+        },
+        "skew_y": {
+          "min": -1.0,
+          "max": 1.0
+        }
+      },
+      "photometric": {
+        "brightness": {
+          "min": -0.1,
+          "max": 0.1
+        },
+        "contrast": {
+          "min": 0.82,
+          "max": 1.18
+        },
+        "gamma": {
+          "min": 0.9,
+          "max": 1.18
+        },
+        "blur_sigma": {
+          "min": 0.0,
+          "max": 1.0
+        },
+        "jpeg_quality": {
+          "min": 70,
+          "max": 100
+        },
+        "noise": [
+          {
+            "type": "compression_blocks",
+            "amount": {
+              "min": 0.0,
+              "max": 0.08
+            }
+          }
+        ]
+      },
+      "occlusion": {
+        "enabled": false,
+        "target_coverage_pct": {
+          "min": 0.0,
+          "max": 0.0
+        }
+      },
+      "decoys": {
+        "enabled": true,
+        "count": {
+          "min": 12,
+          "max": 36
+        },
+        "similarity": {
+          "min": 0.82,
+          "max": 0.95
+        },
+        "placement": "mixed"
+      },
+      "monitor_selector": {
+        "mode": "round_robin",
+        "monitor_ids": [
+          "mon-0",
+          "mon-1"
+        ]
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.78,
+        "area_ratio_max": 1.5,
+        "allow_partial": false
+      }
+    }
+  ],
+  "matrix": {
+    "resolution_group_ids": [
+      "r800x600",
+      "r1024x768",
+      "r1280x720",
+      "r1920x1080"
+    ],
+    "scenario_type_ids": [
+      "vector_ui_baseline"
+    ],
+    "scenarios_per_resolution": 1,
+    "enforce_equal_scenario_count": true,
+    "include_negative_controls": false,
+    "per_resolution_overrides": {}
+  },
+  "outputs": {
+    "write_json": true,
+    "write_markdown": true,
+    "write_images": true,
+    "patch_readmes": true,
+    "summary_scale": 2,
+    "mega_summary": {
+      "format": "jpg",
+      "jpeg_quality": 80
+    }
+  }
+}

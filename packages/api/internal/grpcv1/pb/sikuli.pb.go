@@ -28,6 +28,10 @@ const (
 	MatcherEngine_MATCHER_ENGINE_TEMPLATE    MatcherEngine = 1
 	MatcherEngine_MATCHER_ENGINE_ORB         MatcherEngine = 2
 	MatcherEngine_MATCHER_ENGINE_HYBRID      MatcherEngine = 3
+	MatcherEngine_MATCHER_ENGINE_AKAZE       MatcherEngine = 4
+	MatcherEngine_MATCHER_ENGINE_BRISK       MatcherEngine = 5
+	MatcherEngine_MATCHER_ENGINE_KAZE        MatcherEngine = 6
+	MatcherEngine_MATCHER_ENGINE_SIFT        MatcherEngine = 7
 )
 
 // Enum value maps for MatcherEngine.
@@ -37,12 +41,20 @@ var (
 		1: "MATCHER_ENGINE_TEMPLATE",
 		2: "MATCHER_ENGINE_ORB",
 		3: "MATCHER_ENGINE_HYBRID",
+		4: "MATCHER_ENGINE_AKAZE",
+		5: "MATCHER_ENGINE_BRISK",
+		6: "MATCHER_ENGINE_KAZE",
+		7: "MATCHER_ENGINE_SIFT",
 	}
 	MatcherEngine_value = map[string]int32{
 		"MATCHER_ENGINE_UNSPECIFIED": 0,
 		"MATCHER_ENGINE_TEMPLATE":    1,
 		"MATCHER_ENGINE_ORB":         2,
 		"MATCHER_ENGINE_HYBRID":      3,
+		"MATCHER_ENGINE_AKAZE":       4,
+		"MATCHER_ENGINE_BRISK":       5,
+		"MATCHER_ENGINE_KAZE":        6,
+		"MATCHER_ENGINE_SIFT":        7,
 	}
 )
 
@@ -2228,12 +2240,16 @@ const file_sikuli_v1_sikuli_proto_rawDesc = "" +
 	"\x14IsAppRunningResponse\x12\x18\n" +
 	"\arunning\x18\x01 \x01(\bR\arunning\"B\n" +
 	"\x13ListWindowsResponse\x12+\n" +
-	"\awindows\x18\x01 \x03(\v2\x11.sikuli.v1.WindowR\awindows*\x7f\n" +
+	"\awindows\x18\x01 \x03(\v2\x11.sikuli.v1.WindowR\awindows*\xe5\x01\n" +
 	"\rMatcherEngine\x12\x1e\n" +
 	"\x1aMATCHER_ENGINE_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17MATCHER_ENGINE_TEMPLATE\x10\x01\x12\x16\n" +
 	"\x12MATCHER_ENGINE_ORB\x10\x02\x12\x19\n" +
-	"\x15MATCHER_ENGINE_HYBRID\x10\x032\x8c\v\n" +
+	"\x15MATCHER_ENGINE_HYBRID\x10\x03\x12\x18\n" +
+	"\x14MATCHER_ENGINE_AKAZE\x10\x04\x12\x18\n" +
+	"\x14MATCHER_ENGINE_BRISK\x10\x05\x12\x17\n" +
+	"\x13MATCHER_ENGINE_KAZE\x10\x06\x12\x17\n" +
+	"\x13MATCHER_ENGINE_SIFT\x10\a2\x8c\v\n" +
 	"\rSikuliService\x127\n" +
 	"\x04Find\x12\x16.sikuli.v1.FindRequest\x1a\x17.sikuli.v1.FindResponse\x12=\n" +
 	"\aFindAll\x12\x16.sikuli.v1.FindRequest\x1a\x1a.sikuli.v1.FindAllResponse\x12G\n" +

@@ -7,7 +7,7 @@ const DEFAULT_ADDR = "127.0.0.1:50051";
 const DEFAULT_TIMEOUT_MS = 5000;
 const TRACE_HEADER = "x-trace-id";
 
-export type MatcherEngine = "template" | "orb" | "hybrid";
+export type MatcherEngine = "template" | "orb" | "akaze" | "brisk" | "kaze" | "sift" | "hybrid";
 const SCREEN_SEARCH_METHODS = new Set(["FindOnScreen", "ExistsOnScreen", "WaitOnScreen", "ClickOnScreen"]);
 
 export type RpcMessage = Record<string, unknown>;
@@ -44,7 +44,14 @@ export class SikuliError extends Error {
 
 function normalizeMatcherEngine(raw: string | undefined): MatcherEngine {
   const normalized = String(raw ?? "").trim().toLowerCase();
-  if (normalized === "orb" || normalized === "hybrid") {
+  if (
+    normalized === "orb" ||
+    normalized === "akaze" ||
+    normalized === "brisk" ||
+    normalized === "kaze" ||
+    normalized === "sift" ||
+    normalized === "hybrid"
+  ) {
     return normalized;
   }
   return "template";
@@ -90,6 +97,14 @@ function matcherEngineToProtoValue(engine: MatcherEngine): number {
   switch (engine) {
     case "orb":
       return 2;
+    case "akaze":
+      return 4;
+    case "brisk":
+      return 5;
+    case "kaze":
+      return 6;
+    case "sift":
+      return 7;
     case "hybrid":
       return 3;
     default:

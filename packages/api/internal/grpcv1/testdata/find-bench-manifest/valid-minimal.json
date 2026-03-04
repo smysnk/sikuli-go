@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "name": "fixture-valid-minimal",
+  "seed": 17,
+  "metadata": {
+    "owner": "tests",
+    "created_utc": "2026-03-03T00:00:00Z"
+  },
+  "engines": ["template"],
+  "resolution_groups": [
+    {"id": "r480", "width": 480, "height": 270}
+  ],
+  "defaults": {
+    "target_size_px": 48,
+    "iterations": 1,
+    "retry_attempts": 0,
+    "rpc_timeout_ms": 3000,
+    "query_from_base": true,
+    "tolerance_overlap_min": 0.25,
+    "max_area_ratio": 1.5,
+    "strict_bbox": true
+  },
+  "scenario_types": [
+    {
+      "id": "template_control_exact",
+      "kind": "template_control",
+      "enabled": true,
+      "style": "ui",
+      "target": {
+        "source": "synthetic",
+        "size_px": {"min": 48, "max": 48},
+        "rotation_degrees": {"min": 0, "max": 0}
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.5
+      },
+      "transforms": {
+        "scale": {"min": 1.0, "max": 1.0},
+        "rotate": {"min": 0.0, "max": 0.0},
+        "perspective": {"enabled": false, "corner_shift_pct": {"min": 0.0, "max": 0.0}},
+        "skew_x": {"min": 0.0, "max": 0.0},
+        "skew_y": {"min": 0.0, "max": 0.0}
+      },
+      "photometric": {
+        "brightness": {"min": 0.0, "max": 0.0},
+        "contrast": {"min": 1.0, "max": 1.0},
+        "gamma": {"min": 1.0, "max": 1.0},
+        "blur_sigma": {"min": 0.0, "max": 0.0},
+        "jpeg_quality": {"min": 100, "max": 100}
+      },
+      "occlusion": {"enabled": false, "target_coverage_pct": {"min": 0.0, "max": 0.0}},
+      "decoys": {
+        "enabled": true,
+        "count": {"min": 8, "max": 8},
+        "similarity": {"min": 0.9, "max": 0.9},
+        "placement": "grid"
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.95,
+        "area_ratio_max": 1.1,
+        "allow_partial": false
+      }
+    }
+  ],
+  "matrix": {
+    "resolution_group_ids": ["r480"],
+    "scenario_type_ids": ["template_control_exact"],
+    "scenarios_per_resolution": 1
+  },
+  "outputs": {
+    "summary_scale": 2,
+    "mega_summary": {"format": "jpg", "jpeg_quality": 80}
+  }
+}

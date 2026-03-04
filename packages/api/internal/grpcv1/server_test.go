@@ -440,13 +440,31 @@ func TestMatcherEngineDefaultsToHybrid(t *testing.T) {
 	}
 }
 
-func TestMatcherEngineTemplateEnumStillUsesTemplate(t *testing.T) {
-	engine, err := matcherEngineFromProto(pb.MatcherEngine_MATCHER_ENGINE_TEMPLATE)
-	if err != nil {
-		t.Fatalf("unexpected error for template enum: %v", err)
+func TestMatcherEngineEnumMappings(t *testing.T) {
+	tests := []struct {
+		name string
+		in   pb.MatcherEngine
+		want cv.MatcherEngine
+	}{
+		{name: "template", in: pb.MatcherEngine_MATCHER_ENGINE_TEMPLATE, want: cv.MatcherEngineTemplate},
+		{name: "orb", in: pb.MatcherEngine_MATCHER_ENGINE_ORB, want: cv.MatcherEngineORB},
+		{name: "akaze", in: pb.MatcherEngine_MATCHER_ENGINE_AKAZE, want: cv.MatcherEngineAKAZE},
+		{name: "brisk", in: pb.MatcherEngine_MATCHER_ENGINE_BRISK, want: cv.MatcherEngineBRISK},
+		{name: "kaze", in: pb.MatcherEngine_MATCHER_ENGINE_KAZE, want: cv.MatcherEngineKAZE},
+		{name: "sift", in: pb.MatcherEngine_MATCHER_ENGINE_SIFT, want: cv.MatcherEngineSIFT},
+		{name: "hybrid", in: pb.MatcherEngine_MATCHER_ENGINE_HYBRID, want: cv.MatcherEngineHybrid},
 	}
-	if engine != cv.MatcherEngineTemplate {
-		t.Fatalf("template enum mismatch got=%q want=%q", engine, cv.MatcherEngineTemplate)
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			engine, err := matcherEngineFromProto(tc.in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if engine != tc.want {
+				t.Fatalf("engine enum mismatch got=%q want=%q", engine, tc.want)
+			}
+		})
 	}
 }
 

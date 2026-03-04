@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	orbRatioTestThreshold   = 0.75
-	orbMinGoodMatches       = 8
-	orbHomographyThreshold  = 3.0
-	orbHomographyMaxIters   = 2000
-	orbHomographyConfidence = 0.995
+	featureRatioTestThreshold   = 0.75
+	featureMinGoodMatches       = 8
+	featureHomographyThreshold  = 3.0
+	featureHomographyMaxIters   = 2000
+	featureHomographyConfidence = 0.995
 )
 
 type ORBMatcher struct{}
@@ -25,7 +25,62 @@ func NewORBMatcher() *ORBMatcher {
 	return &ORBMatcher{}
 }
 
+type AKAZEMatcher struct{}
+
+func NewAKAZEMatcher() *AKAZEMatcher {
+	return &AKAZEMatcher{}
+}
+
+type BRISKMatcher struct{}
+
+func NewBRISKMatcher() *BRISKMatcher {
+	return &BRISKMatcher{}
+}
+
+type KAZEMatcher struct{}
+
+func NewKAZEMatcher() *KAZEMatcher {
+	return &KAZEMatcher{}
+}
+
+type SIFTMatcher struct{}
+
+func NewSIFTMatcher() *SIFTMatcher {
+	return &SIFTMatcher{}
+}
+
+type featureDetector interface {
+	DetectAndCompute(src gocv.Mat, mask gocv.Mat) ([]gocv.KeyPoint, gocv.Mat)
+	Close() error
+}
+
 func (m *ORBMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error) {
+	orb := gocv.NewORB()
+	return findWithFeatureDetector(req, &orb, gocv.NormHamming)
+}
+
+func (m *AKAZEMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error) {
+	akaze := gocv.NewAKAZE()
+	return findWithFeatureDetector(req, &akaze, gocv.NormHamming)
+}
+
+func (m *BRISKMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error) {
+	brisk := gocv.NewBRISK()
+	return findWithFeatureDetector(req, &brisk, gocv.NormHamming)
+}
+
+func (m *KAZEMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error) {
+	kaze := gocv.NewKAZE()
+	return findWithFeatureDetector(req, &kaze, gocv.NormL2)
+}
+
+func (m *SIFTMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error) {
+	sift := gocv.NewSIFT()
+	return findWithFeatureDetector(req, &sift, gocv.NormL2)
+}
+
+func findWithFeatureDetector(req core.SearchRequest, detector featureDetector, norm gocv.NormType) ([]core.MatchCandidate, error) {
+	defer detector.Close()
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
@@ -85,20 +140,17 @@ func (m *ORBMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)
 		defer needleMask.Close()
 	}
 
-	orb := gocv.NewORB()
-	defer orb.Close()
-
-	hayKP, hayDesc := orb.DetectAndCompute(hayMat, emptyMask)
+	hayKP, hayDesc := detector.DetectAndCompute(hayMat, emptyMask)
 	defer hayDesc.Close()
 
-	needleKP, needleDesc := orb.DetectAndCompute(needleMat, needleMask)
+	needleKP, needleDesc := detector.DetectAndCompute(needleMat, needleMask)
 	defer needleDesc.Close()
 
 	if len(hayKP) == 0 || len(needleKP) == 0 || hayDesc.Empty() || needleDesc.Empty() {
 		return nil, nil
 	}
 
-	bf := gocv.NewBFMatcherWithParams(gocv.NormHamming, false)
+	bf := gocv.NewBFMatcherWithParams(norm, false)
 	defer bf.Close()
 
 	knn := bf.KnnMatch(needleDesc, hayDesc, 2)
@@ -107,11 +159,11 @@ func (m *ORBMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)
 		if len(pair) < 2 {
 			continue
 		}
-		if pair[0].Distance < orbRatioTestThreshold*pair[1].Distance {
+		if pair[0].Distance < featureRatioTestThreshold*pair[1].Distance {
 			good = append(good, pair[0])
 		}
 	}
-	if len(good) < orbMinGoodMatches {
+	if len(good) < featureMinGoodMatches {
 		return nil, nil
 	}
 
@@ -149,10 +201,10 @@ func (m *ORBMatcher) Find(req core.SearchRequest) ([]core.MatchCandidate, error)
 		srcMat,
 		dstMat,
 		gocv.HomographyMethodRANSAC,
-		orbHomographyThreshold,
+		featureHomographyThreshold,
 		&inlierMask,
-		orbHomographyMaxIters,
-		orbHomographyConfidence,
+		featureHomographyMaxIters,
+		featureHomographyConfidence,
 	)
 	defer homography.Close()
 	if homography.Empty() {

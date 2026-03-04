@@ -1,0 +1,675 @@
+{
+  "schema_version": "1.0.0",
+  "images": [
+    {
+      "id": "hybrid_gate_conflicts",
+      "scenario_type_ids": [
+        "hybrid_gate_conflicts"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/hybrid_gate_conflicts.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/hybrid_gate_conflicts.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/hybrid_gate_conflicts.png",
+      "preview_images": [
+        {
+          "label": "hybrid conflict blend",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/hybrid_gate_conflicts-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1508,
+          "y": 900,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1853,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1508,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1508,
+          "y": 900,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1853,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1508,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        }
+      ]
+    },
+    {
+      "id": "multi_monitor_dpi_shift",
+      "scenario_type_ids": [
+        "multi_monitor_dpi_shift"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/multi_monitor_dpi_shift.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/multi_monitor_dpi_shift.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/multi_monitor_dpi_shift.png",
+      "preview_images": [
+        {
+          "label": "dpi/layout shift preview",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/multi_monitor_dpi_shift-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 654,
+          "y": 273,
+          "w": 807,
+          "h": 177
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 654,
+          "y": 643,
+          "w": 807,
+          "h": 177
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 654,
+          "y": 1013,
+          "w": 807,
+          "h": 177
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 187,
+          "y": 401,
+          "w": 577,
+          "h": 127
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1367,
+          "y": 652,
+          "w": 719,
+          "h": 158
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1367,
+          "y": 981,
+          "w": 719,
+          "h": 158
+        }
+      ]
+    },
+    {
+      "id": "noise_stress_random",
+      "scenario_type_ids": [
+        "noise_stress_random"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/noise_stress_random.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/noise_stress_random.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/noise_stress_random.png",
+      "preview_images": [
+        {
+          "label": "noise + compression",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/noise_stress_random-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1393,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1508,
+          "y": 348,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1278,
+          "y": 762,
+          "w": 460,
+          "h": 278
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1393,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1508,
+          "y": 348,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1278,
+          "y": 762,
+          "w": 460,
+          "h": 278
+        }
+      ]
+    },
+    {
+      "id": "orb_feature_rich",
+      "scenario_type_ids": [
+        "orb_feature_rich"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/orb_feature_rich.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/orb_feature_rich.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/orb_feature_rich.png",
+      "preview_images": [
+        {
+          "label": "feature noise",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/orb_feature_rich-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1048,
+          "y": 210,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1048,
+          "y": 1038,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 818,
+          "y": 762,
+          "w": 460,
+          "h": 278
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1048,
+          "y": 210,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1048,
+          "y": 1038,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 818,
+          "y": 762,
+          "w": 460,
+          "h": 278
+        }
+      ]
+    },
+    {
+      "id": "perspective_skew_sweep",
+      "scenario_type_ids": [
+        "perspective_skew_sweep"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/perspective_skew_sweep.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/perspective_skew_sweep.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/perspective_skew_sweep.png",
+      "preview_images": [
+        {
+          "label": "perspective sweep",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/perspective_skew_sweep-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1968,
+          "y": 693,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1968,
+          "y": 900,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1738,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1206,
+          "y": 1126,
+          "w": 543,
+          "h": 292
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1604,
+          "y": 1121,
+          "w": 543,
+          "h": 287
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 939,
+          "y": 992,
+          "w": 543,
+          "h": 291
+        }
+      ]
+    },
+    {
+      "id": "photo_clutter",
+      "scenario_type_ids": [
+        "photo_clutter"
+      ],
+      "image_path": "docs/bench/assets/photo/4256_clutter_crop_zoom.jpg",
+      "source_image_path": "docs/bench/assets/photo/4256_clutter_crop_zoom.jpg",
+      "benchmark_image_path": "docs/bench/assets/photo/4256_clutter_crop_zoom.jpg",
+      "preview_images": [
+        {
+          "label": "original",
+          "image_path": "docs/bench/assets/photo/4256_clutter_crop_zoom.jpg"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1558,
+          "y": 804,
+          "w": 684,
+          "h": 455
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1900,
+          "y": 1030,
+          "w": 684,
+          "h": 455
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1045,
+          "y": 804,
+          "w": 684,
+          "h": 455
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1558,
+          "y": 804,
+          "w": 684,
+          "h": 455
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1900,
+          "y": 1030,
+          "w": 684,
+          "h": 455
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1045,
+          "y": 804,
+          "w": 684,
+          "h": 455
+        }
+      ]
+    },
+    {
+      "id": "repetitive_grid_camouflage",
+      "scenario_type_ids": [
+        "repetitive_grid_camouflage"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/repetitive_grid_camouflage.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/repetitive_grid_camouflage.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/repetitive_grid_camouflage.png",
+      "preview_images": [
+        {
+          "label": "camouflage benchmark",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/repetitive_grid_camouflage-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 460,
+          "y": 432,
+          "w": 210,
+          "h": 210
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1254,
+          "y": 806,
+          "w": 210,
+          "h": 210
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1868,
+          "y": 489,
+          "w": 210,
+          "h": 210
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 460,
+          "y": 432,
+          "w": 210,
+          "h": 210
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1254,
+          "y": 806,
+          "w": 210,
+          "h": 210
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 1868,
+          "y": 489,
+          "w": 210,
+          "h": 210
+        }
+      ]
+    },
+    {
+      "id": "scale_rotate_sweep",
+      "scenario_type_ids": [
+        "scale_rotate_sweep"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/scale_rotate_sweep.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/scale_rotate_sweep.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/scale_rotate_sweep.png",
+      "preview_images": [
+        {
+          "label": "global rotate",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/scale_rotate_sweep-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1278,
+          "y": 417,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1738,
+          "y": 486,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 933,
+          "y": 348,
+          "w": 460,
+          "h": 278
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1188,
+          "y": 295,
+          "w": 524,
+          "h": 404
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1648,
+          "y": 227,
+          "w": 525,
+          "h": 404
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 839,
+          "y": 330,
+          "w": 523,
+          "h": 404
+        }
+      ]
+    },
+    {
+      "id": "template_control_exact",
+      "scenario_type_ids": [
+        "template_control_exact"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/template_control_exact.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/template_control_exact.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/template_control_exact.png",
+      "preview_images": [
+        {
+          "label": "anti-alias + compression",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/template_control_exact-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1048,
+          "y": 417,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 473,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 703,
+          "y": 417,
+          "w": 460,
+          "h": 278
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 1048,
+          "y": 417,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 473,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 703,
+          "y": 417,
+          "w": 460,
+          "h": 278
+        }
+      ]
+    },
+    {
+      "id": "vector_ui_baseline",
+      "scenario_type_ids": [
+        "vector_ui_baseline"
+      ],
+      "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/vector_ui_baseline.png",
+      "source_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/source/vector_ui_baseline.png",
+      "benchmark_image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/benchmark/vector_ui_baseline.png",
+      "preview_images": [
+        {
+          "label": "original",
+          "image_path": "packages/api/internal/grpcv1/testdata/find-bench-assets/scenario/preview/vector_ui_baseline-01.png"
+        }
+      ],
+      "targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 588,
+          "y": 141,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1163,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 818,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        }
+      ],
+      "benchmark_targets": [
+        {
+          "id": "target-01",
+          "label": "primary",
+          "x": 588,
+          "y": 141,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-02",
+          "label": "secondary",
+          "x": 1163,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        },
+        {
+          "id": "target-03",
+          "label": "tertiary",
+          "x": 818,
+          "y": 555,
+          "w": 460,
+          "h": 278
+        }
+      ]
+    }
+  ]
+}

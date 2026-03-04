@@ -349,6 +349,14 @@ func matcherEngineFromProto(in pb.MatcherEngine) (cv.MatcherEngine, error) {
 		return cv.MatcherEngineTemplate, nil
 	case pb.MatcherEngine_MATCHER_ENGINE_ORB:
 		return cv.MatcherEngineORB, nil
+	case pb.MatcherEngine_MATCHER_ENGINE_AKAZE:
+		return cv.MatcherEngineAKAZE, nil
+	case pb.MatcherEngine_MATCHER_ENGINE_BRISK:
+		return cv.MatcherEngineBRISK, nil
+	case pb.MatcherEngine_MATCHER_ENGINE_KAZE:
+		return cv.MatcherEngineKAZE, nil
+	case pb.MatcherEngine_MATCHER_ENGINE_SIFT:
+		return cv.MatcherEngineSIFT, nil
 	case pb.MatcherEngine_MATCHER_ENGINE_HYBRID:
 		return cv.MatcherEngineHybrid, nil
 	default:

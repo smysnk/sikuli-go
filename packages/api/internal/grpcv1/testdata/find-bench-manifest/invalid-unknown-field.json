@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "name": "fixture-invalid-unknown-field",
+  "seed": 1,
+  "metadata": {"owner": "tests", "created_utc": "2026-03-03T00:00:00Z"},
+  "engines": ["template"],
+  "resolution_groups": [{"id": "r480", "width": 480, "height": 270}],
+  "defaults": {
+    "target_size_px": 48,
+    "iterations": 1,
+    "retry_attempts": 0,
+    "rpc_timeout_ms": 3000,
+    "query_from_base": true,
+    "tolerance_overlap_min": 0.2,
+    "max_area_ratio": 1.5,
+    "strict_bbox": true
+  },
+  "scenario_types": [],
+  "matrix": {"resolution_group_ids": ["r480"], "scenario_type_ids": [], "scenarios_per_resolution": 1},
+  "outputs": {"summary_scale": 2, "mega_summary": {"format": "jpg", "jpeg_quality": 80}},
+  "unexpected_field": true
+}

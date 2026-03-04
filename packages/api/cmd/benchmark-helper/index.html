@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SikuliGO Benchmark Helper</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f3f6fb;
+  --panel: #ffffff;
+  --line: #d7deea;
+  --ink: #0f172a;
+  --muted: #475569;
+  --accent: #0f766e;
+  --danger: #b91c1c;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #f6f9ff 0%, #eef3fb 100%);
+  color: var(--ink);
+  font: 14px/1.35 "SF Mono", Menlo, Consolas, monospace;
+}
+.layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.sidebar {
+  border-right: 1px solid var(--line);
+  background: #f7faff;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar h1 {
+  margin: 0;
+  padding: 16px;
+  font-size: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.meta {
+  padding: 12px 16px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.list {
+  overflow: auto;
+  padding: 8px;
+}
+.item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  padding: 10px;
+  cursor: pointer;
+}
+.item.active {
+  border-color: #0ea5e9;
+  box-shadow: inset 0 0 0 1px #0ea5e9;
+}
+.item .id { font-weight: 700; }
+.item .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.main {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-width: 0;
+}
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.toolbar .spacer { flex: 1; }
+button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font: inherit;
+}
+button.primary { border-color: #0891b2; color: #0f172a; }
+button.danger { border-color: #fca5a5; color: var(--danger); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.tab-group {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.tab-btn {
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+}
+.tab-btn:last-child { border-right: 0; }
+.tab-btn.active {
+  background: #e2e8f0;
+  font-weight: 700;
+}
+.status {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  background: #fdfefe;
+}
+.content-wrap {
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  display: grid;
+  align-content: stretch;
+}
+.source-pane, .preview-pane {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+}
+.canvas-shell {
+  border: 1px solid var(--line);
+  background: #101828;
+  border-radius: 10px;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.preview-pane {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #0b1220;
+  overflow: auto;
+  padding: 12px;
+}
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 12px;
+}
+.preview-card {
+  border: 1px solid #334155;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0f172a;
+}
+.preview-label {
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #e2e8f0;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+.preview-card img {
+  width: 100%;
+  display: block;
+  height: auto;
+}
+.hidden { display: none; }
+.toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 150ms ease;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { max-height: 260px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .preview-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <h1>Benchmark Helper</h1>
+    <div class="meta" id="meta">Loading...</div>
+    <div class="list" id="list"></div>
+  </aside>
+  <main class="main">
+    <div class="toolbar">
+      <button id="prevBtn">Previous</button>
+      <button id="nextBtn">Next</button>
+      <div class="tab-group">
+        <button id="tabSource" class="tab-btn active">Source</button>
+        <button id="tabPreview" class="tab-btn">Preview</button>
+      </div>
+      <button id="deleteBtn" class="danger">Delete Selection</button>
+      <span class="spacer"></span>
+      <button id="saveBtn" class="primary">Save Now</button>
+    </div>
+    <div class="status" id="status">Ready</div>
+    <div class="content-wrap">
+      <div id="sourcePane" class="source-pane">
+        <div class="canvas-shell">
+          <canvas id="canvas" width="1280" height="720"></canvas>
+        </div>
+      </div>
+      <div id="previewPane" class="preview-pane hidden"></div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const MIN_SIZE = 50;
+let spec = null;
+let currentIndex = 0;
+let activeTab = 'source';
+let sourceImageEl = null;
+let selectedTargetIndex = -1;
+let dragState = null;
+let saveTimer = null;
+
+const listEl = document.getElementById('list');
+const metaEl = document.getElementById('meta');
+const statusEl = document.getElementById('status');
+const toastEl = document.getElementById('toast');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const sourcePaneEl = document.getElementById('sourcePane');
+const previewPaneEl = document.getElementById('previewPane');
+const tabSourceEl = document.getElementById('tabSource');
+const tabPreviewEl = document.getElementById('tabPreview');
+const deleteBtnEl = document.getElementById('deleteBtn');
+
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  setTimeout(() => toastEl.classList.remove('show'), 1800);
+}
+
+function setStatus(msg) {
+  statusEl.textContent = msg;
+}
+
+function currentEntry() {
+  if (!spec || !Array.isArray(spec.images) || spec.images.length === 0) return null;
+  return spec.images[currentIndex] || null;
+}
+
+function sourceImagePath(entry) {
+  return String(entry?.source_image_path || entry?.image_path || '').trim();
+}
+
+function benchmarkImagePath(entry) {
+  return String(entry?.benchmark_image_path || sourceImagePath(entry)).trim();
+}
+
+function previewImages(entry) {
+  const list = Array.isArray(entry?.preview_images) ? entry.preview_images : [];
+  const valid = list.filter((p) => String(p?.image_path || '').trim() !== '');
+  if (valid.length > 0) return valid;
+  const fallbackPath = benchmarkImagePath(entry);
+  if (!fallbackPath) return [];
+  return [{ label: 'benchmark', image_path: fallbackPath }];
+}
+
+function makeTargetId() {
+  return `target-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
+}
+
+function rectNormalize(a, b) {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  const w = Math.abs(b.x - a.x);
+  const h = Math.abs(b.y - a.y);
+  return { x, y, w, h };
+}
+
+function canvasTransform() {
+  const w = canvas.width;
+  const h = canvas.height;
+  if (!sourceImageEl || !sourceImageEl.naturalWidth || !sourceImageEl.naturalHeight) {
+    return { scale: 1, ox: 0, oy: 0, drawW: w, drawH: h };
+  }
+  const iw = sourceImageEl.naturalWidth;
+  const ih = sourceImageEl.naturalHeight;
+  const scale = Math.min(w / iw, h / ih);
+  const drawW = iw * scale;
+  const drawH = ih * scale;
+  const ox = (w - drawW) / 2;
+  const oy = (h - drawH) / 2;
+  return { scale, ox, oy, drawW, drawH };
+}
+
+function imageToCanvasPoint(p) {
+  const t = canvasTransform();
+  return { x: t.ox + p.x * t.scale, y: t.oy + p.y * t.scale };
+}
+
+function canvasToImagePoint(evt) {
+  const rect = canvas.getBoundingClientRect();
+  const x = evt.clientX - rect.left;
+  const y = evt.clientY - rect.top;
+  const t = canvasTransform();
+  if (!sourceImageEl) return { x: 0, y: 0 };
+  const ix = Math.max(0, Math.min(sourceImageEl.naturalWidth, (x - t.ox) / t.scale));
+  const iy = Math.max(0, Math.min(sourceImageEl.naturalHeight, (y - t.oy) / t.scale));
+  return { x: ix, y: iy };
+}
+
+function hitTarget(point) {
+  const entry = currentEntry();
+  if (!entry || !Array.isArray(entry.targets)) return -1;
+  for (let i = entry.targets.length - 1; i >= 0; i -= 1) {
+    const t = entry.targets[i];
+    if (point.x >= t.x && point.x <= t.x + t.w && point.y >= t.y && point.y <= t.y + t.h) return i;
+  }
+  return -1;
+}
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function edgeToleranceInImagePx() {
+  const t = canvasTransform();
+  const scale = t.scale > 0 ? t.scale : 1;
+  return Math.max(3, 8 / scale);
+}
+
+function resizeHandleForPoint(point, target) {
+  if (!target) return '';
+  const tol = edgeToleranceInImagePx();
+  const left = target.x;
+  const right = target.x + target.w;
+  const top = target.y;
+  const bottom = target.y + target.h;
+
+  const nearLeft = Math.abs(point.x - left) <= tol;
+  const nearRight = Math.abs(point.x - right) <= tol;
+  const nearTop = Math.abs(point.y - top) <= tol;
+  const nearBottom = Math.abs(point.y - bottom) <= tol;
+
+  const withinX = point.x >= left - tol && point.x <= right + tol;
+  const withinY = point.y >= top - tol && point.y <= bottom + tol;
+  if (!withinX || !withinY) return '';
+
+  if (nearTop && nearLeft) return 'nw';
+  if (nearTop && nearRight) return 'ne';
+  if (nearBottom && nearLeft) return 'sw';
+  if (nearBottom && nearRight) return 'se';
+  if (nearTop && point.x >= left && point.x <= right) return 'n';
+  if (nearBottom && point.x >= left && point.x <= right) return 's';
+  if (nearLeft && point.y >= top && point.y <= bottom) return 'w';
+  if (nearRight && point.y >= top && point.y <= bottom) return 'e';
+  return '';
+}
+
+function resizeCursorForHandle(handle) {
+  switch (handle) {
+    case 'n':
+    case 's':
+      return 'ns-resize';
+    case 'e':
+    case 'w':
+      return 'ew-resize';
+    case 'nw':
+    case 'se':
+      return 'nwse-resize';
+    case 'ne':
+    case 'sw':
+      return 'nesw-resize';
+    default:
+      return 'default';
+  }
+}
+
+function updateCanvasCursor(point = null) {
+  if (activeTab !== 'source') {
+    canvas.style.cursor = 'default';
+    return;
+  }
+  if (dragState?.mode === 'move') {
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+  if (dragState?.mode === 'resize') {
+    canvas.style.cursor = resizeCursorForHandle(dragState.handle);
+    return;
+  }
+  if (!point) {
+    canvas.style.cursor = 'crosshair';
+    return;
+  }
+
+  const entry = currentEntry();
+  if (!entry || !Array.isArray(entry.targets)) {
+    canvas.style.cursor = 'crosshair';
+    return;
+  }
+
+  const hit = hitTarget(point);
+  if (hit < 0) {
+    canvas.style.cursor = 'crosshair';
+    return;
+  }
+  const target = entry.targets[hit];
+  const handle = resizeHandleForPoint(point, target);
+  canvas.style.cursor = handle ? resizeCursorForHandle(handle) : 'move';
+}
+
+function draw() {
+  ctx.fillStyle = '#0b1220';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (!sourceImageEl) {
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '16px Menlo, monospace';
+    ctx.fillText('No source image selected', 20, 30);
+    return;
+  }
+
+  const t = canvasTransform();
+  ctx.drawImage(sourceImageEl, t.ox, t.oy, t.drawW, t.drawH);
+
+  const entry = currentEntry();
+  if (!entry || !Array.isArray(entry.targets)) return;
+
+  entry.targets.forEach((target, idx) => {
+    const p1 = imageToCanvasPoint({ x: target.x, y: target.y });
+    const p2 = imageToCanvasPoint({ x: target.x + target.w, y: target.y + target.h });
+    const w = p2.x - p1.x;
+    const h = p2.y - p1.y;
+    ctx.lineWidth = idx === selectedTargetIndex ? 3 : 2;
+    ctx.strokeStyle = idx === selectedTargetIndex ? '#fde047' : '#22c55e';
+    ctx.strokeRect(p1.x, p1.y, w, h);
+
+    const label = target.label || target.id || `target-${idx + 1}`;
+    ctx.fillStyle = 'rgba(15,23,42,0.85)';
+    ctx.fillRect(p1.x, p1.y - 18, Math.max(40, label.length * 7 + 10), 16);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '11px Menlo, monospace';
+    ctx.fillText(label, p1.x + 5, p1.y - 6);
+  });
+
+  if (dragState && dragState.mode === 'create' && dragState.currentRect) {
+    const r = dragState.currentRect;
+    const p1 = imageToCanvasPoint({ x: r.x, y: r.y });
+    const p2 = imageToCanvasPoint({ x: r.x + r.w, y: r.h + r.y });
+    ctx.setLineDash([8, 4]);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+    ctx.setLineDash([]);
+  }
+}
+
+function renderPreviewPane() {
+  const entry = currentEntry();
+  previewPaneEl.innerHTML = '';
+  if (!entry) return;
+  const previews = previewImages(entry);
+  if (previews.length === 0) {
+    previewPaneEl.innerHTML = '<div class="preview-label">No preview variants configured.</div>';
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'preview-grid';
+  previews.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'preview-card';
+
+    const label = document.createElement('div');
+    label.className = 'preview-label';
+    label.textContent = p.label || `preview ${idx + 1}`;
+
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.alt = p.label || `preview ${idx + 1}`;
+    img.src = `/api/image/${encodeURIComponent(entry.id)}?mode=preview&idx=${idx}&t=${Date.now()}`;
+
+    card.appendChild(label);
+    card.appendChild(img);
+    grid.appendChild(card);
+  });
+  previewPaneEl.appendChild(grid);
+}
+
+function setActiveTab(tab) {
+  activeTab = tab === 'preview' ? 'preview' : 'source';
+  const sourceActive = activeTab === 'source';
+  sourcePaneEl.classList.toggle('hidden', !sourceActive);
+  previewPaneEl.classList.toggle('hidden', sourceActive);
+  tabSourceEl.classList.toggle('active', sourceActive);
+  tabPreviewEl.classList.toggle('active', !sourceActive);
+  deleteBtnEl.disabled = !sourceActive;
+
+  if (sourceActive) {
+    setStatus('Source tab: draw/move/delete target regions');
+    resizeCanvas();
+    draw();
+    updateCanvasCursor();
+  } else {
+    setStatus('Preview tab: benchmark challenge variants');
+    renderPreviewPane();
+    updateCanvasCursor();
+  }
+}
+
+function renderList() {
+  listEl.innerHTML = '';
+  if (!spec || !Array.isArray(spec.images)) return;
+  spec.images.forEach((entry, idx) => {
+    const btn = document.createElement('button');
+    btn.className = `item${idx === currentIndex ? ' active' : ''}`;
+    btn.type = 'button';
+    const scenarios = Array.isArray(entry.scenario_type_ids) ? entry.scenario_type_ids.join(', ') : '';
+    const count = Array.isArray(entry.targets) ? entry.targets.length : 0;
+    btn.innerHTML = `<div class="id">${entry.id}</div><div class="sub">scenarios: ${scenarios || '-'}<br/>targets: ${count}</div>`;
+    btn.addEventListener('click', () => {
+      currentIndex = idx;
+      selectedTargetIndex = -1;
+      renderList();
+      loadCurrentSourceImage();
+    });
+    listEl.appendChild(btn);
+  });
+
+  const entry = currentEntry();
+  metaEl.textContent = entry ? `Spec version ${spec.schema_version} | ${currentIndex + 1}/${spec.images.length}` : 'No images configured';
+}
+
+async function loadSpec() {
+  const res = await fetch('/api/spec', { cache: 'no-store' });
+  if (!res.ok) throw new Error(`load spec failed: ${res.status}`);
+  spec = await res.json();
+  if (!Array.isArray(spec.images)) spec.images = [];
+  if (currentIndex >= spec.images.length) currentIndex = 0;
+  renderList();
+  await loadCurrentSourceImage();
+}
+
+async function loadCurrentSourceImage() {
+  const entry = currentEntry();
+  if (!entry) {
+    sourceImageEl = null;
+    draw();
+    return;
+  }
+  setStatus(`Loading source image for ${entry.id}...`);
+  sourceImageEl = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`failed to load source image for ${entry.id}`));
+    img.src = `/api/image/${encodeURIComponent(entry.id)}?mode=source&t=${Date.now()}`;
+  }).catch((err) => {
+    toast(err.message || String(err));
+    return null;
+  });
+
+  draw();
+  updateCanvasCursor();
+  renderPreviewPane();
+  const count = Array.isArray(entry.targets) ? entry.targets.length : 0;
+  setStatus(`Scenario ${entry.id} loaded (${count} targets)`);
+}
+
+function resizeCanvas() {
+  if (activeTab !== 'source') return;
+  const shell = canvas.parentElement;
+  const w = Math.max(640, Math.floor(shell.clientWidth));
+  const h = Math.max(500, Math.floor(shell.clientHeight));
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  draw();
+  updateCanvasCursor();
+}
+
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { void saveSpec(); }, 180);
+}
+
+async function saveSpec() {
+  if (!spec) return;
+  const res = await fetch('/api/spec', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(spec),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    toast(`save failed: ${text}`);
+    return;
+  }
+  setStatus(`Saved ${new Date().toLocaleTimeString()}`);
+}
+
+canvas.addEventListener('mousedown', (evt) => {
+  if (activeTab !== 'source') return;
+  const entry = currentEntry();
+  if (!entry) return;
+  if (!Array.isArray(entry.targets)) entry.targets = [];
+
+  const p = canvasToImagePoint(evt);
+  const hit = hitTarget(p);
+  if (hit >= 0) {
+    selectedTargetIndex = hit;
+    const target = entry.targets[hit];
+    const handle = resizeHandleForPoint(p, target);
+    if (handle) {
+      dragState = {
+        mode: 'resize',
+        targetIndex: hit,
+        handle,
+        startRect: { x: target.x, y: target.y, w: target.w, h: target.h },
+        changed: false,
+      };
+      updateCanvasCursor(p);
+      draw();
+      return;
+    }
+    dragState = {
+      mode: 'move',
+      targetIndex: hit,
+      dx: p.x - target.x,
+      dy: p.y - target.y,
+      changed: false,
+    };
+    updateCanvasCursor(p);
+    draw();
+    return;
+  }
+
+  selectedTargetIndex = -1;
+  dragState = {
+    mode: 'create',
+    start: p,
+    currentRect: { x: p.x, y: p.y, w: 0, h: 0 },
+  };
+  updateCanvasCursor(p);
+  draw();
+});
+
+canvas.addEventListener('mousemove', (evt) => {
+  if (activeTab !== 'source') return;
+  const entry = currentEntry();
+  if (!entry) return;
+  const p = canvasToImagePoint(evt);
+  if (!dragState) {
+    updateCanvasCursor(p);
+    return;
+  }
+
+  if (dragState.mode === 'move') {
+    const target = entry.targets[dragState.targetIndex];
+    if (!target) return;
+    target.x = Math.round(Math.max(0, Math.min(sourceImageEl.naturalWidth - target.w, p.x - dragState.dx)));
+    target.y = Math.round(Math.max(0, Math.min(sourceImageEl.naturalHeight - target.h, p.y - dragState.dy)));
+    dragState.changed = true;
+    updateCanvasCursor(p);
+    draw();
+    return;
+  }
+
+  if (dragState.mode === 'resize') {
+    const target = entry.targets[dragState.targetIndex];
+    if (!target || !dragState.startRect) return;
+    let left = dragState.startRect.x;
+    let top = dragState.startRect.y;
+    let right = dragState.startRect.x + dragState.startRect.w;
+    let bottom = dragState.startRect.y + dragState.startRect.h;
+
+    const iw = sourceImageEl?.naturalWidth || 0;
+    const ih = sourceImageEl?.naturalHeight || 0;
+    const handle = dragState.handle || '';
+
+    if (handle.includes('w')) left = clamp(p.x, 0, right - MIN_SIZE);
+    if (handle.includes('e')) right = clamp(p.x, left + MIN_SIZE, iw);
+    if (handle.includes('n')) top = clamp(p.y, 0, bottom - MIN_SIZE);
+    if (handle.includes('s')) bottom = clamp(p.y, top + MIN_SIZE, ih);
+
+    target.x = Math.round(left);
+    target.y = Math.round(top);
+    target.w = Math.round(right - left);
+    target.h = Math.round(bottom - top);
+    dragState.changed = true;
+    updateCanvasCursor(p);
+    draw();
+    return;
+  }
+
+  if (dragState.mode === 'create') {
+    dragState.currentRect = rectNormalize(dragState.start, p);
+    updateCanvasCursor(p);
+    draw();
+  }
+});
+
+function endDrag() {
+  if (!dragState) return;
+  const entry = currentEntry();
+  if (!entry) {
+    dragState = null;
+    return;
+  }
+
+  if (dragState.mode === 'move' && dragState.changed) {
+    scheduleSave();
+    renderList();
+  }
+
+  if (dragState.mode === 'resize' && dragState.changed) {
+    scheduleSave();
+    renderList();
+  }
+
+  if (dragState.mode === 'create' && dragState.currentRect) {
+    const rect = dragState.currentRect;
+    if (rect.w < MIN_SIZE || rect.h < MIN_SIZE) {
+      toast('selection too small');
+    } else {
+      entry.targets.push({
+        id: makeTargetId(),
+        label: `target ${entry.targets.length + 1}`,
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        w: Math.round(rect.w),
+        h: Math.round(rect.h),
+      });
+      selectedTargetIndex = entry.targets.length - 1;
+      scheduleSave();
+      renderList();
+    }
+  }
+
+  dragState = null;
+  updateCanvasCursor();
+  draw();
+}
+
+canvas.addEventListener('mouseup', endDrag);
+canvas.addEventListener('mouseleave', () => {
+  endDrag();
+  updateCanvasCursor();
+});
+
+window.addEventListener('keydown', (evt) => {
+  if (activeTab !== 'source') return;
+  if (evt.key !== 'Delete' && evt.key !== 'Backspace') return;
+  const entry = currentEntry();
+  if (!entry || selectedTargetIndex < 0 || selectedTargetIndex >= entry.targets.length) return;
+  entry.targets.splice(selectedTargetIndex, 1);
+  selectedTargetIndex = -1;
+  scheduleSave();
+  renderList();
+  draw();
+});
+
+deleteBtnEl.addEventListener('click', () => {
+  if (activeTab !== 'source') return;
+  const entry = currentEntry();
+  if (!entry || selectedTargetIndex < 0 || selectedTargetIndex >= entry.targets.length) {
+    toast('no selection to delete');
+    return;
+  }
+  entry.targets.splice(selectedTargetIndex, 1);
+  selectedTargetIndex = -1;
+  scheduleSave();
+  renderList();
+  draw();
+});
+
+document.getElementById('saveBtn').addEventListener('click', () => { void saveSpec(); });
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (!spec || !Array.isArray(spec.images) || spec.images.length === 0) return;
+  currentIndex = (currentIndex - 1 + spec.images.length) % spec.images.length;
+  selectedTargetIndex = -1;
+  renderList();
+  void loadCurrentSourceImage();
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (!spec || !Array.isArray(spec.images) || spec.images.length === 0) return;
+  currentIndex = (currentIndex + 1) % spec.images.length;
+  selectedTargetIndex = -1;
+  renderList();
+  void loadCurrentSourceImage();
+});
+
+tabSourceEl.addEventListener('click', () => setActiveTab('source'));
+tabPreviewEl.addEventListener('click', () => setActiveTab('preview'));
+
+window.addEventListener('resize', resizeCanvas);
+
+(async function init() {
+  try {
+    await loadSpec();
+    setActiveTab('source');
+    resizeCanvas();
+  } catch (err) {
+    toast(err.message || String(err));
+    setStatus('failed to load spec');
+  }
+})();
+</script>
+</body>
+</html>

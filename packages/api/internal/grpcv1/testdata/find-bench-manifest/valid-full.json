@@ -1,0 +1,169 @@
+{
+  "$schema": "../../../../../docs/bench/find-on-screen-scenario.schema.json",
+  "schema_version": "1.0.0",
+  "name": "fixture-valid-full",
+  "seed": 424242,
+  "metadata": {
+    "owner": "tests",
+    "created_utc": "2026-03-03T00:00:00Z",
+    "notes": "full fixture",
+    "tags": ["fixture", "full"]
+  },
+  "engines": ["template", "orb", "hybrid"],
+  "resolution_groups": [
+    {"id": "r480", "width": 480, "height": 270, "dpi_scale": 1.0, "enabled": true},
+    {"id": "r1280", "width": 1280, "height": 720, "dpi_scale": 1.0, "enabled": true}
+  ],
+  "monitor_profiles": [
+    {"id": "mon-a", "label": "A", "width": 1920, "height": 1080, "dpi_scale": 1.0, "gamma": 1.02, "color_temperature_shift": 100, "sharpness": 0.95},
+    {"id": "mon-b", "label": "B", "width": 2560, "height": 1440, "dpi_scale": 2.0, "gamma": 1.1, "color_temperature_shift": -120, "sharpness": 1.05}
+  ],
+  "defaults": {
+    "target_size_px": 96,
+    "iterations": 1,
+    "retry_attempts": 1,
+    "rpc_timeout_ms": 4500,
+    "query_from_base": true,
+    "tolerance_overlap_min": 0.25,
+    "max_area_ratio": 2.0,
+    "strict_bbox": true
+  },
+  "scenario_types": [
+    {
+      "id": "vector_ui_baseline",
+      "kind": "vector_ui",
+      "enabled": true,
+      "style": "vector",
+      "target": {
+        "source": "synthetic",
+        "size_px": {"min": 56, "max": 96},
+        "rotation_degrees": {"min": 0, "max": 180},
+        "aspect_jitter": 0.05,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.8,
+        "palette": "ui_light",
+        "texture_seed": 1001
+      },
+      "transforms": {
+        "scale": {"min": 0.9, "max": 1.1},
+        "rotate": {"min": -8, "max": 8},
+        "perspective": {"enabled": false, "corner_shift_pct": {"min": 0.0, "max": 0.0}},
+        "skew_x": {"min": 0.0, "max": 0.0},
+        "skew_y": {"min": 0.0, "max": 0.0}
+      },
+      "photometric": {
+        "brightness": {"min": -0.08, "max": 0.08},
+        "contrast": {"min": 0.9, "max": 1.1},
+        "gamma": {"min": 0.95, "max": 1.05},
+        "blur_sigma": {"min": 0.0, "max": 0.8},
+        "jpeg_quality": {"min": 88, "max": 100},
+        "noise": [
+          {"type": "compression_blocks", "amount": {"min": 0.0, "max": 0.08}}
+        ]
+      },
+      "occlusion": {"enabled": false, "target_coverage_pct": {"min": 0.0, "max": 0.0}},
+      "decoys": {
+        "enabled": true,
+        "count": {"min": 10, "max": 20},
+        "similarity": {"min": 0.88, "max": 0.97},
+        "placement": "grid"
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.9,
+        "area_ratio_max": 1.3,
+        "allow_partial": false
+      }
+    },
+    {
+      "id": "hybrid_gate_conflicts",
+      "kind": "hybrid_gate",
+      "enabled": true,
+      "style": "mixed",
+      "target": {
+        "source": "mixed",
+        "size_px": {"min": 64, "max": 128},
+        "rotation_degrees": {"min": -60, "max": 60},
+        "aspect_jitter": 0.18,
+        "subpixel_offset": true
+      },
+      "background": {
+        "continuous_canvas": true,
+        "clutter_density": 0.9,
+        "palette": "mixed",
+        "texture_seed": 1002
+      },
+      "transforms": {
+        "scale": {"min": 0.7, "max": 1.5},
+        "rotate": {"min": -60, "max": 60},
+        "perspective": {"enabled": true, "corner_shift_pct": {"min": 0.02, "max": 0.12}},
+        "skew_x": {"min": -6.0, "max": 6.0},
+        "skew_y": {"min": -2.0, "max": 2.0}
+      },
+      "photometric": {
+        "brightness": {"min": -0.15, "max": 0.15},
+        "contrast": {"min": 0.8, "max": 1.3},
+        "gamma": {"min": 0.85, "max": 1.2},
+        "blur_sigma": {"min": 0.0, "max": 1.2},
+        "jpeg_quality": {"min": 60, "max": 100},
+        "noise": [
+          {"type": "gaussian", "amount": {"min": 0.0, "max": 0.1}},
+          {"type": "banding", "amount": {"min": 0.0, "max": 0.1}}
+        ]
+      },
+      "occlusion": {"enabled": true, "target_coverage_pct": {"min": 0.0, "max": 0.2}},
+      "decoys": {
+        "enabled": true,
+        "count": {"min": 18, "max": 48},
+        "similarity": {"min": 0.8, "max": 0.98},
+        "placement": "mixed"
+      },
+      "monitor_selector": {
+        "mode": "round_robin",
+        "monitor_ids": ["mon-a", "mon-b"]
+      },
+      "hybrid_policy": {
+        "must_consider_all_engines": true,
+        "select_by": "score_then_iou",
+        "fallback_order": ["orb", "akaze", "brisk", "kaze", "sift", "template"]
+      },
+      "engine_expectations": {
+        "hybrid": {"min_success_rate": 0.7, "max_false_positive_rate": 0.15, "max_avg_latency_ms": 60}
+      },
+      "expected": {
+        "positive": true,
+        "iou_min": 0.72,
+        "area_ratio_max": 1.9,
+        "allow_partial": true
+      }
+    }
+  ],
+  "matrix": {
+    "resolution_group_ids": ["r480", "r1280"],
+    "scenario_type_ids": ["vector_ui_baseline", "hybrid_gate_conflicts"],
+    "scenarios_per_resolution": 2,
+    "enforce_equal_scenario_count": true,
+    "include_negative_controls": false,
+    "per_resolution_overrides": {
+      "r1280": {
+        "target_size_px": {"min": 96, "max": 140},
+        "tolerance_overlap_min": 0.2,
+        "max_area_ratio": 2.4
+      }
+    }
+  },
+  "outputs": {
+    "write_json": true,
+    "write_markdown": true,
+    "write_images": true,
+    "patch_readmes": false,
+    "summary_scale": 2,
+    "mega_summary": {
+      "format": "jpg",
+      "jpeg_quality": 80
+    }
+  }
+}

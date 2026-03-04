@@ -1,0 +1,422 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/smysnk/sikuligo/docs/bench/find-on-screen-scenario.schema.json",
+  "title": "SikuliGO FindOnScreen Benchmark Scenario Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "metadata",
+    "engines",
+    "resolution_groups",
+    "defaults",
+    "scenario_types",
+    "matrix",
+    "outputs"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri-reference"
+    },
+    "$id": {
+      "type": "string",
+      "format": "uri-reference"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+\\.[0-9]+$"
+    },
+    "name": {"type": "string", "minLength": 3},
+    "description": {"type": "string"},
+    "seed": {"type": "integer", "minimum": 0},
+    "scenario_region_spec": {"type": "string", "minLength": 1},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "created_utc"],
+      "properties": {
+        "owner": {"type": "string", "minLength": 1},
+        "created_utc": {"type": "string", "format": "date-time"},
+        "notes": {"type": "string"},
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        }
+      }
+    },
+    "engines": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["template", "orb", "akaze", "brisk", "kaze", "sift", "hybrid"]
+      }
+    },
+    "resolution_groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/resolutionGroup"}
+    },
+    "monitor_profiles": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/monitorProfile"}
+    },
+    "defaults": {"$ref": "#/$defs/defaults"},
+    "scenario_types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/scenarioType"}
+    },
+    "matrix": {"$ref": "#/$defs/matrix"},
+    "outputs": {"$ref": "#/$defs/outputs"}
+  },
+  "$defs": {
+    "floatRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": {"type": "number"},
+        "max": {"type": "number"}
+      }
+    },
+    "intRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": {"type": "integer"},
+        "max": {"type": "integer"}
+      }
+    },
+    "resolutionGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "width", "height"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "width": {"type": "integer", "minimum": 64},
+        "height": {"type": "integer", "minimum": 64},
+        "dpi_scale": {"type": "number", "minimum": 0.5, "maximum": 4.0},
+        "enabled": {"type": "boolean"}
+      }
+    },
+    "monitorProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "width", "height", "dpi_scale"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "label": {"type": "string"},
+        "width": {"type": "integer", "minimum": 64},
+        "height": {"type": "integer", "minimum": 64},
+        "dpi_scale": {"type": "number", "minimum": 0.5, "maximum": 4.0},
+        "gamma": {"type": "number", "minimum": 0.1, "maximum": 4.0},
+        "color_temperature_shift": {"type": "integer", "minimum": -2000, "maximum": 2000},
+        "sharpness": {"type": "number", "minimum": 0.0, "maximum": 2.0}
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_size_px",
+        "iterations",
+        "retry_attempts",
+        "rpc_timeout_ms",
+        "query_from_base",
+        "tolerance_overlap_min",
+        "max_area_ratio",
+        "strict_bbox"
+      ],
+      "properties": {
+        "target_size_px": {"type": "integer", "minimum": 16},
+        "iterations": {"type": "integer", "minimum": 1},
+        "retry_attempts": {"type": "integer", "minimum": 0, "maximum": 10},
+        "rpc_timeout_ms": {"type": "integer", "minimum": 100},
+        "query_from_base": {"type": "boolean"},
+        "tolerance_overlap_min": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "max_area_ratio": {"type": "number", "minimum": 1.0, "maximum": 20.0},
+        "strict_bbox": {"type": "boolean"}
+      }
+    },
+    "scenarioType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "enabled",
+        "style",
+        "target",
+        "background",
+        "transforms",
+        "photometric",
+        "occlusion",
+        "decoys",
+        "expected"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {
+          "type": "string",
+          "enum": [
+            "vector_ui",
+            "photographic",
+            "repetitive_grid",
+            "noise_stress",
+            "scale_rotate",
+            "perspective_skew",
+            "orb_feature_rich",
+            "template_control",
+            "hybrid_gate",
+            "multi_monitor_dpi"
+          ]
+        },
+        "enabled": {"type": "boolean"},
+        "style": {
+          "type": "string",
+          "enum": ["vector", "ui", "photo", "grid", "noise", "orbtex", "mixed"]
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "size_px", "rotation_degrees"],
+          "properties": {
+            "source": {"type": "string", "enum": ["synthetic", "asset", "mixed"]},
+            "asset_pool": {"type": "array", "items": {"type": "string"}},
+            "size_px": {"$ref": "#/$defs/intRange"},
+            "rotation_degrees": {"$ref": "#/$defs/floatRange"},
+            "aspect_jitter": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+            "subpixel_offset": {"type": "boolean"}
+          }
+        },
+        "background": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["continuous_canvas", "clutter_density"],
+          "properties": {
+            "continuous_canvas": {"type": "boolean"},
+            "clutter_density": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+            "palette": {"type": "string", "enum": ["grayscale", "mixed", "ui_light", "ui_dark"]},
+            "texture_seed": {"type": "integer", "minimum": 0}
+          }
+        },
+        "transforms": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scale", "rotate", "perspective", "skew_x", "skew_y"],
+          "properties": {
+            "scale": {"$ref": "#/$defs/floatRange"},
+            "rotate": {"$ref": "#/$defs/floatRange"},
+            "perspective": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["enabled", "corner_shift_pct"],
+              "properties": {
+                "enabled": {"type": "boolean"},
+                "corner_shift_pct": {"$ref": "#/$defs/floatRange"}
+              }
+            },
+            "skew_x": {"$ref": "#/$defs/floatRange"},
+            "skew_y": {"$ref": "#/$defs/floatRange"}
+          }
+        },
+        "photometric": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["brightness", "contrast", "gamma", "blur_sigma", "jpeg_quality"],
+          "properties": {
+            "brightness": {"$ref": "#/$defs/floatRange"},
+            "contrast": {"$ref": "#/$defs/floatRange"},
+            "gamma": {"$ref": "#/$defs/floatRange"},
+            "blur_sigma": {"$ref": "#/$defs/floatRange"},
+            "jpeg_quality": {"$ref": "#/$defs/intRange"},
+            "noise": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "amount"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["gaussian", "poisson", "salt_pepper", "banding", "compression_blocks"]
+                  },
+                  "amount": {"$ref": "#/$defs/floatRange"}
+                }
+              }
+            }
+          }
+        },
+        "occlusion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "target_coverage_pct"],
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "target_coverage_pct": {"$ref": "#/$defs/floatRange"}
+          }
+        },
+        "decoys": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "count", "similarity", "placement"],
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "count": {"$ref": "#/$defs/intRange"},
+            "similarity": {"$ref": "#/$defs/floatRange"},
+            "placement": {"type": "string", "enum": ["grid", "random", "clustered", "mixed"]}
+          }
+        },
+        "monitor_selector": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {"type": "string", "enum": ["single", "all", "round_robin"]},
+            "monitor_ids": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "hybrid_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "must_consider_all_engines": {"type": "boolean"},
+            "select_by": {"type": "string", "enum": ["score_then_iou", "iou_then_area", "best_confidence"]},
+            "fallback_order": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["template", "orb", "akaze", "brisk", "kaze", "sift", "hybrid"]
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "engine_expectations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "min_success_rate": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+              "max_false_positive_rate": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+              "max_avg_latency_ms": {"type": "number", "minimum": 0.0}
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["positive", "iou_min", "area_ratio_max", "allow_partial"],
+          "properties": {
+            "positive": {"type": "boolean"},
+            "iou_min": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+            "area_ratio_max": {"type": "number", "minimum": 1.0, "maximum": 20.0},
+            "allow_partial": {"type": "boolean"}
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"kind": {"const": "scale_rotate"}}},
+          "then": {
+            "properties": {
+              "transforms": {
+                "properties": {
+                  "scale": {"properties": {"min": {"exclusiveMaximum": 1.0}, "max": {"exclusiveMinimum": 1.0}}},
+                  "rotate": {"properties": {"min": {"maximum": -1.0}, "max": {"minimum": 1.0}}}
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"kind": {"const": "perspective_skew"}}},
+          "then": {
+            "properties": {
+              "transforms": {
+                "properties": {
+                  "perspective": {
+                    "properties": {"enabled": {"const": true}}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"kind": {"const": "hybrid_gate"}}},
+          "then": {"required": ["hybrid_policy"]}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "multi_monitor_dpi"}}},
+          "then": {"required": ["monitor_selector"]}
+        }
+      ]
+    },
+    "matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolution_group_ids", "scenario_type_ids", "scenarios_per_resolution"],
+      "properties": {
+        "resolution_group_ids": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "scenario_type_ids": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "scenarios_per_resolution": {"type": "integer", "minimum": 1},
+        "enforce_equal_scenario_count": {"type": "boolean"},
+        "include_negative_controls": {"type": "boolean"},
+        "per_resolution_overrides": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "scenario_type_ids": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "target_size_px": {"$ref": "#/$defs/intRange"},
+              "tolerance_overlap_min": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+              "max_area_ratio": {"type": "number", "minimum": 1.0, "maximum": 20.0}
+            }
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary_scale", "mega_summary"],
+      "properties": {
+        "write_json": {"type": "boolean"},
+        "write_markdown": {"type": "boolean"},
+        "write_images": {"type": "boolean"},
+        "patch_readmes": {"type": "boolean"},
+        "summary_scale": {"type": "integer", "minimum": 1, "maximum": 8},
+        "mega_summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "jpeg_quality"],
+          "properties": {
+            "format": {"type": "string", "enum": ["png", "jpg"]},
+            "jpeg_quality": {"type": "integer", "minimum": 1, "maximum": 100}
+          }
+        }
+      }
+    }
+  }
+}

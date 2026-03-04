@@ -5,56 +5,118 @@ THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${THIS_DIR}/paths.sh"
 
 BENCH_NAME="${FIND_BENCH_NAME:-BenchmarkFindOnScreenE2E}"
+BENCH_TARGET="all"
+BENCH_FILTER="${BENCH_NAME}"
 BENCH_TIME="${FIND_BENCH_TIME:-200ms}"
 BENCH_COUNT="${FIND_BENCH_COUNT:-1}"
 BENCH_TAGS="${FIND_BENCH_TAGS:-opencv gocv_specific_modules gocv_features2d gocv_calib3d}"
+RUN_MODE="full_report"
+HIGH_RES="1"
+ULTRA_RES="1"
+BENCH_MANIFEST="${FIND_BENCH_SCENARIO_MANIFEST:-docs/bench/find-on-screen-scenarios.example.json}"
+if [[ "${BENCH_MANIFEST}" == "example" || "${BENCH_MANIFEST}" == "default" ]]; then
+  BENCH_MANIFEST="docs/bench/find-on-screen-scenarios.example.json"
+fi
+BENCH_SCHEMA="${FIND_BENCH_SCENARIO_SCHEMA:-}"
+BENCH_REGION_SPEC="${FIND_BENCH_REGION_SPEC:-packages/api/internal/grpcv1/testdata/find-bench-assets/regions.json}"
+BENCH_SEED="${FIND_BENCH_SEED:-}"
+BENCH_PHOTO_ASSET="${FIND_BENCH_PHOTO_ASSET:-}"
+DETERMINISTIC_REPORT="${FIND_BENCH_DETERMINISTIC_REPORT:-1}"
+OUTPUT_BY_SEED="${FIND_BENCH_OUTPUT_BY_SEED:-0}"
 GO_TEST_ARGS="${FIND_BENCH_GO_TEST_ARGS:-}"
 REPORT_DIR="${FIND_BENCH_REPORT_DIR:-${ROOT_DIR}/.test-results/bench}"
-TEXT_OUT="${FIND_BENCH_TEXT_OUT:-${REPORT_DIR}/find-on-screen-e2e.txt}"
-JSON_OUT="${FIND_BENCH_JSON_OUT:-${REPORT_DIR}/find-on-screen-e2e.json}"
-MD_OUT="${FIND_BENCH_MD_OUT:-${REPORT_DIR}/find-on-screen-e2e.md}"
-PERF_SVG_OUT="${FIND_BENCH_PERF_SVG_OUT:-${REPORT_DIR}/find-on-screen-performance.svg}"
-ACCURACY_SVG_OUT="${FIND_BENCH_ACCURACY_SVG_OUT:-${REPORT_DIR}/find-on-screen-accuracy.svg}"
-RESOLUTION_TIME_SVG_OUT="${FIND_BENCH_RESOLUTION_TIME_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-time.svg}"
-RESOLUTION_MATCHES_SVG_OUT="${FIND_BENCH_RESOLUTION_MATCHES_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-matches.svg}"
-RESOLUTION_MISSES_SVG_OUT="${FIND_BENCH_RESOLUTION_MISSES_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-misses.svg}"
-RESOLUTION_FALSE_POS_SVG_OUT="${FIND_BENCH_RESOLUTION_FALSE_POS_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-false-positives.svg}"
-VISUAL_ENABLE="${FIND_BENCH_VISUAL:-1}"
-VISUAL_DIR="${FIND_BENCH_VISUAL_DIR:-${REPORT_DIR}/visuals}"
+BENCH_BASENAME="find-on-screen-e2e"
+if [[ -n "${BENCH_SEED}" && "${OUTPUT_BY_SEED}" =~ ^(1|true|yes|on)$ ]]; then
+  BENCH_BASENAME="${BENCH_BASENAME}-seed${BENCH_SEED}"
+fi
+TEXT_OUT="${FIND_BENCH_TEXT_OUT:-${REPORT_DIR}/${BENCH_BASENAME}.txt}"
+JSON_OUT="${FIND_BENCH_JSON_OUT:-${REPORT_DIR}/${BENCH_BASENAME}.json}"
+MD_OUT="${FIND_BENCH_MD_OUT:-${REPORT_DIR}/${BENCH_BASENAME}.md}"
+PERF_SVG_OUT="${FIND_BENCH_PERF_SVG_OUT:-${REPORT_DIR}/find-on-screen-performance${BENCH_SEED:+-seed${BENCH_SEED}}.svg}"
+ACCURACY_SVG_OUT="${FIND_BENCH_ACCURACY_SVG_OUT:-${REPORT_DIR}/find-on-screen-accuracy${BENCH_SEED:+-seed${BENCH_SEED}}.svg}"
+KIND_TIME_SVG_OUT="${FIND_BENCH_KIND_TIME_SVG_OUT:-${REPORT_DIR}/find-on-screen-kind-time${BENCH_SEED:+-seed${BENCH_SEED}}.svg}"
+KIND_SUCCESS_SVG_OUT="${FIND_BENCH_KIND_SUCCESS_SVG_OUT:-${REPORT_DIR}/find-on-screen-kind-success${BENCH_SEED:+-seed${BENCH_SEED}}.svg}"
+RESOLUTION_TIME_SVG_OUT="${FIND_BENCH_RESOLUTION_TIME_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-time${BENCH_SEED:+-seed${BENCH_SEED}}.svg}"
+RESOLUTION_MATCHES_SVG_OUT="${FIND_BENCH_RESOLUTION_MATCHES_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-matches${BENCH_SEED:+-seed${BENCH_SEED}}.svg}"
+RESOLUTION_MISSES_SVG_OUT="${FIND_BENCH_RESOLUTION_MISSES_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-misses${BENCH_SEED:+-seed${BENCH_SEED}}.svg}"
+RESOLUTION_FALSE_POS_SVG_OUT="${FIND_BENCH_RESOLUTION_FALSE_POS_SVG_OUT:-${REPORT_DIR}/find-on-screen-resolution-false-positives${BENCH_SEED:+-seed${BENCH_SEED}}.svg}"
+VISUAL_ENABLE="1"
+VISUAL_DIR="${FIND_BENCH_VISUAL_DIR:-${REPORT_DIR}/visuals${BENCH_SEED:+-seed${BENCH_SEED}}}"
 VISUAL_MAX_ATTEMPTS="${FIND_BENCH_VISUAL_MAX_ATTEMPTS:-2}"
 VISUAL_TIMEOUT="${FIND_BENCH_VISUAL_TIMEOUT:-5s}"
-PATCH_READMES="${FIND_BENCH_PATCH_READMES:-1}"
+PATCH_READMES="1"
 README_PATHS="${FIND_BENCH_README_PATHS:-${ROOT_DIR}/README.md,${ROOT_DIR}/packages/client-node/README.md,${ROOT_DIR}/packages/client-python/README.md}"
 README_SECTION_TITLE="${FIND_BENCH_README_SECTION_TITLE:-FindOnScreen Benchmark Test Results}"
 README_INLINE_IMAGES="${FIND_BENCH_README_INLINE_IMAGES:-6}"
+STRATEGY_BASENAME="find-on-screen-scenario-strategy"
+if [[ -n "${BENCH_SEED}" && "${OUTPUT_BY_SEED}" =~ ^(1|true|yes|on)$ ]]; then
+  STRATEGY_BASENAME="${STRATEGY_BASENAME}-seed${BENCH_SEED}"
+fi
+STRATEGY_JSON_OUT="${FIND_BENCH_STRATEGY_JSON_OUT:-${REPORT_DIR}/${STRATEGY_BASENAME}.json}"
+STRATEGY_MD_OUT="${FIND_BENCH_STRATEGY_MD_OUT:-${REPORT_DIR}/${STRATEGY_BASENAME}.md}"
 
 mkdir -p "${REPORT_DIR}"
 
 echo "[find-bench] package=${API_DIR}/internal/grpcv1"
 echo "[find-bench] bench=${BENCH_NAME} benchtime=${BENCH_TIME} count=${BENCH_COUNT}"
+echo "[find-bench] target=${BENCH_TARGET} filter=${BENCH_FILTER}"
 if [[ -n "${BENCH_TAGS}" ]]; then
   echo "[find-bench] tags=${BENCH_TAGS}"
 fi
+echo "[find-bench] run_mode=${RUN_MODE} high_res=${HIGH_RES} ultra_res=${ULTRA_RES}"
+if [[ -n "${BENCH_MANIFEST}" ]]; then
+  echo "[find-bench] manifest=${BENCH_MANIFEST}"
+fi
+if [[ -n "${BENCH_SCHEMA}" ]]; then
+  echo "[find-bench] schema=${BENCH_SCHEMA}"
+fi
+if [[ -n "${BENCH_REGION_SPEC}" ]]; then
+  echo "[find-bench] region_spec=${BENCH_REGION_SPEC}"
+fi
+if [[ -n "${BENCH_SEED}" ]]; then
+  echo "[find-bench] seed=${BENCH_SEED}"
+fi
+if [[ -n "${BENCH_PHOTO_ASSET}" ]]; then
+  echo "[find-bench] photo_asset=${BENCH_PHOTO_ASSET}"
+fi
+echo "[find-bench] deterministic_report=${DETERMINISTIC_REPORT}"
 
 echo "[find-bench] text=${TEXT_OUT}"
 echo "[find-bench] json=${JSON_OUT}"
 echo "[find-bench] markdown=${MD_OUT}"
 echo "[find-bench] perf_svg=${PERF_SVG_OUT}"
 echo "[find-bench] accuracy_svg=${ACCURACY_SVG_OUT}"
+echo "[find-bench] kind_time_svg=${KIND_TIME_SVG_OUT}"
+echo "[find-bench] kind_success_svg=${KIND_SUCCESS_SVG_OUT}"
 echo "[find-bench] resolution_time_svg=${RESOLUTION_TIME_SVG_OUT}"
 echo "[find-bench] resolution_matches_svg=${RESOLUTION_MATCHES_SVG_OUT}"
 echo "[find-bench] resolution_misses_svg=${RESOLUTION_MISSES_SVG_OUT}"
 echo "[find-bench] resolution_false_pos_svg=${RESOLUTION_FALSE_POS_SVG_OUT}"
 echo "[find-bench] visuals=${VISUAL_ENABLE} dir=${VISUAL_DIR} max_attempts=${VISUAL_MAX_ATTEMPTS} timeout=${VISUAL_TIMEOUT}"
 echo "[find-bench] patch_readmes=${PATCH_READMES} readmes=${README_PATHS} inline_images=${README_INLINE_IMAGES}"
+echo "[find-bench] strategy_json=${STRATEGY_JSON_OUT}"
+echo "[find-bench] strategy_md=${STRATEGY_MD_OUT}"
 
 cd "${API_DIR}"
+
+FIND_BENCH_SCENARIO_MANIFEST="${BENCH_MANIFEST}" \
+FIND_BENCH_REPORT_DIR="${REPORT_DIR}" \
+FIND_BENCH_STRATEGY_JSON_OUT="${STRATEGY_JSON_OUT}" \
+FIND_BENCH_STRATEGY_MD_OUT="${STRATEGY_MD_OUT}" \
+"${THIS_DIR}/report-find-on-screen-scenario-strategy.sh"
+
+FIND_BENCH_SCENARIO_MANIFEST="${BENCH_MANIFEST}" \
+FIND_BENCH_SCENARIO_SCHEMA="${BENCH_SCHEMA}" \
+FIND_BENCH_REGION_SPEC="${BENCH_REGION_SPEC}" \
+FIND_BENCH_SEED="${BENCH_SEED}" \
+FIND_BENCH_PHOTO_ASSET="${BENCH_PHOTO_ASSET}" \
+go test ./internal/grpcv1 -run '^TestFindBenchManifestPreflightFromEnv$' -count=1 -v
 
 cmd=(
   go test
   ./internal/grpcv1
   -run '^$'
-  -bench "${BENCH_NAME}"
+  -bench "${BENCH_FILTER}"
   -benchmem
   -benchtime "${BENCH_TIME}"
   -count "${BENCH_COUNT}"
@@ -74,12 +136,29 @@ FIND_BENCH_VISUAL="${VISUAL_ENABLE}" \
 FIND_BENCH_VISUAL_DIR="${VISUAL_DIR}" \
 FIND_BENCH_VISUAL_MAX_ATTEMPTS="${VISUAL_MAX_ATTEMPTS}" \
 FIND_BENCH_VISUAL_TIMEOUT="${VISUAL_TIMEOUT}" \
+FIND_BENCH_HIGH_RES="${HIGH_RES}" \
+FIND_BENCH_ULTRA_RES="${ULTRA_RES}" \
+FIND_BENCH_SCENARIO_MANIFEST="${BENCH_MANIFEST}" \
+FIND_BENCH_SCENARIO_SCHEMA="${BENCH_SCHEMA}" \
+FIND_BENCH_REGION_SPEC="${BENCH_REGION_SPEC}" \
+FIND_BENCH_SEED="${BENCH_SEED}" \
+FIND_BENCH_PHOTO_ASSET="${BENCH_PHOTO_ASSET}" \
 "${cmd[@]}" | tee "${TEXT_OUT}"
 
 BENCH_NAME="${BENCH_NAME}" \
+BENCH_TARGET="${BENCH_TARGET}" \
+BENCH_FILTER="${BENCH_FILTER}" \
 BENCH_TIME="${BENCH_TIME}" \
 BENCH_COUNT="${BENCH_COUNT}" \
 BENCH_TAGS="${BENCH_TAGS}" \
+RUN_MODE="${RUN_MODE}" \
+HIGH_RES="${HIGH_RES}" \
+ULTRA_RES="${ULTRA_RES}" \
+BENCH_SEED="${BENCH_SEED}" \
+DETERMINISTIC_REPORT="${DETERMINISTIC_REPORT}" \
+BENCH_MANIFEST="${BENCH_MANIFEST}" \
+BENCH_SCHEMA="${BENCH_SCHEMA}" \
+BENCH_REGION_SPEC="${BENCH_REGION_SPEC}" \
 PROJECT_ROOT="${ROOT_DIR}" \
 VISUAL_ENABLE="${VISUAL_ENABLE}" \
 VISUAL_DIR="${VISUAL_DIR}" \
@@ -94,6 +173,8 @@ JSON_OUT="${JSON_OUT}" \
 MD_OUT="${MD_OUT}" \
 PERF_SVG_OUT="${PERF_SVG_OUT}" \
 ACCURACY_SVG_OUT="${ACCURACY_SVG_OUT}" \
+KIND_TIME_SVG_OUT="${KIND_TIME_SVG_OUT}" \
+KIND_SUCCESS_SVG_OUT="${KIND_SUCCESS_SVG_OUT}" \
 RESOLUTION_TIME_SVG_OUT="${RESOLUTION_TIME_SVG_OUT}" \
 RESOLUTION_MATCHES_SVG_OUT="${RESOLUTION_MATCHES_SVG_OUT}" \
 RESOLUTION_MISSES_SVG_OUT="${RESOLUTION_MISSES_SVG_OUT}" \
@@ -114,15 +195,27 @@ json_path = Path(os.environ["JSON_OUT"])
 md_path = Path(os.environ["MD_OUT"])
 perf_svg_path = Path(os.environ["PERF_SVG_OUT"])
 accuracy_svg_path = Path(os.environ["ACCURACY_SVG_OUT"])
+kind_time_svg_path = Path(os.environ["KIND_TIME_SVG_OUT"])
+kind_success_svg_path = Path(os.environ["KIND_SUCCESS_SVG_OUT"])
 resolution_time_svg_path = Path(os.environ["RESOLUTION_TIME_SVG_OUT"])
 resolution_matches_svg_path = Path(os.environ["RESOLUTION_MATCHES_SVG_OUT"])
 resolution_misses_svg_path = Path(os.environ["RESOLUTION_MISSES_SVG_OUT"])
 resolution_false_pos_svg_path = Path(os.environ["RESOLUTION_FALSE_POS_SVG_OUT"])
 
 bench_name = os.environ["BENCH_NAME"]
+bench_target = os.environ.get("BENCH_TARGET", "all")
+bench_filter = os.environ.get("BENCH_FILTER", bench_name)
 bench_time = os.environ["BENCH_TIME"]
 bench_count = os.environ["BENCH_COUNT"]
 bench_tags = os.environ.get("BENCH_TAGS", "")
+high_res = os.environ.get("HIGH_RES", "")
+ultra_res = os.environ.get("ULTRA_RES", "")
+run_mode = os.environ.get("RUN_MODE", "full_range")
+bench_seed = os.environ.get("BENCH_SEED", "").strip()
+deterministic_report = os.environ.get("DETERMINISTIC_REPORT", "").strip().lower() in {"1", "true", "yes", "on"}
+bench_manifest = os.environ.get("BENCH_MANIFEST", "").strip()
+bench_schema = os.environ.get("BENCH_SCHEMA", "").strip()
+bench_region_spec = os.environ.get("BENCH_REGION_SPEC", "").strip()
 visual_enable = os.environ.get("VISUAL_ENABLE", "")
 visual_dir = os.environ.get("VISUAL_DIR", "")
 visual_max_attempts = os.environ.get("VISUAL_MAX_ATTEMPTS", "")
@@ -140,11 +233,17 @@ meta = {
     "goarch": "",
     "package": "",
     "cpu": "",
-    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    "timestamp_utc": f"seed:{bench_seed}" if deterministic_report and bench_seed else datetime.now(timezone.utc).isoformat(),
     "bench_name": bench_name,
+    "bench_target": bench_target,
+    "bench_filter": bench_filter,
     "benchtime": bench_time,
     "count": int(bench_count),
     "tags": bench_tags,
+    "seed": bench_seed,
+    "manifest": bench_manifest,
+    "schema": bench_schema,
+    "region_spec": bench_region_spec,
 }
 
 label_re = re.compile(r"^Benchmark[^/]+/engine=([^/]+)/(.+)-\d+$")
@@ -269,7 +368,7 @@ def render_grouped_accuracy_chart_svg(
     return "\n".join(parts)
 
 def ordered_engines(raw_engines: list[str]) -> list[str]:
-    preferred = ["orb", "template", "hybrid"]
+    preferred = ["orb", "akaze", "brisk", "kaze", "sift", "template", "hybrid"]
     known = [e for e in preferred if e in raw_engines]
     rest = sorted([e for e in raw_engines if e not in preferred])
     return known + rest
@@ -278,6 +377,35 @@ def scenario_resolution(scenario: str) -> str:
     m = re.search(r"(\d+x\d+)$", scenario)
     if m:
         return m.group(1)
+    m2 = re.search(r"(\d+x\d+)_", scenario)
+    if m2:
+        return m2.group(1)
+    return "unknown"
+
+def scenario_kind(scenario: str) -> str:
+    s = scenario.lower()
+    if s.startswith("vector_") or "vector_ui" in s:
+        return "vector_ui"
+    if s.startswith("photo_") or "photo_clutter" in s:
+        return "photographic"
+    if s.startswith("ui_") or "template_control" in s:
+        return "template_control"
+    if s.startswith("grid_") or s.startswith("glyph_") or "repetitive_grid" in s:
+        return "repetitive_grid"
+    if s.startswith("noise_") or "noise_stress" in s:
+        return "noise_stress"
+    if "scale_rotate" in s or "mix_resize" in s:
+        return "scale_rotate"
+    if "perspective" in s or "skew" in s:
+        return "perspective_skew"
+    if "orb_feature_rich" in s or "orbtex" in s:
+        return "orb_feature_rich"
+    if "hybrid_gate" in s:
+        return "hybrid_gate"
+    if "multi_monitor" in s:
+        return "multi_monitor_dpi"
+    if "mix_rotate" in s:
+        return "scale_rotate"
     return "unknown"
 
 def resolution_sort_key(res: str) -> tuple[int, int, str]:
@@ -291,6 +419,10 @@ def resolution_sort_key(res: str) -> tuple[int, int, str]:
 def engine_color(name: str, idx: int) -> str:
     palette = {
         "orb": "#ea580c",
+        "akaze": "#a21caf",
+        "brisk": "#db2777",
+        "kaze": "#7c3aed",
+        "sift": "#9333ea",
         "template": "#2563eb",
         "hybrid": "#16a34a",
     }
@@ -553,6 +685,94 @@ for res in resolution_groups:
         }
     resolution_rows.append({"resolution": res, "engines": engines_map})
 
+kind_buckets: dict[str, dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(lambda: {
+    "ms_sum": 0.0,
+    "n": 0.0,
+    "success_sum": 0.0,
+    "not_found_sum": 0.0,
+    "false_pos_sum": 0.0,
+}))
+resolution_kind_buckets: dict[tuple[str, str], dict[str, dict[str, float]]] = defaultdict(lambda: defaultdict(lambda: {
+    "ms_sum": 0.0,
+    "n": 0.0,
+    "success_sum": 0.0,
+    "not_found_sum": 0.0,
+    "false_pos_sum": 0.0,
+}))
+
+for row in results:
+    scenario = str(row.get("scenario", ""))
+    engine = str(row.get("engine", "unknown"))
+    kind = scenario_kind(scenario)
+    res = scenario_resolution(scenario)
+    metrics = row.get("metrics", {})
+    success = float(metrics.get("success/op", 1.0))
+    not_found = float(metrics.get("not_found/op", 0.0))
+    false_pos = float(metrics.get("overlap_miss/op", 0.0))
+    ms = float(row.get("ms_per_op", 0.0))
+
+    kb = kind_buckets[kind][engine]
+    kb["ms_sum"] += ms
+    kb["n"] += 1.0
+    kb["success_sum"] += success
+    kb["not_found_sum"] += not_found
+    kb["false_pos_sum"] += false_pos
+
+    rb = resolution_kind_buckets[(res, kind)][engine]
+    rb["ms_sum"] += ms
+    rb["n"] += 1.0
+    rb["success_sum"] += success
+    rb["not_found_sum"] += not_found
+    rb["false_pos_sum"] += false_pos
+
+kind_rows: list[dict[str, object]] = []
+for kind in sorted(kind_buckets.keys()):
+    engines_map: dict[str, dict[str, float]] = {}
+    for eng in engine_names:
+        b = kind_buckets[kind].get(eng)
+        if b is None or b["n"] <= 0:
+            engines_map[eng] = {
+                "avg_ms_per_op": 0.0,
+                "success_pct": 0.0,
+                "not_found_pct": 0.0,
+                "false_positive_pct": 0.0,
+                "cases": 0.0,
+            }
+            continue
+        n = b["n"]
+        engines_map[eng] = {
+            "avg_ms_per_op": b["ms_sum"] / n,
+            "success_pct": (b["success_sum"] / n) * 100.0,
+            "not_found_pct": (b["not_found_sum"] / n) * 100.0,
+            "false_positive_pct": (b["false_pos_sum"] / n) * 100.0,
+            "cases": n,
+        }
+    kind_rows.append({"kind": kind, "engines": engines_map})
+
+resolution_kind_rows: list[dict[str, object]] = []
+for (res, kind) in sorted(resolution_kind_buckets.keys(), key=lambda x: (resolution_sort_key(x[0]), x[1])):
+    row: dict[str, object] = {"resolution": res, "kind": kind, "engines": {}}
+    for eng in engine_names:
+        b = resolution_kind_buckets[(res, kind)].get(eng)
+        if b is None or b["n"] <= 0:
+            row["engines"][eng] = {
+                "avg_ms_per_op": 0.0,
+                "success_pct": 0.0,
+                "not_found_pct": 0.0,
+                "false_positive_pct": 0.0,
+                "cases": 0.0,
+            }
+            continue
+        n = b["n"]
+        row["engines"][eng] = {
+            "avg_ms_per_op": b["ms_sum"] / n,
+            "success_pct": (b["success_sum"] / n) * 100.0,
+            "not_found_pct": (b["not_found_sum"] / n) * 100.0,
+            "false_positive_pct": (b["false_pos_sum"] / n) * 100.0,
+            "cases": n,
+        }
+    resolution_kind_rows.append(row)
+
 report = {
     "metadata": meta,
     "summary": {
@@ -561,6 +781,8 @@ report = {
         "by_engine": summary_rows,
         "metrics_chart": metrics_chart_rows,
         "by_resolution": resolution_rows,
+        "by_kind": kind_rows,
+        "by_resolution_kind": resolution_kind_rows,
     },
     "results": results,
 }
@@ -578,6 +800,14 @@ lines.append(f"- Target: `{meta['bench_name']}`")
 lines.append(f"- Benchtime: `{meta['benchtime']}`")
 lines.append(f"- Count: `{meta['count']}`")
 lines.append(f"- Tags: `{meta['tags'] or '(none)'}`")
+lines.append(f"- Seed: `{meta['seed'] or '(unset)'}`")
+if meta["manifest"]:
+    lines.append(f"- Scenario Manifest: `{meta['manifest']}`")
+if meta["schema"]:
+    lines.append(f"- Scenario Schema: `{meta['schema']}`")
+lines.append(f"- Run Mode: `{run_mode}`")
+lines.append(f"- High Resolution Scenarios: `{high_res}`")
+lines.append(f"- Ultra Resolution Scenarios: `{ultra_res}`")
 lines.append(f"- Platform: `{meta['goos']}/{meta['goarch']}`")
 lines.append(f"- CPU: `{meta['cpu']}`")
 lines.append(f"- Visuals Enabled: `{visual_enable}`")
@@ -589,10 +819,15 @@ if visual_enable.lower() in {"1", "true", "yes", "on"} and visual_dir:
     visual_path = Path(visual_dir)
     attempt_count = 0
     summary_count = 0
-    mega_summary = visual_path / "summaries" / "summary-run-mega.png"
+    mega_summary = visual_path / "summaries" / "summary-run-mega.jpg"
     if visual_path.exists():
         attempt_count = len(list((visual_path / "attempts").glob("**/*.png")))
-        summary_count = len(list((visual_path / "summaries").glob("*.png")))
+        if not mega_summary.exists():
+            mega_summary = visual_path / "summaries" / "summary-run-mega.png"
+        summary_count = len([
+            p for p in (visual_path / "summaries").glob("summary-*.png")
+            if p.name != "summary-run-mega.png" and p.name != "summary-run-mega.jpg"
+        ])
     lines.append("## Visual Artifacts")
     lines.append("")
     lines.append(f"- Directory: `{visual_dir}`")
@@ -789,6 +1024,78 @@ if resolution_rows and engine_names:
     lines.append("")
     lines.append(f"![Resolution False Positives]({rel_fp_md})")
 
+if kind_rows and engine_names:
+    kind_labels = [str(r["kind"]) for r in kind_rows]
+    kind_time_series: list[tuple[str, list[float], str]] = []
+    kind_success_series: list[tuple[str, list[float], str]] = []
+    for i, eng in enumerate(engine_names):
+        color = engine_color(eng, i)
+        t_vals: list[float] = []
+        s_vals: list[float] = []
+        for row in kind_rows:
+            stats = row["engines"].get(eng, {})
+            t_vals.append(round(float(stats.get("avg_ms_per_op", 0.0)), 3))
+            s_vals.append(round(float(stats.get("success_pct", 0.0)), 2))
+        kind_time_series.append((eng, t_vals, color))
+        kind_success_series.append((eng, s_vals, color))
+
+    write_svg(
+        kind_time_svg_path,
+        render_grouped_multi_series_bar_chart_svg(
+            title="Scenario Kind: Match Time by Engine",
+            y_label="ms/op",
+            group_labels=kind_labels,
+            series=kind_time_series,
+        ),
+    )
+    write_svg(
+        kind_success_svg_path,
+        render_grouped_multi_series_bar_chart_svg(
+            title="Scenario Kind: Success % by Engine",
+            y_label="success percent",
+            group_labels=kind_labels,
+            series=kind_success_series,
+        ),
+    )
+
+    rel_kind_time_md = os.path.relpath(kind_time_svg_path, md_path.parent).replace(os.sep, "/")
+    rel_kind_success_md = os.path.relpath(kind_success_svg_path, md_path.parent).replace(os.sep, "/")
+
+    lines.append("")
+    lines.append("## Scenario Kind Graphs (SVG)")
+    lines.append("")
+    lines.append(f"- [Kind Match Time]({rel_kind_time_md})")
+    lines.append(f"- [Kind Success Rate]({rel_kind_success_md})")
+    lines.append("")
+    lines.append(f"![Kind Match Time]({rel_kind_time_md})")
+    lines.append("")
+    lines.append(f"![Kind Success Rate]({rel_kind_success_md})")
+
+if resolution_kind_rows:
+    lines.append("")
+    lines.append("## Resolution + Scenario Kind Breakdown")
+    lines.append("")
+    lines.append("| Resolution | Scenario Kind | Engine | Cases | Avg ms/op | Success % | Not Found % | False Positive % |")
+    lines.append("|---|---|---|---:|---:|---:|---:|---:|")
+    for rk in resolution_kind_rows:
+        res = str(rk["resolution"])
+        kind = str(rk["kind"])
+        eng_map = rk["engines"]
+        for eng in engine_names:
+            stats = eng_map.get(eng, {})
+            lines.append(
+                "| {res} | `{kind}` | {eng} | {cases:.0f} | {avg:.3f} | {success:.2f} | {miss:.2f} | {fp:.2f} |".format(
+                    res=res,
+                    kind=kind,
+                    eng=eng,
+                    cases=float(stats.get("cases", 0.0)),
+                    avg=float(stats.get("avg_ms_per_op", 0.0)),
+                    success=float(stats.get("success_pct", 0.0)),
+                    miss=float(stats.get("not_found_pct", 0.0)),
+                    fp=float(stats.get("false_positive_pct", 0.0)),
+                )
+            )
+
 for engine in sorted(engines.keys()):
     lines.append("")
     lines.append(f"## Engine: `{engine}`")
@@ -866,12 +1173,14 @@ if env_true(patch_readmes):
     scenario_summaries: list[Path] = []
     attempt_images: list[Path] = []
     if root_visual and root_visual.exists():
-        maybe_mega = root_visual / "summaries" / "summary-run-mega.png"
+        maybe_mega = root_visual / "summaries" / "summary-run-mega.jpg"
+        if not maybe_mega.exists():
+            maybe_mega = root_visual / "summaries" / "summary-run-mega.png"
         if maybe_mega.exists():
             mega_summary = maybe_mega
         scenario_summaries = sorted(
             p for p in (root_visual / "summaries").glob("summary-*.png")
-            if p.name != "summary-run-mega.png"
+            if p.name != "summary-run-mega.png" and p.name != "summary-run-mega.jpg"
         )
         attempt_images = sorted((root_visual / "attempts").glob("**/*.png"))
 
@@ -902,6 +1211,10 @@ if env_true(patch_readmes):
             section.append(f"- [Performance SVG]({to_rel_link(readme.parent, perf_svg_path)})")
         if accuracy_svg_path.exists():
             section.append(f"- [Accuracy SVG]({to_rel_link(readme.parent, accuracy_svg_path)})")
+        if kind_time_svg_path.exists():
+            section.append(f"- [Scenario Kind Match Time SVG]({to_rel_link(readme.parent, kind_time_svg_path)})")
+        if kind_success_svg_path.exists():
+            section.append(f"- [Scenario Kind Success SVG]({to_rel_link(readme.parent, kind_success_svg_path)})")
         if resolution_time_svg_path.exists():
             section.append(f"- [Resolution Match Time SVG]({to_rel_link(readme.parent, resolution_time_svg_path)})")
         if resolution_matches_svg_path.exists():
@@ -956,6 +1269,22 @@ if env_true(patch_readmes):
                 section.append("")
                 section.append(f"- [Open accuracy graph]({rel_acc})")
 
+        if kind_time_svg_path.exists() or kind_success_svg_path.exists():
+            section.append("")
+            section.append("### Scenario Kind Graphs")
+            section.append("")
+            if kind_time_svg_path.exists():
+                rel = to_rel_link(readme.parent, kind_time_svg_path)
+                section.append(f"![Scenario Kind Match Time]({rel})")
+                section.append("")
+                section.append(f"- [Open scenario kind match time graph]({rel})")
+                section.append("")
+            if kind_success_svg_path.exists():
+                rel = to_rel_link(readme.parent, kind_success_svg_path)
+                section.append(f"![Scenario Kind Success]({rel})")
+                section.append("")
+                section.append(f"- [Open scenario kind success graph]({rel})")
+
         if resolution_time_svg_path.exists() or resolution_matches_svg_path.exists() or resolution_misses_svg_path.exists() or resolution_false_pos_svg_path.exists():
             section.append("")
             section.append("### Resolution Group Graphs")
@@ -984,6 +1313,14 @@ if env_true(patch_readmes):
                 section.append("")
                 section.append(f"- [Open resolution false positives graph]({rel})")
 
+        if root_visual is not None:
+            section.append("")
+            section.append("### Artifact Directories")
+            section.append("")
+            section.append(f"- [Visual Root Directory]({to_rel_link(readme.parent, root_visual)})")
+            section.append(f"- [Scenario Summaries Directory]({to_rel_link(readme.parent, root_visual / 'summaries')})")
+            section.append(f"- [Attempt Images Directory]({to_rel_link(readme.parent, root_visual / 'attempts')})")
+
         if scenario_summaries:
             inline_n = max(0, readme_inline_images)
             section.append("")
@@ -999,21 +1336,8 @@ if env_true(patch_readmes):
                 section.append(f"- [Open `{name}` image]({rel})")
                 section.append("")
             if len(scenario_summaries) > inline_n:
-                section.append(f"- {len(scenario_summaries) - inline_n} additional scenario images are linked below.")
+                section.append(f"- {len(scenario_summaries) - inline_n} additional scenario images available in the summaries directory.")
                 section.append("")
-            section.append("### Scenario Image Links")
-            section.append("")
-            for img in scenario_summaries:
-                name = img.stem.replace("summary-", "")
-                section.append(f"- [`{name}`]({to_rel_link(readme.parent, img)})")
-
-        if attempt_images:
-            sample_n = min(len(attempt_images), max(6, readme_inline_images * 2))
-            section.append("")
-            section.append(f"### Attempt Image Links (sample {sample_n} of {len(attempt_images)})")
-            section.append("")
-            for img in attempt_images[:sample_n]:
-                section.append(f"- [{img.name}]({to_rel_link(readme.parent, img)})")
 
         patch_readme(readme, section)
         print(f"[find-bench] patched readme: {readme}")
@@ -1024,6 +1348,10 @@ if perf_svg_path.exists():
     print(f"[find-bench] wrote performance graph: {perf_svg_path}")
 if accuracy_svg_path.exists():
     print(f"[find-bench] wrote accuracy graph: {accuracy_svg_path}")
+if kind_time_svg_path.exists():
+    print(f"[find-bench] wrote scenario kind time graph: {kind_time_svg_path}")
+if kind_success_svg_path.exists():
+    print(f"[find-bench] wrote scenario kind success graph: {kind_success_svg_path}")
 if resolution_time_svg_path.exists():
     print(f"[find-bench] wrote resolution time graph: {resolution_time_svg_path}")
 if resolution_matches_svg_path.exists():

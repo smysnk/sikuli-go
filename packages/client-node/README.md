@@ -59,7 +59,7 @@ source ~/.bash_profile
 <!-- BEGIN: FIND_ON_SCREEN_BENCH_AUTOGEN -->
 ## FindOnScreen Benchmark Test Results
 
-Generated: `2026-03-03T03:21:00.700542+00:00`
+Generated: `2026-03-04T04:38:28.587408+00:00`
 
 ### Reports
 
@@ -68,6 +68,8 @@ Generated: `2026-03-03T03:21:00.700542+00:00`
 - [Raw go test Output](../../.test-results/bench/find-on-screen-e2e.txt)
 - [Performance SVG](../../.test-results/bench/find-on-screen-performance.svg)
 - [Accuracy SVG](../../.test-results/bench/find-on-screen-accuracy.svg)
+- [Scenario Kind Match Time SVG](../../.test-results/bench/find-on-screen-kind-time.svg)
+- [Scenario Kind Success SVG](../../.test-results/bench/find-on-screen-kind-success.svg)
 - [Resolution Match Time SVG](../../.test-results/bench/find-on-screen-resolution-time.svg)
 - [Resolution Matches SVG](../../.test-results/bench/find-on-screen-resolution-matches.svg)
 - [Resolution Misses SVG](../../.test-results/bench/find-on-screen-resolution-misses.svg)
@@ -77,15 +79,19 @@ Generated: `2026-03-03T03:21:00.700542+00:00`
 
 | Engine | Cases | OK | Partial | Not Found | Unsupported | Error | Overlap Miss | Avg ms/op | Median ms/op |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| hybrid | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 13.238 | 11.158 |
-| orb | 15 | 4 | 0 | 10 | 0 | 0 | 1 | 6.565 | 7.334 |
-| template | 15 | 11 | 0 | 4 | 0 | 0 | 0 | 10.848 | 11.004 |
+| akaze | 4 | 1 | 0 | 3 | 0 | 0 | 0 | 114.554 | 96.795 |
+| brisk | 4 | 0 | 0 | 4 | 0 | 0 | 0 | 70.137 | 67.852 |
+| hybrid | 4 | 4 | 0 | 0 | 0 | 0 | 0 | 87.512 | 71.370 |
+| kaze | 4 | 2 | 0 | 0 | 0 | 0 | 2 | 465.050 | 373.112 |
+| orb | 4 | 0 | 0 | 4 | 0 | 0 | 0 | 21.716 | 19.190 |
+| sift | 4 | 4 | 0 | 0 | 0 | 0 | 0 | 169.555 | 142.072 |
+| template | 4 | 4 | 0 | 0 | 0 | 0 | 0 | 86.397 | 68.461 |
 
 ### Run Mega Summary
 
-![Run Mega Summary](../../.test-results/bench/visuals/summaries/summary-run-mega.png)
+![Run Mega Summary](../../.test-results/bench/visuals/summaries/summary-run-mega.jpg)
 
-- [Open run mega summary image](../../.test-results/bench/visuals/summaries/summary-run-mega.png)
+- [Open run mega summary image](../../.test-results/bench/visuals/summaries/summary-run-mega.jpg)
 
 ### Benchmark Graphs
 
@@ -96,6 +102,16 @@ Generated: `2026-03-03T03:21:00.700542+00:00`
 ![Accuracy Graph](../../.test-results/bench/find-on-screen-accuracy.svg)
 
 - [Open accuracy graph](../../.test-results/bench/find-on-screen-accuracy.svg)
+
+### Scenario Kind Graphs
+
+![Scenario Kind Match Time](../../.test-results/bench/find-on-screen-kind-time.svg)
+
+- [Open scenario kind match time graph](../../.test-results/bench/find-on-screen-kind-time.svg)
+
+![Scenario Kind Success](../../.test-results/bench/find-on-screen-kind-success.svg)
+
+- [Open scenario kind success graph](../../.test-results/bench/find-on-screen-kind-success.svg)
 
 ### Resolution Group Graphs
 
@@ -115,76 +131,50 @@ Generated: `2026-03-03T03:21:00.700542+00:00`
 
 - [Open resolution false positives graph](../../.test-results/bench/find-on-screen-resolution-false-positives.svg)
 
-### Scenario Summary Images (15)
+### Artifact Directories
 
-#### `glyph_large_r90_800x450`
+- [Visual Root Directory](../../.test-results/bench/visuals)
+- [Scenario Summaries Directory](../../.test-results/bench/visuals/summaries)
+- [Attempt Images Directory](../../.test-results/bench/visuals/attempts)
 
-![glyph_large_r90_800x450](../../.test-results/bench/visuals/summaries/summary-glyph_large_r90_800x450.png)
+### Scenario Summary Images (44)
 
-- [Open `glyph_large_r90_800x450` image](../../.test-results/bench/visuals/summaries/summary-glyph_large_r90_800x450.png)
+#### `noise_stress_random_1024x576_i04_rotate_sc66006f4`
 
-#### `glyph_medium_r0_640x360`
+![noise_stress_random_1024x576_i04_rotate_sc66006f4](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_1024x576_i04_rotate_sc66006f4.png)
 
-![glyph_medium_r0_640x360](../../.test-results/bench/visuals/summaries/summary-glyph_medium_r0_640x360.png)
+- [Open `noise_stress_random_1024x576_i04_rotate_sc66006f4` image](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_1024x576_i04_rotate_sc66006f4.png)
 
-- [Open `glyph_medium_r0_640x360` image](../../.test-results/bench/visuals/summaries/summary-glyph_medium_r0_640x360.png)
+#### `noise_stress_random_1280x720_i04_rotate_sc37a59d9`
 
-#### `glyph_small_r270_480x270`
+![noise_stress_random_1280x720_i04_rotate_sc37a59d9](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_1280x720_i04_rotate_sc37a59d9.png)
 
-![glyph_small_r270_480x270](../../.test-results/bench/visuals/summaries/summary-glyph_small_r270_480x270.png)
+- [Open `noise_stress_random_1280x720_i04_rotate_sc37a59d9` image](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_1280x720_i04_rotate_sc37a59d9.png)
 
-- [Open `glyph_small_r270_480x270` image](../../.test-results/bench/visuals/summaries/summary-glyph_small_r270_480x270.png)
+#### `noise_stress_random_1920x1080_i04_rotate_s17ff8896`
 
-#### `grid_large_r180_800x450`
+![noise_stress_random_1920x1080_i04_rotate_s17ff8896](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_1920x1080_i04_rotate_s17ff8896.png)
 
-![grid_large_r180_800x450](../../.test-results/bench/visuals/summaries/summary-grid_large_r180_800x450.png)
+- [Open `noise_stress_random_1920x1080_i04_rotate_s17ff8896` image](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_1920x1080_i04_rotate_s17ff8896.png)
 
-- [Open `grid_large_r180_800x450` image](../../.test-results/bench/visuals/summaries/summary-grid_large_r180_800x450.png)
+#### `noise_stress_random_480x270_i04_rotate_s67369b96`
 
-#### `grid_medium_r90_640x360`
+![noise_stress_random_480x270_i04_rotate_s67369b96](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_480x270_i04_rotate_s67369b96.png)
 
-![grid_medium_r90_640x360](../../.test-results/bench/visuals/summaries/summary-grid_medium_r90_640x360.png)
+- [Open `noise_stress_random_480x270_i04_rotate_s67369b96` image](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_480x270_i04_rotate_s67369b96.png)
 
-- [Open `grid_medium_r90_640x360` image](../../.test-results/bench/visuals/summaries/summary-grid_medium_r90_640x360.png)
+#### `noise_stress_random_640x360_i04_rotate_s0f3b4e62`
 
-#### `grid_small_r0_480x270`
+![noise_stress_random_640x360_i04_rotate_s0f3b4e62](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_640x360_i04_rotate_s0f3b4e62.png)
 
-![grid_small_r0_480x270](../../.test-results/bench/visuals/summaries/summary-grid_small_r0_480x270.png)
+- [Open `noise_stress_random_640x360_i04_rotate_s0f3b4e62` image](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_640x360_i04_rotate_s0f3b4e62.png)
 
-- [Open `grid_small_r0_480x270` image](../../.test-results/bench/visuals/summaries/summary-grid_small_r0_480x270.png)
+#### `noise_stress_random_800x450_i04_rotate_s1e6f64ce`
 
-- 9 additional scenario images are linked below.
+![noise_stress_random_800x450_i04_rotate_s1e6f64ce](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_800x450_i04_rotate_s1e6f64ce.png)
 
-### Scenario Image Links
+- [Open `noise_stress_random_800x450_i04_rotate_s1e6f64ce` image](../../.test-results/bench/visuals/summaries/summary-noise_stress_random_800x450_i04_rotate_s1e6f64ce.png)
 
-- [`glyph_large_r90_800x450`](../../.test-results/bench/visuals/summaries/summary-glyph_large_r90_800x450.png)
-- [`glyph_medium_r0_640x360`](../../.test-results/bench/visuals/summaries/summary-glyph_medium_r0_640x360.png)
-- [`glyph_small_r270_480x270`](../../.test-results/bench/visuals/summaries/summary-glyph_small_r270_480x270.png)
-- [`grid_large_r180_800x450`](../../.test-results/bench/visuals/summaries/summary-grid_large_r180_800x450.png)
-- [`grid_medium_r90_640x360`](../../.test-results/bench/visuals/summaries/summary-grid_medium_r90_640x360.png)
-- [`grid_small_r0_480x270`](../../.test-results/bench/visuals/summaries/summary-grid_small_r0_480x270.png)
-- [`noise_large_r270_960x540`](../../.test-results/bench/visuals/summaries/summary-noise_large_r270_960x540.png)
-- [`noise_medium_r180_800x450`](../../.test-results/bench/visuals/summaries/summary-noise_medium_r180_800x450.png)
-- [`orbtex_large_r180_1024x576`](../../.test-results/bench/visuals/summaries/summary-orbtex_large_r180_1024x576.png)
-- [`orbtex_large_r90_960x540`](../../.test-results/bench/visuals/summaries/summary-orbtex_large_r90_960x540.png)
-- [`orbtex_medium_r0_800x450`](../../.test-results/bench/visuals/summaries/summary-orbtex_medium_r0_800x450.png)
-- [`orbx_perspective_960x540`](../../.test-results/bench/visuals/summaries/summary-orbx_perspective_960x540.png)
-- [`orbx_resize_115_960x540`](../../.test-results/bench/visuals/summaries/summary-orbx_resize_115_960x540.png)
-- [`orbx_rotate_12deg_960x540`](../../.test-results/bench/visuals/summaries/summary-orbx_rotate_12deg_960x540.png)
-- [`orbx_skewx_010_960x540`](../../.test-results/bench/visuals/summaries/summary-orbx_skewx_010_960x540.png)
+- 38 additional scenario images available in the summaries directory.
 
-### Attempt Image Links (sample 12 of 75)
-
-- [engine-hybrid-attempt-1-ok.png](../../.test-results/bench/visuals/attempts/glyph_large_r90_800x450/engine-hybrid-attempt-1-ok.png)
-- [engine-orb-attempt-1-not_found.png](../../.test-results/bench/visuals/attempts/glyph_large_r90_800x450/engine-orb-attempt-1-not_found.png)
-- [engine-orb-attempt-2-not_found.png](../../.test-results/bench/visuals/attempts/glyph_large_r90_800x450/engine-orb-attempt-2-not_found.png)
-- [engine-template-attempt-1-ok.png](../../.test-results/bench/visuals/attempts/glyph_large_r90_800x450/engine-template-attempt-1-ok.png)
-- [engine-hybrid-attempt-1-ok.png](../../.test-results/bench/visuals/attempts/glyph_medium_r0_640x360/engine-hybrid-attempt-1-ok.png)
-- [engine-orb-attempt-1-not_found.png](../../.test-results/bench/visuals/attempts/glyph_medium_r0_640x360/engine-orb-attempt-1-not_found.png)
-- [engine-orb-attempt-2-not_found.png](../../.test-results/bench/visuals/attempts/glyph_medium_r0_640x360/engine-orb-attempt-2-not_found.png)
-- [engine-template-attempt-1-ok.png](../../.test-results/bench/visuals/attempts/glyph_medium_r0_640x360/engine-template-attempt-1-ok.png)
-- [engine-hybrid-attempt-1-ok.png](../../.test-results/bench/visuals/attempts/glyph_small_r270_480x270/engine-hybrid-attempt-1-ok.png)
-- [engine-orb-attempt-1-not_found.png](../../.test-results/bench/visuals/attempts/glyph_small_r270_480x270/engine-orb-attempt-1-not_found.png)
-- [engine-orb-attempt-2-not_found.png](../../.test-results/bench/visuals/attempts/glyph_small_r270_480x270/engine-orb-attempt-2-not_found.png)
-- [engine-template-attempt-1-ok.png](../../.test-results/bench/visuals/attempts/glyph_small_r270_480x270/engine-template-attempt-1-ok.png)
 <!-- END: FIND_ON_SCREEN_BENCH_AUTOGEN -->

@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"image/jpeg"
 	"image/png"
 	"math"
 	"os"
@@ -23,9 +24,12 @@ import (
 )
 
 type findBenchVisualCollector struct {
-	outDir      string
-	maxAttempts int
-	rpcTimeout  time.Duration
+	outDir             string
+	maxAttempts        int
+	rpcTimeout         time.Duration
+	attemptOverlay     bool
+	summaryNative      bool
+	summaryShowPattern bool
 
 	mu        sync.Mutex
 	scenarios map[string]*findBenchScenarioVisual
@@ -34,6 +38,7 @@ type findBenchVisualCollector struct {
 type findBenchScenarioVisual struct {
 	scenario findBenchScenario
 	engines  map[string][]findBenchAttemptVisual
+	pattern  *image.Gray
 }
 
 type findBenchScenarioSummaryImage struct {
@@ -41,17 +46,30 @@ type findBenchScenarioSummaryImage struct {
 	Path         string
 }
 
-type findBenchAttemptVisual struct {
-	Attempt   int
-	Duration  time.Duration
-	Retried   bool
+type findBenchVisualQuery struct {
+	Request  *pb.FindOnScreenRequest
+	Expected *pb.Rect
+	Label    string
+}
+
+type findBenchAttemptQueryVisual struct {
+	Label     string
 	Status    string
 	Error     string
 	Overlap   float64
 	AreaRatio float64
 	Expected  *pb.Rect
 	Found     *pb.Rect
-	File      string
+}
+
+type findBenchAttemptVisual struct {
+	Attempt  int
+	Duration time.Duration
+	Retried  bool
+	Status   string
+	Error    string
+	Queries  []findBenchAttemptQueryVisual
+	File     string
 }
 
 func newFindBenchVisualCollectorFromEnv(t testing.TB) *findBenchVisualCollector {
@@ -69,6 +87,12 @@ func newFindBenchVisualCollectorFromEnv(t testing.TB) *findBenchVisualCollector 
 		maxAttempts = 1
 	}
 	rpcTimeout := parseEnvDuration("FIND_BENCH_VISUAL_TIMEOUT", 5*time.Second)
+	attemptOverlay := true
+	if raw := strings.TrimSpace(os.Getenv("FIND_BENCH_VISUAL_ATTEMPT_OVERLAY")); raw != "" {
+		attemptOverlay = envFlagTrue(raw)
+	}
+	summaryNative := envFlagTrue(os.Getenv("FIND_BENCH_VISUAL_SUMMARY_NATIVE"))
+	summaryShowPattern := envFlagTrue(os.Getenv("FIND_BENCH_VISUAL_SUMMARY_SHOW_PATTERN"))
 
 	if err := os.MkdirAll(filepath.Join(outDir, "attempts"), 0o755); err != nil {
 		t.Fatalf("create benchmark visual attempts directory: %v", err)
@@ -76,64 +100,85 @@ func newFindBenchVisualCollectorFromEnv(t testing.TB) *findBenchVisualCollector 
 	if err := os.MkdirAll(filepath.Join(outDir, "summaries"), 0o755); err != nil {
 		t.Fatalf("create benchmark visual summary directory: %v", err)
 	}
-	t.Logf("benchmark visuals enabled: dir=%s max_attempts=%d timeout=%s", outDir, maxAttempts, rpcTimeout)
+	t.Logf("benchmark visuals enabled: dir=%s max_attempts=%d timeout=%s attempt_overlay=%v summary_native=%v show_pattern=%v", outDir, maxAttempts, rpcTimeout, attemptOverlay, summaryNative, summaryShowPattern)
 
 	return &findBenchVisualCollector{
-		outDir:      outDir,
-		maxAttempts: maxAttempts,
-		rpcTimeout:  rpcTimeout,
-		scenarios:   map[string]*findBenchScenarioVisual{},
+		outDir:             outDir,
+		maxAttempts:        maxAttempts,
+		rpcTimeout:         rpcTimeout,
+		attemptOverlay:     attemptOverlay,
+		summaryNative:      summaryNative,
+		summaryShowPattern: summaryShowPattern,
+		scenarios:          map[string]*findBenchScenarioVisual{},
 	}
 }
 
 func (c *findBenchVisualCollector) CaptureAttempts(
 	t testing.TB,
 	client pb.SikuliServiceClient,
-	request *pb.FindOnScreenRequest,
+	queries []findBenchVisualQuery,
 	source *image.Gray,
-	expected *pb.Rect,
 	engine findBenchEngine,
 	scenario findBenchScenario,
 ) {
 	t.Helper()
-	if c == nil || client == nil || request == nil || source == nil || expected == nil {
+	if c == nil || client == nil || source == nil || len(queries) == 0 {
 		return
 	}
+	pattern := patternGrayFromRequest(queries[0].Request)
 
 	attempts := make([]findBenchAttemptVisual, 0, c.maxAttempts)
 	for attempt := 1; attempt <= c.maxAttempts; attempt++ {
 		rec := findBenchAttemptVisual{
-			Attempt:  attempt,
-			Retried:  attempt > 1,
-			Status:   "error",
-			Expected: cloneRect(expected),
+			Attempt: attempt,
+			Retried: attempt > 1,
+			Status:  "error",
+			Queries: make([]findBenchAttemptQueryVisual, 0, len(queries)),
 		}
 
 		start := time.Now()
-		ctx, cancel := context.WithTimeout(context.Background(), c.rpcTimeout)
-		res, err := client.FindOnScreen(ctx, request)
-		cancel()
-		rec.Duration = time.Since(start)
+		for queryIdx, query := range queries {
+			qrec := findBenchAttemptQueryVisual{
+				Label:    strings.TrimSpace(query.Label),
+				Status:   "error",
+				Expected: cloneRect(query.Expected),
+			}
+			if qrec.Label == "" {
+				qrec.Label = fmt.Sprintf("target-%02d", queryIdx+1)
+			}
+			if query.Request == nil || query.Expected == nil {
+				qrec.Error = "missing query request or expected target"
+				rec.Queries = append(rec.Queries, qrec)
+				continue
+			}
 
-		if err != nil {
-			rec.Status = visualStatusFromError(err)
-			rec.Error = err.Error()
-		} else {
-			rect := res.GetMatch().GetRect()
-			if rect == nil {
-				rec.Status = "error"
-				rec.Error = "missing match rect"
+			ctx, cancel := context.WithTimeout(context.Background(), c.rpcTimeout)
+			res, err := client.FindOnScreen(ctx, query.Request)
+			cancel()
+			if err != nil {
+				qrec.Status = visualStatusFromError(err)
+				qrec.Error = err.Error()
 			} else {
-				rec.Found = cloneRect(rect)
-				rec.Overlap = rectOverlapRatio(rect, expected)
-				rec.AreaRatio = rectAreaRatio(rect, expected)
-				if rectMatchSatisfies(rect, expected, scenario.tolerance, scenario.maxAreaRatio) {
-					rec.Status = "ok"
+				rect := res.GetMatch().GetRect()
+				if rect == nil {
+					qrec.Status = "error"
+					qrec.Error = "missing match rect"
 				} else {
-					rec.Status = "overlap_miss"
+					qrec.Found = cloneRect(rect)
+					qrec.Overlap = rectOverlapRatio(rect, query.Expected)
+					qrec.AreaRatio = rectAreaRatio(rect, query.Expected)
+					if rectMatchSatisfies(rect, query.Expected, scenario.tolerance, scenario.maxAreaRatio) {
+						qrec.Status = "ok"
+					} else {
+						qrec.Status = "overlap_miss"
+					}
 				}
 			}
+			rec.Queries = append(rec.Queries, qrec)
 		}
+		rec.Duration = time.Since(start)
+		rec.Status = aggregateAttemptStatus(rec.Queries)
+		rec.Error = summarizeAttemptErrors(rec.Queries)
 
 		path, writeErr := c.writeAttemptImage(source, scenario, engine, rec)
 		if writeErr != nil {
@@ -152,11 +197,19 @@ func (c *findBenchVisualCollector) CaptureAttempts(
 	defer c.mu.Unlock()
 	entry, ok := c.scenarios[scenario.name]
 	if !ok {
+		var patternCopy *image.Gray
+		if pattern != nil {
+			patternCopy = cloneGray(pattern)
+		}
 		entry = &findBenchScenarioVisual{
 			scenario: scenario,
 			engines:  map[string][]findBenchAttemptVisual{},
+			pattern:  patternCopy,
 		}
 		c.scenarios[scenario.name] = entry
+	}
+	if entry.pattern == nil && pattern != nil {
+		entry.pattern = cloneGray(pattern)
 	}
 	entry.engines[engine.name] = append([]findBenchAttemptVisual(nil), attempts...)
 }
@@ -171,6 +224,9 @@ func (c *findBenchVisualCollector) WriteScenarioSummaries() error {
 		cp := &findBenchScenarioVisual{
 			scenario: v.scenario,
 			engines:  map[string][]findBenchAttemptVisual{},
+		}
+		if v.pattern != nil {
+			cp.pattern = cloneGray(v.pattern)
 		}
 		for engine, rows := range v.engines {
 			cp.engines[engine] = append([]findBenchAttemptVisual(nil), rows...)
@@ -200,55 +256,49 @@ func (c *findBenchVisualCollector) WriteScenarioSummaries() error {
 
 func (c *findBenchVisualCollector) writeAttemptImage(source *image.Gray, scenario findBenchScenario, engine findBenchEngine, rec findBenchAttemptVisual) (string, error) {
 	canvas := grayToRGBA(source)
-	if rec.Found != nil {
+	for _, query := range rec.Queries {
+		if query.Found == nil {
+			continue
+		}
 		boxColor := color.RGBA{R: 230, G: 80, B: 80, A: 255} // false positive/wrong place
-		if rec.Status == "ok" {
+		if query.Status == "ok" {
 			boxColor = color.RGBA{R: 40, G: 210, B: 95, A: 255} // correct match
 		}
-		drawRectOutline(canvas, rec.Found, boxColor, 3)
+		drawRectOutline(canvas, query.Found, boxColor, 3)
 	}
 
-	overlayHeight := 74
-	if canvas.Bounds().Dy() < overlayHeight+8 {
-		overlayHeight = maxInt(24, canvas.Bounds().Dy()/2)
-	}
-	draw.Draw(
-		canvas,
-		image.Rect(0, 0, canvas.Bounds().Dx(), overlayHeight),
-		&image.Uniform{C: color.RGBA{R: 14, G: 19, B: 28, A: 220}},
-		image.Point{},
-		draw.Over,
-	)
-
-	line1 := fmt.Sprintf("ENGINE %s ATTEMPT %d", engine.name, rec.Attempt)
-	line2 := fmt.Sprintf("STATUS %s DURATION %.3fMS RETRY %s", rec.Status, float64(rec.Duration.Microseconds())/1000.0, boolWord(rec.Retried))
-	line3 := "FOUND NONE"
-	if rec.Found != nil {
-		line3 = fmt.Sprintf("FOUND X=%d Y=%d W=%d H=%d OVERLAP %.3f AREA %.2fx", rec.Found.GetX(), rec.Found.GetY(), rec.Found.GetW(), rec.Found.GetH(), rec.Overlap, rec.AreaRatio)
-	}
-	line4 := fmt.Sprintf("TARGET X=%d Y=%d W=%d H=%d", rec.Expected.GetX(), rec.Expected.GetY(), rec.Expected.GetW(), rec.Expected.GetH())
-	if rec.Found != nil {
-		if rec.Status == "ok" {
-			line4 = "MATCH CLASS CORRECT (GREEN)"
-		} else {
-			line4 = "MATCH CLASS FALSE_POSITIVE (RED)"
+	if c.attemptOverlay {
+		overlayHeight := 74
+		if canvas.Bounds().Dy() < overlayHeight+8 {
+			overlayHeight = maxInt(24, canvas.Bounds().Dy()/2)
 		}
-	} else if rec.Status == "not_found" {
-		line4 = "MATCH CLASS NO_MATCH (NO BOX)"
-	}
-	if rec.Error != "" {
-		line4 = truncateUpper(fmt.Sprintf("ERROR %s", rec.Error), 88)
-	}
+		draw.Draw(
+			canvas,
+			image.Rect(0, 0, canvas.Bounds().Dx(), overlayHeight),
+			&image.Uniform{C: color.RGBA{R: 14, G: 19, B: 28, A: 220}},
+			image.Point{},
+			draw.Over,
+		)
 
-	textScale := 2
-	y := 7
-	y += drawTinyText(canvas, 8, y, line1, color.RGBA{R: 255, G: 255, B: 255, A: 255}, textScale)
-	y += 3
-	y += drawTinyText(canvas, 8, y, line2, color.RGBA{R: 220, G: 231, B: 248, A: 255}, textScale)
-	y += 3
-	y += drawTinyText(canvas, 8, y, line3, color.RGBA{R: 160, G: 245, B: 183, A: 255}, textScale)
-	y += 3
-	_ = drawTinyText(canvas, 8, y, line4, color.RGBA{R: 250, G: 189, B: 189, A: 255}, textScale)
+		line1 := fmt.Sprintf("ENGINE %s ATTEMPT %d", engine.name, rec.Attempt)
+		line2 := fmt.Sprintf("STATUS %s DURATION %.3fMS RETRY %s", rec.Status, float64(rec.Duration.Microseconds())/1000.0, boolWord(rec.Retried))
+		okCount, notFoundCount, overlapCount, errorCount := summarizeAttemptQueryCounts(rec.Queries)
+		line3 := fmt.Sprintf("MATCH OK %d/%d NOT_FOUND %d OVERLAP %d ERROR %d", okCount, len(rec.Queries), notFoundCount, overlapCount, errorCount)
+		line4 := attemptQueryStatusLine(rec.Queries)
+		if rec.Error != "" {
+			line4 = truncateUpper(fmt.Sprintf("ERROR %s", rec.Error), 88)
+		}
+
+		textScale := 2
+		y := 7
+		y += drawTinyText(canvas, 8, y, line1, color.RGBA{R: 255, G: 255, B: 255, A: 255}, textScale)
+		y += 3
+		y += drawTinyText(canvas, 8, y, line2, color.RGBA{R: 220, G: 231, B: 248, A: 255}, textScale)
+		y += 3
+		y += drawTinyText(canvas, 8, y, line3, color.RGBA{R: 160, G: 245, B: 183, A: 255}, textScale)
+		y += 3
+		_ = drawTinyText(canvas, 8, y, line4, color.RGBA{R: 250, G: 189, B: 189, A: 255}, textScale)
+	}
 
 	scenarioDir := filepath.Join(c.outDir, "attempts", sanitizeFileToken(scenario.name))
 	if err := os.MkdirAll(scenarioDir, 0o755); err != nil {
@@ -284,44 +334,95 @@ func (c *findBenchVisualCollector) writeScenarioSummary(scenario *findBenchScena
 
 	srcW := maxInt(1, scenario.scenario.screenW)
 	srcH := maxInt(1, scenario.scenario.screenH)
-	tileW := 420
-	tileH := maxInt(120, int(float64(srcH)*float64(tileW)/float64(srcW)))
-	margin := 12
-	headerH := 78
-	captionH := 20
+	summaryScale := 1
+	if c.summaryNative {
+		summaryScale = 1
+	}
+	screenW := 420 * summaryScale
+	screenH := maxInt(120*summaryScale, int(float64(srcH)*float64(screenW)/float64(srcW)))
+	if c.summaryNative {
+		screenW = srcW
+		screenH = srcH
+	}
+	margin := 12 * summaryScale
+	headerH := 78 * summaryScale
+	rowLabelH := 22 * summaryScale
+	patternGap := 8 * summaryScale
+	patternPanelW := 0
+	if c.summaryShowPattern && scenario.pattern != nil {
+		if c.summaryNative {
+			patternPanelW = maxInt(96, minInt(180, screenW/8))
+		} else {
+			patternPanelW = 160 * summaryScale
+		}
+	}
+	cellW := screenW
+	if patternPanelW > 0 {
+		cellW += patternPanelW + patternGap
+	}
+	cellH := rowLabelH + screenH
 	cols := len(engines)
 
-	width := margin + cols*(tileW+margin)
-	height := headerH + margin + rows*(tileH+captionH+margin)
+	width := margin + cols*(cellW+margin)
+	height := headerH + margin + rows*(cellH+margin)
 	canvas := image.NewRGBA(image.Rect(0, 0, width, height))
 	draw.Draw(canvas, canvas.Bounds(), &image.Uniform{C: color.RGBA{R: 242, G: 246, B: 252, A: 255}}, image.Point{}, draw.Src)
 	draw.Draw(canvas, image.Rect(0, 0, width, headerH), &image.Uniform{C: color.RGBA{R: 16, G: 26, B: 40, A: 255}}, image.Point{}, draw.Src)
 
 	title := fmt.Sprintf("SCENARIO %s RES %dx%d ROT %d VARIANT %s", scenario.scenario.name, scenario.scenario.screenW, scenario.scenario.screenH, scenario.scenario.rotation, scenario.scenario.variant)
-	subtitle := "GREEN CORRECT MATCH   RED FALSE POSITIVE   NO BOX NO MATCH"
-	drawTinyText(canvas, 10, 8, truncateUpper(title, 108), color.RGBA{R: 255, G: 255, B: 255, A: 255}, 2)
-	drawTinyText(canvas, 10, 42, subtitle, color.RGBA{R: 190, G: 208, B: 236, A: 255}, 2)
+	subtitle := "GREEN CORRECT MATCH   RED FALSE POSITIVE   NO BOX NO MATCH   LABELS ABOVE SCREEN"
+	drawTinyText(canvas, 10*summaryScale, 8*summaryScale, truncateUpper(title, 108), color.RGBA{R: 255, G: 255, B: 255, A: 255}, 2*summaryScale)
+	drawTinyText(canvas, 10*summaryScale, 42*summaryScale, subtitle, color.RGBA{R: 190, G: 208, B: 236, A: 255}, 2*summaryScale)
 
 	for col, engine := range engines {
 		records := scenario.engines[engine]
 		for row := 0; row < rows; row++ {
-			x := margin + col*(tileW+margin)
-			y := headerH + margin + row*(tileH+captionH+margin)
-			tileRect := image.Rect(x, y, x+tileW, y+tileH)
-			draw.Draw(canvas, tileRect, &image.Uniform{C: color.RGBA{R: 222, G: 228, B: 237, A: 255}}, image.Point{}, draw.Src)
+			x := margin + col*(cellW+margin)
+			y := headerH + margin + row*(cellH+margin)
+			bodyY := y + rowLabelH
+			screenX := x
+			if patternPanelW > 0 {
+				screenX += patternPanelW + patternGap
+			}
+			screenRect := image.Rect(screenX, bodyY, screenX+screenW, bodyY+screenH)
+			draw.Draw(canvas, screenRect, &image.Uniform{C: color.RGBA{R: 222, G: 228, B: 237, A: 255}}, image.Point{}, draw.Src)
 
-			caption := fmt.Sprintf("ENGINE %s ATTEMPT %d NO RETRY", engine, row+1)
+			label := fmt.Sprintf("ENGINE %s ATTEMPT %d NO RETRY", engine, row+1)
 			if row < len(records) {
 				rec := records[row]
-				caption = fmt.Sprintf("ENGINE %s ATTEMPT %d %s %.3fMS RETRY %s", engine, rec.Attempt, rec.Status, float64(rec.Duration.Microseconds())/1000.0, boolWord(rec.Retried))
+				label = fmt.Sprintf("ENGINE %s ATTEMPT %d %s %.3fMS RETRY %s", engine, rec.Attempt, rec.Status, float64(rec.Duration.Microseconds())/1000.0, boolWord(rec.Retried))
 				img, err := readImage(rec.File)
 				if err == nil {
-					thumb := resizeNearest(img, tileW, tileH)
-					draw.Draw(canvas, tileRect, thumb, image.Point{}, draw.Src)
+					iw := img.Bounds().Dx()
+					ih := img.Bounds().Dy()
+					tw, th := fitWithinNoUpscale(screenW, screenH, iw, ih)
+					if tw > 0 && th > 0 {
+						thumb := resizeNearest(img, tw, th)
+						px := screenRect.Min.X + (screenRect.Dx()-tw)/2
+						py := screenRect.Min.Y + (screenRect.Dy()-th)/2
+						draw.Draw(canvas, image.Rect(px, py, px+tw, py+th), thumb, image.Point{}, draw.Src)
+					}
 				}
 			}
-			drawRectOutline(canvas, &pb.Rect{X: int32(x), Y: int32(y), W: int32(tileW), H: int32(tileH)}, color.RGBA{R: 82, G: 95, B: 116, A: 255}, 2)
-			drawTinyText(canvas, x+2, y+tileH+4, truncateUpper(caption, 54), color.RGBA{R: 35, G: 46, B: 64, A: 255}, 1)
+
+			if patternPanelW > 0 {
+				patternRect := image.Rect(x, bodyY, x+patternPanelW, bodyY+screenH)
+				draw.Draw(canvas, patternRect, &image.Uniform{C: color.RGBA{R: 228, G: 234, B: 243, A: 255}}, image.Point{}, draw.Src)
+				if scenario.pattern != nil {
+					pw, ph := fitWithinNoUpscale(patternRect.Dx()-8, patternRect.Dy()-24, scenario.pattern.Bounds().Dx(), scenario.pattern.Bounds().Dy())
+					if pw > 0 && ph > 0 {
+						px := patternRect.Min.X + (patternRect.Dx()-pw)/2
+						py := patternRect.Min.Y + 18 + (patternRect.Dy()-18-ph)/2
+						patternImg := resizeNearest(grayToRGBA(scenario.pattern), pw, ph)
+						draw.Draw(canvas, image.Rect(px, py, px+pw, py+ph), patternImg, image.Point{}, draw.Src)
+					}
+				}
+				drawTinyText(canvas, x+4, y+4, "PATTERN", color.RGBA{R: 35, G: 46, B: 64, A: 255}, summaryScale)
+				drawRectOutline(canvas, &pb.Rect{X: int32(patternRect.Min.X), Y: int32(patternRect.Min.Y), W: int32(patternRect.Dx()), H: int32(patternRect.Dy())}, color.RGBA{R: 104, G: 116, B: 137, A: 255}, maxInt(1, summaryScale))
+			}
+
+			drawTinyText(canvas, screenX+4, y+4, truncateUpper(label, 84), color.RGBA{R: 35, G: 46, B: 64, A: 255}, summaryScale)
+			drawRectOutline(canvas, &pb.Rect{X: int32(screenRect.Min.X), Y: int32(screenRect.Min.Y), W: int32(screenRect.Dx()), H: int32(screenRect.Dy())}, color.RGBA{R: 82, G: 95, B: 116, A: 255}, maxInt(1, summaryScale))
 		}
 	}
 
@@ -342,11 +443,12 @@ func (c *findBenchVisualCollector) writeRunMegaSummary(images []findBenchScenari
 	})
 
 	const (
-		margin   = 16
-		headerH  = 96
-		tileW    = 680
-		tileH    = 330
-		captionH = 24
+		megaScale = 2
+		margin    = 16 * megaScale
+		headerH   = 96 * megaScale
+		tileW     = 680 * megaScale
+		tileH     = 330 * megaScale
+		captionH  = 24 * megaScale
 	)
 	cols := int(math.Ceil(math.Sqrt(float64(len(images)))))
 	if cols < 1 {
@@ -362,8 +464,8 @@ func (c *findBenchVisualCollector) writeRunMegaSummary(images []findBenchScenari
 
 	title := "RUN-LEVEL MEGA SUMMARY   FINDONSCREEN BENCHMARK"
 	meta := fmt.Sprintf("SCENARIOS %d   GRID %dX%d   GENERATED %s", len(images), cols, rows, time.Now().UTC().Format("2006-01-02T15:04:05Z"))
-	drawTinyText(canvas, 10, 12, title, color.RGBA{R: 255, G: 255, B: 255, A: 255}, 2)
-	drawTinyText(canvas, 10, 46, truncateUpper(meta, 120), color.RGBA{R: 184, G: 202, B: 232, A: 255}, 2)
+	drawTinyText(canvas, 10*megaScale, 12*megaScale, title, color.RGBA{R: 255, G: 255, B: 255, A: 255}, 2*megaScale)
+	drawTinyText(canvas, 10*megaScale, 46*megaScale, truncateUpper(meta, 120), color.RGBA{R: 184, G: 202, B: 232, A: 255}, 2*megaScale)
 
 	for i, summary := range images {
 		col := i % cols
@@ -374,21 +476,28 @@ func (c *findBenchVisualCollector) writeRunMegaSummary(images []findBenchScenari
 		tileRect := image.Rect(x, y, x+tileW, y+tileH)
 		draw.Draw(canvas, tileRect, &image.Uniform{C: color.RGBA{R: 219, G: 226, B: 236, A: 255}}, image.Point{}, draw.Src)
 		if img, err := readImage(summary.Path); err == nil {
-			thumb := resizeNearest(img, tileW, tileH)
-			draw.Draw(canvas, tileRect, thumb, image.Point{}, draw.Src)
+			iw := img.Bounds().Dx()
+			ih := img.Bounds().Dy()
+			tw, th := fitWithinNoUpscale(tileW, tileH, iw, ih)
+			if tw > 0 && th > 0 {
+				thumb := resizeNearest(img, tw, th)
+				px := tileRect.Min.X + (tileRect.Dx()-tw)/2
+				py := tileRect.Min.Y + (tileRect.Dy()-th)/2
+				draw.Draw(canvas, image.Rect(px, py, px+tw, py+th), thumb, image.Point{}, draw.Src)
+			}
 		}
-		drawRectOutline(canvas, &pb.Rect{X: int32(x), Y: int32(y), W: int32(tileW), H: int32(tileH)}, color.RGBA{R: 77, G: 90, B: 112, A: 255}, 2)
+		drawRectOutline(canvas, &pb.Rect{X: int32(x), Y: int32(y), W: int32(tileW), H: int32(tileH)}, color.RGBA{R: 77, G: 90, B: 112, A: 255}, 2*megaScale)
 		drawTinyText(
 			canvas,
-			x+4,
-			y+tileH+5,
+			x+8,
+			y+tileH+10,
 			truncateUpper(fmt.Sprintf("SCENARIO %s", summary.ScenarioName), 72),
 			color.RGBA{R: 33, G: 43, B: 60, A: 255},
-			1,
+			megaScale,
 		)
 	}
 
-	return writePNG(filepath.Join(c.outDir, "summaries", "summary-run-mega.png"), canvas)
+	return writeJPEG(filepath.Join(c.outDir, "summaries", "summary-run-mega.jpg"), canvas, 80)
 }
 
 func writePNG(path string, in image.Image) error {
@@ -398,6 +507,21 @@ func writePNG(path string, in image.Image) error {
 	}
 	defer func() { _ = f.Close() }()
 	return png.Encode(f, in)
+}
+
+func writeJPEG(path string, in image.Image, quality int) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+	if quality < 1 {
+		quality = 1
+	}
+	if quality > 100 {
+		quality = 100
+	}
+	return jpeg.Encode(f, in, &jpeg.Options{Quality: quality})
 }
 
 func readImage(path string) (image.Image, error) {
@@ -488,6 +612,51 @@ func cloneRect(in *pb.Rect) *pb.Rect {
 	return &pb.Rect{X: in.GetX(), Y: in.GetY(), W: in.GetW(), H: in.GetH()}
 }
 
+func patternGrayFromRequest(req *pb.FindOnScreenRequest) *image.Gray {
+	if req == nil || req.GetPattern() == nil || req.GetPattern().GetImage() == nil {
+		return nil
+	}
+	gi := req.GetPattern().GetImage()
+	w := int(gi.GetWidth())
+	h := int(gi.GetHeight())
+	if w <= 0 || h <= 0 {
+		return nil
+	}
+	pix := gi.GetPix()
+	if len(pix) < w*h {
+		return nil
+	}
+	out := image.NewGray(image.Rect(0, 0, w, h))
+	for y := 0; y < h; y++ {
+		start := y * w
+		copy(out.Pix[y*out.Stride:y*out.Stride+w], pix[start:start+w])
+	}
+	return out
+}
+
+func fitWithin(maxW, maxH, srcW, srcH int) (int, int) {
+	if maxW <= 0 || maxH <= 0 || srcW <= 0 || srcH <= 0 {
+		return 0, 0
+	}
+	scale := math.Min(float64(maxW)/float64(srcW), float64(maxH)/float64(srcH))
+	if scale <= 0 {
+		return 0, 0
+	}
+	w := maxInt(1, int(math.Round(float64(srcW)*scale)))
+	h := maxInt(1, int(math.Round(float64(srcH)*scale)))
+	return w, h
+}
+
+func fitWithinNoUpscale(maxW, maxH, srcW, srcH int) (int, int) {
+	if maxW <= 0 || maxH <= 0 || srcW <= 0 || srcH <= 0 {
+		return 0, 0
+	}
+	if srcW <= maxW && srcH <= maxH {
+		return srcW, srcH
+	}
+	return fitWithin(maxW, maxH, srcW, srcH)
+}
+
 func visualStatusFromError(err error) string {
 	code := status.Code(err)
 	switch code {
@@ -500,6 +669,110 @@ func visualStatusFromError(err error) string {
 	default:
 		return "error"
 	}
+}
+
+func aggregateAttemptStatus(queries []findBenchAttemptQueryVisual) string {
+	if len(queries) == 0 {
+		return "error"
+	}
+	allOK := true
+	hasNotFound := false
+	hasOverlap := false
+	hasTimeout := false
+	hasUnsupported := false
+	hasError := false
+	for _, query := range queries {
+		switch query.Status {
+		case "ok":
+			// no-op
+		case "not_found":
+			allOK = false
+			hasNotFound = true
+		case "overlap_miss":
+			allOK = false
+			hasOverlap = true
+		case "timeout":
+			allOK = false
+			hasTimeout = true
+		case "unsupported":
+			allOK = false
+			hasUnsupported = true
+		default:
+			allOK = false
+			hasError = true
+		}
+	}
+	if allOK {
+		return "ok"
+	}
+	if hasError {
+		return "error"
+	}
+	if hasTimeout {
+		return "timeout"
+	}
+	if hasUnsupported {
+		return "unsupported"
+	}
+	if hasOverlap {
+		return "overlap_miss"
+	}
+	if hasNotFound {
+		return "not_found"
+	}
+	return "error"
+}
+
+func summarizeAttemptErrors(queries []findBenchAttemptQueryVisual) string {
+	parts := make([]string, 0, 2)
+	for _, query := range queries {
+		if strings.TrimSpace(query.Error) == "" {
+			continue
+		}
+		label := strings.TrimSpace(query.Label)
+		if label == "" {
+			label = "query"
+		}
+		parts = append(parts, fmt.Sprintf("%s: %s", label, query.Error))
+		if len(parts) >= 2 {
+			break
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return strings.Join(parts, " | ")
+}
+
+func summarizeAttemptQueryCounts(queries []findBenchAttemptQueryVisual) (okCount int, notFoundCount int, overlapCount int, errorCount int) {
+	for _, query := range queries {
+		switch query.Status {
+		case "ok":
+			okCount++
+		case "not_found":
+			notFoundCount++
+		case "overlap_miss":
+			overlapCount++
+		default:
+			errorCount++
+		}
+	}
+	return okCount, notFoundCount, overlapCount, errorCount
+}
+
+func attemptQueryStatusLine(queries []findBenchAttemptQueryVisual) string {
+	if len(queries) == 0 {
+		return "TARGETS NONE"
+	}
+	parts := make([]string, 0, len(queries))
+	for idx, query := range queries {
+		label := strings.TrimSpace(query.Label)
+		if label == "" {
+			label = fmt.Sprintf("target-%02d", idx+1)
+		}
+		parts = append(parts, fmt.Sprintf("%s=%s", label, query.Status))
+	}
+	return truncateUpper(fmt.Sprintf("TARGETS %s", strings.Join(parts, " ")), 88)
 }
 
 func boolWord(v bool) string {
