@@ -86,7 +86,7 @@ Options:
 
 CI automation:
 
-- `.github/workflows/docs-pages.yml` runs benchmark + publish on pushes to `main` (and `master` compatibility) and on manual dispatch.
+- `.github/workflows/docs-pages.yml` runs benchmark + API/parity doc generation, then executes GitHub Pages build/deploy on pushes to `main` (and `master` compatibility) and on manual dispatch.
 
 ## Local End-to-End Verification
 

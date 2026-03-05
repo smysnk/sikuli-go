@@ -3,9 +3,11 @@ module github.com/smysnk/sikuligo
 go 1.24.0
 
 require (
+	github.com/gen2brain/avif v0.4.4
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/otiai10/gosseract/v2 v2.2.4
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	gocv.io/x/gocv v0.43.0
 	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11
@@ -15,14 +17,12 @@ require (
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.8.3 // indirect
-	github.com/gen2brain/avif v0.4.4 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	github.com/tetratelabs/wazero v1.9.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
