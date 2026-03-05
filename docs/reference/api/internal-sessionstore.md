@@ -149,12 +149,12 @@ Package: `package sessionstore // import "github.com/smysnk/sikuligo/internal/se
 #### <a id="method-store-startapisession"></a><span class="api-method">Method</span> `Store.StartAPISession`
 
 - Signature: <span class="api-signature">`func (s *Store) StartAPISession(ctx context.Context, in APISessionStartInput) (APISession, error)`</span>
-- Uses: [`APISessionStartInput`](#type-apisessionstartinput), [`APISession`](#type-apisession)
+- Uses: [`APISession`](#type-apisession), [`APISessionStartInput`](#type-apisessionstartinput)
 
 #### <a id="method-store-startclientsession"></a><span class="api-method">Method</span> `Store.StartClientSession`
 
 - Signature: <span class="api-signature">`func (s *Store) StartClientSession(ctx context.Context, in ClientSessionStartInput) (ClientSession, error)`</span>
-- Uses: [`ClientSessionStartInput`](#type-clientsessionstartinput), [`ClientSession`](#type-clientsession)
+- Uses: [`ClientSession`](#type-clientsession), [`ClientSessionStartInput`](#type-clientsessionstartinput)
 
 ## Raw Package Doc
 

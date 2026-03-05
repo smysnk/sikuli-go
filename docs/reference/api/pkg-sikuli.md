@@ -325,7 +325,7 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="func-newfinder"></a><span class="api-func">Function</span> `NewFinder`
 
 - Signature: <span class="api-signature">`func NewFinder(source *Image) (*Finder, error)`</span>
-- Uses: [`Image`](#type-image), [`Finder`](#type-finder)
+- Uses: [`Finder`](#type-finder), [`Image`](#type-image)
 - Notes: NewFinder creates a search/OCR helper bound to a source image.
 
 #### <a id="func-newimagefromany"></a><span class="api-func">Function</span> `NewImageFromAny`
@@ -356,7 +356,7 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="func-newmatch"></a><span class="api-func">Function</span> `NewMatch`
 
 - Signature: <span class="api-signature">`func NewMatch(x, y, w, h int, score float64, off Point) Match`</span>
-- Uses: [`Point`](#type-point), [`Match`](#type-match)
+- Uses: [`Match`](#type-match), [`Point`](#type-point)
 
 #### <a id="func-newobservercontroller"></a><span class="api-func">Function</span> `NewObserverController`
 
@@ -441,7 +441,7 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="method-appcontroller-listwindows"></a><span class="api-method">Method</span> `AppController.ListWindows`
 
 - Signature: <span class="api-signature">`func (c *AppController) ListWindows(name string, opts AppOptions) ([]Window, error)`</span>
-- Uses: [`Window`](#type-window), [`AppOptions`](#type-appoptions)
+- Uses: [`AppOptions`](#type-appoptions), [`Window`](#type-window)
 
 #### <a id="method-appcontroller-open"></a><span class="api-method">Method</span> `AppController.Open`
 
@@ -461,31 +461,31 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="method-finder-exists"></a><span class="api-method">Method</span> `Finder.Exists`
 
 - Signature: <span class="api-signature">`func (f *Finder) Exists(pattern *Pattern) (Match, bool, error)`</span>
-- Uses: [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Match`](#type-match), [`Pattern`](#type-pattern)
 - Notes: Exists returns the first match when present. Missing targets return (Match{}, false, nil).
 
 #### <a id="method-finder-find"></a><span class="api-method">Method</span> `Finder.Find`
 
 - Signature: <span class="api-signature">`func (f *Finder) Find(pattern *Pattern) (Match, error)`</span>
-- Uses: [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Match`](#type-match), [`Pattern`](#type-pattern)
 - Notes: Find returns the best match for the pattern.
 
 #### <a id="method-finder-findall"></a><span class="api-method">Method</span> `Finder.FindAll`
 
 - Signature: <span class="api-signature">`func (f *Finder) FindAll(pattern *Pattern) ([]Match, error)`</span>
-- Uses: [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Match`](#type-match), [`Pattern`](#type-pattern)
 - Notes: FindAll returns all candidate matches for the pattern.
 
 #### <a id="method-finder-findallbycolumn"></a><span class="api-method">Method</span> `Finder.FindAllByColumn`
 
 - Signature: <span class="api-signature">`func (f *Finder) FindAllByColumn(pattern *Pattern) ([]Match, error)`</span>
-- Uses: [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Match`](#type-match), [`Pattern`](#type-pattern)
 - Notes: FindAllByColumn returns all matches sorted left-to-right then top-to-bottom.
 
 #### <a id="method-finder-findallbyrow"></a><span class="api-method">Method</span> `Finder.FindAllByRow`
 
 - Signature: <span class="api-signature">`func (f *Finder) FindAllByRow(pattern *Pattern) ([]Match, error)`</span>
-- Uses: [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Match`](#type-match), [`Pattern`](#type-pattern)
 
 #### <a id="method-finder-findtext"></a><span class="api-method">Method</span> `Finder.FindText`
 
@@ -524,7 +524,7 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="method-finder-wait"></a><span class="api-method">Method</span> `Finder.Wait`
 
 - Signature: <span class="api-signature">`func (f *Finder) Wait(pattern *Pattern, timeout time.Duration) (Match, error)`</span>
-- Uses: [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Match`](#type-match), [`Pattern`](#type-pattern)
 
 #### <a id="method-finder-waitvanish"></a><span class="api-method">Method</span> `Finder.WaitVanish`
 
@@ -600,17 +600,17 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="method-observercontroller-observeappear"></a><span class="api-method">Method</span> `ObserverController.ObserveAppear`
 
 - Signature: <span class="api-signature">`func (c *ObserverController) ObserveAppear(source *Image, region Region, pattern *Pattern, opts ObserveOptions) ([]ObserveEvent, error)`</span>
-- Uses: [`Image`](#type-image), [`Region`](#type-region), [`ObserveOptions`](#type-observeoptions), [`ObserveEvent`](#type-observeevent), [`Pattern`](#type-pattern)
+- Uses: [`Image`](#type-image), [`ObserveEvent`](#type-observeevent), [`ObserveOptions`](#type-observeoptions), [`Pattern`](#type-pattern), [`Region`](#type-region)
 
 #### <a id="method-observercontroller-observechange"></a><span class="api-method">Method</span> `ObserverController.ObserveChange`
 
 - Signature: <span class="api-signature">`func (c *ObserverController) ObserveChange(source *Image, region Region, opts ObserveOptions) ([]ObserveEvent, error)`</span>
-- Uses: [`Image`](#type-image), [`Region`](#type-region), [`ObserveOptions`](#type-observeoptions), [`ObserveEvent`](#type-observeevent)
+- Uses: [`Image`](#type-image), [`ObserveEvent`](#type-observeevent), [`ObserveOptions`](#type-observeoptions), [`Region`](#type-region)
 
 #### <a id="method-observercontroller-observevanish"></a><span class="api-method">Method</span> `ObserverController.ObserveVanish`
 
 - Signature: <span class="api-signature">`func (c *ObserverController) ObserveVanish(source *Image, region Region, pattern *Pattern, opts ObserveOptions) ([]ObserveEvent, error)`</span>
-- Uses: [`Image`](#type-image), [`Region`](#type-region), [`ObserveOptions`](#type-observeoptions), [`ObserveEvent`](#type-observeevent), [`Pattern`](#type-pattern)
+- Uses: [`Image`](#type-image), [`ObserveEvent`](#type-observeevent), [`ObserveOptions`](#type-observeoptions), [`Pattern`](#type-pattern), [`Region`](#type-region)
 
 #### <a id="method-observercontroller-setbackend"></a><span class="api-method">Method</span> `ObserverController.SetBackend`
 
@@ -696,7 +696,7 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="method-pattern-offset"></a><span class="api-method">Method</span> `Pattern.Offset`
 
 - Signature: <span class="api-signature">`func (p *Pattern) Offset() Point`</span>
-- Uses: [`Point`](#type-point), [`Offset`](#type-offset)
+- Uses: [`Offset`](#type-offset), [`Point`](#type-point)
 - Notes: Offset returns the configured click anchor offset.
 
 #### <a id="method-pattern-resize"></a><span class="api-method">Method</span> `Pattern.Resize`
@@ -790,34 +790,34 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="method-region-exists"></a><span class="api-method">Method</span> `Region.Exists`
 
 - Signature: <span class="api-signature">`func (r Region) Exists(source *Image, pattern *Pattern, timeout time.Duration) (Match, bool, error)`</span>
-- Uses: [`Image`](#type-image), [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Image`](#type-image), [`Match`](#type-match), [`Pattern`](#type-pattern)
 - Notes: Exists checks for pattern presence within timeout and returns first match when found.
 
 #### <a id="method-region-find"></a><span class="api-method">Method</span> `Region.Find`
 
 - Signature: <span class="api-signature">`func (r Region) Find(source *Image, pattern *Pattern) (Match, error)`</span>
-- Uses: [`Image`](#type-image), [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Image`](#type-image), [`Match`](#type-match), [`Pattern`](#type-pattern)
 
 #### <a id="method-region-findall"></a><span class="api-method">Method</span> `Region.FindAll`
 
 - Signature: <span class="api-signature">`func (r Region) FindAll(source *Image, pattern *Pattern) ([]Match, error)`</span>
-- Uses: [`Image`](#type-image), [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Image`](#type-image), [`Match`](#type-match), [`Pattern`](#type-pattern)
 - Notes: FindAll returns all matches in this region.
 
 #### <a id="method-region-findallbycolumn"></a><span class="api-method">Method</span> `Region.FindAllByColumn`
 
 - Signature: <span class="api-signature">`func (r Region) FindAllByColumn(source *Image, pattern *Pattern) ([]Match, error)`</span>
-- Uses: [`Image`](#type-image), [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Image`](#type-image), [`Match`](#type-match), [`Pattern`](#type-pattern)
 
 #### <a id="method-region-findallbyrow"></a><span class="api-method">Method</span> `Region.FindAllByRow`
 
 - Signature: <span class="api-signature">`func (r Region) FindAllByRow(source *Image, pattern *Pattern) ([]Match, error)`</span>
-- Uses: [`Image`](#type-image), [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Image`](#type-image), [`Match`](#type-match), [`Pattern`](#type-pattern)
 
 #### <a id="method-region-findtext"></a><span class="api-method">Method</span> `Region.FindText`
 
 - Signature: <span class="api-signature">`func (r Region) FindText(source *Image, query string, params OCRParams) ([]TextMatch, error)`</span>
-- Uses: [`OCRParams`](#type-ocrparams), [`Image`](#type-image), [`TextMatch`](#type-textmatch)
+- Uses: [`Image`](#type-image), [`OCRParams`](#type-ocrparams), [`TextMatch`](#type-textmatch)
 - Notes: FindText runs OCR in region and returns matches for the query.
 
 #### <a id="method-region-grow"></a><span class="api-method">Method</span> `Region.Grow`
@@ -860,7 +860,7 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="method-region-readtext"></a><span class="api-method">Method</span> `Region.ReadText`
 
 - Signature: <span class="api-signature">`func (r Region) ReadText(source *Image, params OCRParams) (string, error)`</span>
-- Uses: [`OCRParams`](#type-ocrparams), [`Image`](#type-image)
+- Uses: [`Image`](#type-image), [`OCRParams`](#type-ocrparams)
 
 #### <a id="method-region-resetthrowexception"></a><span class="api-method">Method</span> `Region.ResetThrowException`
 
@@ -895,7 +895,7 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 #### <a id="method-region-wait"></a><span class="api-method">Method</span> `Region.Wait`
 
 - Signature: <span class="api-signature">`func (r Region) Wait(source *Image, pattern *Pattern, timeout time.Duration) (Match, error)`</span>
-- Uses: [`Image`](#type-image), [`Pattern`](#type-pattern), [`Match`](#type-match)
+- Uses: [`Image`](#type-image), [`Match`](#type-match), [`Pattern`](#type-pattern)
 
 #### <a id="method-region-waitvanish"></a><span class="api-method">Method</span> `Region.WaitVanish`
 

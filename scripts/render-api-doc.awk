@@ -31,10 +31,11 @@ function has_word(sig, word,    pat) {
   return sig ~ pat
 }
 
-function add_use(sig, self_type,    t, out, sep) {
+function add_use(sig, self_type,    i, t, out, sep) {
   out = ""
   sep = ""
-  for (t in type_map) {
+  for (i = 1; i <= type_count; i++) {
+    t = type_name[i]
     if (t == self_type) {
       continue
     }

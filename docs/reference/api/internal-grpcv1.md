@@ -136,7 +136,7 @@ Package: `package grpcv1 // import "github.com/smysnk/sikuligo/internal/grpcv1"`
 #### <a id="func-newserver"></a><span class="api-func">Function</span> `NewServer`
 
 - Signature: <span class="api-signature">`func NewServer(opts ...ServerOption) *Server`</span>
-- Uses: [`ServerOption`](#type-serveroption), [`Server`](#type-server)
+- Uses: [`Server`](#type-server), [`ServerOption`](#type-serveroption)
 
 #### <a id="func-withcapturescreen"></a><span class="api-func">Function</span> `WithCaptureScreen`
 

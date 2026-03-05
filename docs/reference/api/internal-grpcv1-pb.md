@@ -1663,7 +1663,7 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 #### <a id="method-unimplementedsikuliserviceserver-click"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.Click`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) Click(context.Context, *ClickRequest) (*ActionResponse, error)`</span>
-- Uses: [`ClickRequest`](#type-clickrequest), [`ActionResponse`](#type-actionresponse)
+- Uses: [`ActionResponse`](#type-actionresponse), [`ClickRequest`](#type-clickrequest)
 
 #### <a id="method-unimplementedsikuliserviceserver-clickonscreen"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.ClickOnScreen`
 
@@ -1673,12 +1673,12 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 #### <a id="method-unimplementedsikuliserviceserver-closeapp"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.CloseApp`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) CloseApp(context.Context, *AppActionRequest) (*ActionResponse, error)`</span>
-- Uses: [`AppActionRequest`](#type-appactionrequest), [`ActionResponse`](#type-actionresponse)
+- Uses: [`ActionResponse`](#type-actionresponse), [`AppActionRequest`](#type-appactionrequest)
 
 #### <a id="method-unimplementedsikuliserviceserver-existsonscreen"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.ExistsOnScreen`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) ExistsOnScreen(context.Context, *ExistsOnScreenRequest) (*ExistsOnScreenResponse, error)`</span>
-- Uses: [`ExistsOnScreenResponse`](#type-existsonscreenresponse), [`ExistsOnScreenRequest`](#type-existsonscreenrequest)
+- Uses: [`ExistsOnScreenRequest`](#type-existsonscreenrequest), [`ExistsOnScreenResponse`](#type-existsonscreenresponse)
 
 #### <a id="method-unimplementedsikuliserviceserver-find"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.Find`
 
@@ -1688,7 +1688,7 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 #### <a id="method-unimplementedsikuliserviceserver-findall"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.FindAll`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) FindAll(context.Context, *FindRequest) (*FindAllResponse, error)`</span>
-- Uses: [`FindRequest`](#type-findrequest), [`FindAllResponse`](#type-findallresponse)
+- Uses: [`FindAllResponse`](#type-findallresponse), [`FindRequest`](#type-findrequest)
 
 #### <a id="method-unimplementedsikuliserviceserver-findonscreen"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.FindOnScreen`
 
@@ -1698,17 +1698,17 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 #### <a id="method-unimplementedsikuliserviceserver-findtext"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.FindText`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) FindText(context.Context, *FindTextRequest) (*FindTextResponse, error)`</span>
-- Uses: [`FindTextResponse`](#type-findtextresponse), [`FindTextRequest`](#type-findtextrequest)
+- Uses: [`FindTextRequest`](#type-findtextrequest), [`FindTextResponse`](#type-findtextresponse)
 
 #### <a id="method-unimplementedsikuliserviceserver-focusapp"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.FocusApp`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) FocusApp(context.Context, *AppActionRequest) (*ActionResponse, error)`</span>
-- Uses: [`AppActionRequest`](#type-appactionrequest), [`ActionResponse`](#type-actionresponse)
+- Uses: [`ActionResponse`](#type-actionresponse), [`AppActionRequest`](#type-appactionrequest)
 
 #### <a id="method-unimplementedsikuliserviceserver-hotkey"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.Hotkey`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) Hotkey(context.Context, *HotkeyRequest) (*ActionResponse, error)`</span>
-- Uses: [`HotkeyRequest`](#type-hotkeyrequest), [`ActionResponse`](#type-actionresponse)
+- Uses: [`ActionResponse`](#type-actionresponse), [`HotkeyRequest`](#type-hotkeyrequest)
 
 #### <a id="method-unimplementedsikuliserviceserver-isapprunning"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.IsAppRunning`
 
@@ -1718,17 +1718,17 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 #### <a id="method-unimplementedsikuliserviceserver-listwindows"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.ListWindows`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) ListWindows(context.Context, *AppActionRequest) (*ListWindowsResponse, error)`</span>
-- Uses: [`ListWindowsResponse`](#type-listwindowsresponse), [`AppActionRequest`](#type-appactionrequest)
+- Uses: [`AppActionRequest`](#type-appactionrequest), [`ListWindowsResponse`](#type-listwindowsresponse)
 
 #### <a id="method-unimplementedsikuliserviceserver-movemouse"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.MoveMouse`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) MoveMouse(context.Context, *MoveMouseRequest) (*ActionResponse, error)`</span>
-- Uses: [`MoveMouseRequest`](#type-movemouserequest), [`ActionResponse`](#type-actionresponse)
+- Uses: [`ActionResponse`](#type-actionresponse), [`MoveMouseRequest`](#type-movemouserequest)
 
 #### <a id="method-unimplementedsikuliserviceserver-observeappear"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.ObserveAppear`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) ObserveAppear(context.Context, *ObserveRequest) (*ObserveResponse, error)`</span>
-- Uses: [`ObserveResponse`](#type-observeresponse), [`ObserveRequest`](#type-observerequest)
+- Uses: [`ObserveRequest`](#type-observerequest), [`ObserveResponse`](#type-observeresponse)
 
 #### <a id="method-unimplementedsikuliserviceserver-observechange"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.ObserveChange`
 
@@ -1738,22 +1738,22 @@ Package: `package sikuliv1 // import "github.com/smysnk/sikuligo/internal/grpcv1
 #### <a id="method-unimplementedsikuliserviceserver-observevanish"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.ObserveVanish`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) ObserveVanish(context.Context, *ObserveRequest) (*ObserveResponse, error)`</span>
-- Uses: [`ObserveResponse`](#type-observeresponse), [`ObserveRequest`](#type-observerequest)
+- Uses: [`ObserveRequest`](#type-observerequest), [`ObserveResponse`](#type-observeresponse)
 
 #### <a id="method-unimplementedsikuliserviceserver-openapp"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.OpenApp`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) OpenApp(context.Context, *AppActionRequest) (*ActionResponse, error)`</span>
-- Uses: [`AppActionRequest`](#type-appactionrequest), [`ActionResponse`](#type-actionresponse)
+- Uses: [`ActionResponse`](#type-actionresponse), [`AppActionRequest`](#type-appactionrequest)
 
 #### <a id="method-unimplementedsikuliserviceserver-readtext"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.ReadText`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) ReadText(context.Context, *ReadTextRequest) (*ReadTextResponse, error)`</span>
-- Uses: [`ReadTextResponse`](#type-readtextresponse), [`ReadTextRequest`](#type-readtextrequest)
+- Uses: [`ReadTextRequest`](#type-readtextrequest), [`ReadTextResponse`](#type-readtextresponse)
 
 #### <a id="method-unimplementedsikuliserviceserver-typetext"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.TypeText`
 
 - Signature: <span class="api-signature">`func (UnimplementedSikuliServiceServer) TypeText(context.Context, *TypeTextRequest) (*ActionResponse, error)`</span>
-- Uses: [`TypeTextRequest`](#type-typetextrequest), [`ActionResponse`](#type-actionresponse)
+- Uses: [`ActionResponse`](#type-actionresponse), [`TypeTextRequest`](#type-typetextrequest)
 
 #### <a id="method-unimplementedsikuliserviceserver-waitonscreen"></a><span class="api-method">Method</span> `UnimplementedSikuliServiceServer.WaitOnScreen`
 
