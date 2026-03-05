@@ -117,6 +117,14 @@ type findBenchFixtureQuery struct {
 	Label    string
 }
 
+type findBenchMatchClass string
+
+const (
+	findBenchMatchClassOK          findBenchMatchClass = "ok"
+	findBenchMatchClassWrongRegion findBenchMatchClass = "wrong_region"
+	findBenchMatchClassOverlapMiss findBenchMatchClass = "overlap_miss"
+)
+
 type findBenchResolutionPack struct {
 	screenW      int
 	screenH      int
@@ -348,6 +356,7 @@ func runFindOnScreenScenarioBenchmark(b *testing.B, engine findBenchEngine, scen
 	client := pb.NewSikuliServiceClient(conn)
 	requests := make([]*pb.FindOnScreenRequest, 0, len(queries))
 	visualQueries := make([]findBenchVisualQuery, 0, len(queries))
+	expectedRects := make([]*pb.Rect, 0, len(queries))
 	for _, q := range queries {
 		request := &pb.FindOnScreenRequest{
 			Pattern: &pb.Pattern{
@@ -364,6 +373,7 @@ func runFindOnScreenScenarioBenchmark(b *testing.B, engine findBenchEngine, scen
 			Expected: q.Expected,
 			Label:    q.Label,
 		})
+		expectedRects = append(expectedRects, q.Expected)
 	}
 
 	if visuals != nil && len(visualQueries) > 0 {
@@ -467,11 +477,16 @@ func runFindOnScreenScenarioBenchmark(b *testing.B, engine findBenchEngine, scen
 				iterationOK = false
 				continue
 			}
-			if !rectMatchSatisfies(res.GetMatch().GetRect(), expectedRect, scenario.tolerance, scenario.maxAreaRatio) {
-				if scenario.allowPartial && rectMatchSatisfies(res.GetMatch().GetRect(), expectedRect, scenario.tolerance*0.60, scenario.maxAreaRatio*1.20) {
-					queryOKCount++
-					continue
-				}
+			matchClass := classifyFindBenchPositiveMatch(
+				res.GetMatch().GetRect(),
+				expectedRect,
+				expectedRects,
+				request.GetPattern().GetImage(),
+				scenario.tolerance,
+				scenario.maxAreaRatio,
+				scenario.allowPartial,
+			)
+			if matchClass != findBenchMatchClassOK {
 				queryOverlapMissCount++
 				if iterationOK {
 					overlapMissCount++
@@ -499,6 +514,125 @@ func runFindOnScreenScenarioBenchmark(b *testing.B, engine findBenchEngine, scen
 		b.ReportMetric(float64(queryErrorCount)/denom, "query_error/op")
 		b.ReportMetric(float64(queryOverlapMissCount)/denom, "query_overlap_miss/op")
 	}
+}
+
+func classifyFindBenchPositiveMatch(
+	found *pb.Rect,
+	expected *pb.Rect,
+	allExpected []*pb.Rect,
+	pattern *pb.GrayImage,
+	tolerance float64,
+	maxAreaRatio float64,
+	allowPartial bool,
+) findBenchMatchClass {
+	if found == nil || expected == nil {
+		return findBenchMatchClassOverlapMiss
+	}
+	if matchRectAgainstRegion(found, expected, pattern, tolerance, maxAreaRatio, allowPartial) {
+		return findBenchMatchClassOK
+	}
+	for _, peer := range allExpected {
+		if peer == nil || rectsEquivalent(peer, expected) {
+			continue
+		}
+		if matchRectAgainstRegion(found, peer, pattern, tolerance, maxAreaRatio, allowPartial) {
+			return findBenchMatchClassWrongRegion
+		}
+	}
+	return findBenchMatchClassOverlapMiss
+}
+
+func matchRectAgainstRegion(
+	found *pb.Rect,
+	expected *pb.Rect,
+	pattern *pb.GrayImage,
+	tolerance float64,
+	maxAreaRatio float64,
+	allowPartial bool,
+) bool {
+	if found == nil || expected == nil {
+		return false
+	}
+	if regionActsAsZone(expected, pattern) {
+		if zoneMatchSatisfies(found, expected, pattern, tolerance, maxAreaRatio, allowPartial) {
+			return true
+		}
+		if allowPartial && zoneMatchSatisfies(found, expected, pattern, tolerance*0.60, maxAreaRatio*1.20, true) {
+			return true
+		}
+		return false
+	}
+	if rectMatchSatisfies(found, expected, tolerance, maxAreaRatio) {
+		return true
+	}
+	if allowPartial && rectMatchSatisfies(found, expected, tolerance*0.60, maxAreaRatio*1.20) {
+		return true
+	}
+	return false
+}
+
+func regionActsAsZone(expected *pb.Rect, pattern *pb.GrayImage) bool {
+	if expected == nil || pattern == nil {
+		return false
+	}
+	zoneArea := float64(max32(1, expected.GetW()*expected.GetH()))
+	patternArea := float64(max32(1, pattern.GetWidth()*pattern.GetHeight()))
+	// Region-spec benchmark targets may be coarse zones rather than tight boxes.
+	// When they are significantly larger than the query template, use zone scoring.
+	return zoneArea > patternArea*1.35
+}
+
+func zoneMatchSatisfies(
+	found *pb.Rect,
+	zone *pb.Rect,
+	pattern *pb.GrayImage,
+	minOverlap float64,
+	maxAreaRatio float64,
+	allowPartial bool,
+) bool {
+	if found == nil || zone == nil {
+		return false
+	}
+	foundArea := rectAreaFloat(found)
+	if foundArea <= 0 {
+		return false
+	}
+	if pattern != nil {
+		patternArea := float64(max32(1, pattern.GetWidth()*pattern.GetHeight()))
+		limit := maxAreaRatio
+		if limit <= 0 {
+			limit = 1.50
+		}
+		// Zone scoring keeps strict size checks by comparing against the template area.
+		// This avoids accepting oversized detections even when they overlap the zone.
+		if foundArea/patternArea > limit*1.30 {
+			return false
+		}
+	}
+	overlapFound := rectIntersectionArea(found, zone) / foundArea
+	threshold := math.Max(0.10, math.Min(0.85, minOverlap*0.70))
+	if allowPartial {
+		threshold *= 0.80
+	}
+	if overlapFound >= threshold {
+		return true
+	}
+	if overlapFound >= threshold*0.40 {
+		cx := float64(found.GetX()) + float64(found.GetW())/2.0
+		cy := float64(found.GetY()) + float64(found.GetH())/2.0
+		return rectContainsPoint(zone, cx, cy)
+	}
+	return false
+}
+
+func rectsEquivalent(a, b *pb.Rect) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	return a.GetX() == b.GetX() &&
+		a.GetY() == b.GetY() &&
+		a.GetW() == b.GetW() &&
+		a.GetH() == b.GetH()
 }
 
 func benchFindOnScreenCall(client pb.SikuliServiceClient, request *pb.FindOnScreenRequest, scenario findBenchScenario) (*pb.FindResponse, error) {
@@ -2131,21 +2265,43 @@ func rectAreaRatio(got *pb.Rect, want *pb.Rect) float64 {
 }
 
 func rectOverlapRatio(got *pb.Rect, want *pb.Rect) float64 {
-	gx0, gy0 := got.GetX(), got.GetY()
-	gx1, gy1 := gx0+got.GetW(), gy0+got.GetH()
-	wx0, wy0 := want.GetX(), want.GetY()
-	wx1, wy1 := wx0+want.GetW(), wy0+want.GetH()
+	interArea := rectIntersectionArea(got, want)
+	wantArea := float64(max32(1, want.GetW()*want.GetH()))
+	return interArea / wantArea
+}
 
-	ix0 := max32(gx0, wx0)
-	iy0 := max32(gy0, wy0)
-	ix1 := min32(gx1, wx1)
-	iy1 := min32(gy1, wy1)
+func rectIntersectionArea(a *pb.Rect, b *pb.Rect) float64 {
+	ax0, ay0 := a.GetX(), a.GetY()
+	ax1, ay1 := ax0+a.GetW(), ay0+a.GetH()
+	bx0, by0 := b.GetX(), b.GetY()
+	bx1, by1 := bx0+b.GetW(), by0+b.GetH()
+
+	ix0 := max32(ax0, bx0)
+	iy0 := max32(ay0, by0)
+	ix1 := min32(ax1, bx1)
+	iy1 := min32(ay1, by1)
 	if ix1 <= ix0 || iy1 <= iy0 {
 		return 0
 	}
-	interArea := float64((ix1 - ix0) * (iy1 - iy0))
-	wantArea := float64(max32(1, want.GetW()*want.GetH()))
-	return interArea / wantArea
+	return float64((ix1 - ix0) * (iy1 - iy0))
+}
+
+func rectAreaFloat(r *pb.Rect) float64 {
+	if r == nil {
+		return 0
+	}
+	return float64(max32(1, r.GetW()*r.GetH()))
+}
+
+func rectContainsPoint(r *pb.Rect, x, y float64) bool {
+	if r == nil {
+		return false
+	}
+	left := float64(r.GetX())
+	top := float64(r.GetY())
+	right := left + float64(r.GetW())
+	bottom := top + float64(r.GetH())
+	return x >= left && x <= right && y >= top && y <= bottom
 }
 
 func setRect(img *image.Gray, x, y, w, h int, value uint8) {

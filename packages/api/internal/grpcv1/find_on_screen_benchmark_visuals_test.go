@@ -63,10 +63,12 @@ type findBenchAttemptQueryVisual struct {
 	Label     string
 	Status    string
 	Error     string
+	Explain   string
 	Overlap   float64
 	AreaRatio float64
 	Expected  *pb.Rect
 	Found     *pb.Rect
+	Template  *image.Gray
 }
 
 type findBenchAttemptVisual struct {
@@ -143,6 +145,10 @@ func (c *findBenchVisualCollector) CaptureAttempts(
 	pattern := patternGrayFromRequest(queries[0].Request)
 
 	attempts := make([]findBenchAttemptVisual, 0, c.maxAttempts)
+	expectedRects := make([]*pb.Rect, 0, len(queries))
+	for _, query := range queries {
+		expectedRects = append(expectedRects, cloneRect(query.Expected))
+	}
 	for attempt := 1; attempt <= c.maxAttempts; attempt++ {
 		rec := findBenchAttemptVisual{
 			Attempt: attempt,
@@ -153,10 +159,15 @@ func (c *findBenchVisualCollector) CaptureAttempts(
 
 		start := time.Now()
 		for queryIdx, query := range queries {
+			var queryTemplate *image.Gray
+			if qimg := patternGrayFromRequest(query.Request); qimg != nil {
+				queryTemplate = cloneGray(qimg)
+			}
 			qrec := findBenchAttemptQueryVisual{
 				Label:    strings.TrimSpace(query.Label),
 				Status:   "error",
 				Expected: cloneRect(query.Expected),
+				Template: queryTemplate,
 			}
 			if qrec.Label == "" {
 				qrec.Label = fmt.Sprintf("target-%02d", queryIdx+1)
@@ -173,21 +184,48 @@ func (c *findBenchVisualCollector) CaptureAttempts(
 			if err != nil {
 				qrec.Status = visualStatusFromError(err)
 				qrec.Error = err.Error()
+				qrec.Explain = fmt.Sprintf("rpc %s", strings.ReplaceAll(qrec.Status, "_", " "))
 			} else {
 				rect := res.GetMatch().GetRect()
 				if rect == nil {
 					qrec.Status = "error"
 					qrec.Error = "missing match rect"
+					qrec.Explain = "rpc returned missing match rect"
 				} else {
 					qrec.Found = cloneRect(rect)
 					qrec.Overlap = rectOverlapRatio(rect, query.Expected)
 					qrec.AreaRatio = rectAreaRatio(rect, query.Expected)
-					if rectMatchSatisfies(rect, query.Expected, scenario.tolerance, scenario.maxAreaRatio) {
+					pattern := query.Request.GetPattern().GetImage()
+					matchClass := classifyFindBenchPositiveMatch(
+						rect,
+						query.Expected,
+						expectedRects,
+						pattern,
+						scenario.tolerance,
+						scenario.maxAreaRatio,
+						scenario.allowPartial,
+					)
+					if matchClass == findBenchMatchClassOK {
 						qrec.Status = "ok"
+					} else if matchClass == findBenchMatchClassWrongRegion {
+						qrec.Status = "wrong_region"
+						qrec.Error = "matched another configured region"
 					} else {
 						qrec.Status = "overlap_miss"
 					}
+					qrec.Explain = explainFindBenchMatchOutcome(
+						matchClass,
+						rect,
+						query.Expected,
+						pattern,
+						scenario.tolerance,
+						scenario.maxAreaRatio,
+						scenario.allowPartial,
+					)
 				}
+			}
+			if strings.TrimSpace(qrec.Explain) == "" {
+				qrec.Explain = strings.ReplaceAll(qrec.Status, "_", " ")
 			}
 			rec.Queries = append(rec.Queries, qrec)
 		}
@@ -279,7 +317,7 @@ func (c *findBenchVisualCollector) WriteScenarioSummaries() error {
 
 func (c *findBenchVisualCollector) writeAttemptImage(source *image.Gray, scenario findBenchScenario, engine findBenchEngine, rec findBenchAttemptVisual) (string, error) {
 	canvas := grayToRGBA(source)
-	for _, query := range rec.Queries {
+	for idx, query := range rec.Queries {
 		if query.Found == nil {
 			continue
 		}
@@ -288,6 +326,7 @@ func (c *findBenchVisualCollector) writeAttemptImage(source *image.Gray, scenari
 			boxColor = color.RGBA{R: 40, G: 210, B: 95, A: 255} // correct match
 		}
 		drawRectOutline(canvas, query.Found, boxColor, 3)
+		drawRegionTemplateOverlay(canvas, query, boxColor, idx)
 	}
 
 	if c.attemptOverlay {
@@ -774,6 +813,9 @@ func aggregateAttemptStatus(queries []findBenchAttemptQueryVisual) string {
 		case "overlap_miss":
 			allOK = false
 			hasOverlap = true
+		case "wrong_region":
+			allOK = false
+			hasOverlap = true
 		case "timeout":
 			allOK = false
 			hasTimeout = true
@@ -834,7 +876,7 @@ func summarizeAttemptQueryCounts(queries []findBenchAttemptQueryVisual) (okCount
 			okCount++
 		case "not_found":
 			notFoundCount++
-		case "overlap_miss":
+		case "overlap_miss", "wrong_region":
 			overlapCount++
 		default:
 			errorCount++
@@ -856,6 +898,161 @@ func attemptQueryStatusLine(queries []findBenchAttemptQueryVisual) string {
 		parts = append(parts, fmt.Sprintf("%s=%s", label, query.Status))
 	}
 	return truncateUpper(fmt.Sprintf("TARGETS %s", strings.Join(parts, " ")), 88)
+}
+
+func explainFindBenchMatchOutcome(
+	matchClass findBenchMatchClass,
+	found *pb.Rect,
+	expected *pb.Rect,
+	pattern *pb.GrayImage,
+	tolerance float64,
+	maxAreaRatio float64,
+	allowPartial bool,
+) string {
+	if found == nil || expected == nil {
+		return "missing match or expected rect"
+	}
+
+	zoneMode := regionActsAsZone(expected, pattern)
+	if zoneMode {
+		foundArea := rectAreaFloat(found)
+		zoneOverlap := 0.0
+		if foundArea > 0 {
+			zoneOverlap = rectIntersectionArea(found, expected) / foundArea
+		}
+		zoneThreshold := math.Max(0.10, math.Min(0.85, tolerance*0.70))
+		if allowPartial {
+			zoneThreshold *= 0.80
+		}
+		ratioLimit := maxAreaRatio
+		if ratioLimit <= 0 {
+			ratioLimit = 1.50
+		}
+		patternRatio := 0.0
+		if pattern != nil {
+			patternArea := float64(max32(1, pattern.GetWidth()*pattern.GetHeight()))
+			patternRatio = foundArea / patternArea
+			ratioLimit *= 1.30
+		}
+
+		switch matchClass {
+		case findBenchMatchClassOK:
+			return fmt.Sprintf("zone ok ov=%.2f>=%.2f ap=%.2f", zoneOverlap, zoneThreshold, patternRatio)
+		case findBenchMatchClassWrongRegion:
+			return fmt.Sprintf("wrong region zone ov=%.2f ap=%.2f", zoneOverlap, patternRatio)
+		default:
+			if pattern != nil && patternRatio > ratioLimit {
+				return fmt.Sprintf("miss oversized ap=%.2f>%.2f", patternRatio, ratioLimit)
+			}
+			return fmt.Sprintf("miss zone ov=%.2f<%.2f", zoneOverlap, zoneThreshold)
+		}
+	}
+
+	overlap := rectOverlapRatio(found, expected)
+	areaRatio := rectAreaRatio(found, expected)
+	overlapThreshold := math.Max(0.0, math.Min(1.0, tolerance))
+	areaLimit := maxAreaRatio
+	if areaLimit <= 0 {
+		areaLimit = 1.50
+	}
+	partialOverlapThreshold := overlapThreshold * 0.60
+	partialAreaLimit := areaLimit * 1.20
+	strictOK := areaRatio <= areaLimit && overlap >= overlapThreshold
+	partialOK := allowPartial && areaRatio <= partialAreaLimit && overlap >= partialOverlapThreshold
+
+	switch matchClass {
+	case findBenchMatchClassOK:
+		if strictOK {
+			return fmt.Sprintf("strict ok ov=%.2f>=%.2f ar=%.2f", overlap, overlapThreshold, areaRatio)
+		}
+		if partialOK {
+			return fmt.Sprintf("partial ok ov=%.2f>=%.2f ar=%.2f", overlap, partialOverlapThreshold, areaRatio)
+		}
+		return fmt.Sprintf("ok ov=%.2f ar=%.2f", overlap, areaRatio)
+	case findBenchMatchClassWrongRegion:
+		return fmt.Sprintf("wrong region ov=%.2f ar=%.2f", overlap, areaRatio)
+	default:
+		if areaRatio > areaLimit && (!allowPartial || areaRatio > partialAreaLimit) {
+			return fmt.Sprintf("miss size ar=%.2f>%.2f", areaRatio, areaLimit)
+		}
+		if allowPartial {
+			return fmt.Sprintf("miss ov=%.2f<%.2f ar=%.2f", overlap, partialOverlapThreshold, areaRatio)
+		}
+		return fmt.Sprintf("miss ov=%.2f<%.2f ar=%.2f", overlap, overlapThreshold, areaRatio)
+	}
+}
+
+func drawRegionTemplateOverlay(canvas *image.RGBA, query findBenchAttemptQueryVisual, border color.RGBA, slot int) {
+	if canvas == nil || query.Found == nil || query.Template == nil {
+		return
+	}
+	b := canvas.Bounds()
+	maxThumbW := maxInt(48, minInt(180, b.Dx()/6))
+	maxThumbH := maxInt(40, minInt(140, b.Dy()/6))
+	label := strings.ToLower(strings.TrimSpace(query.Label))
+	if label == "" {
+		label = "target"
+	}
+	labelTextBase := fmt.Sprintf("region template: %s", label)
+	textScale := 1
+	labelH := 10*textScale + 2
+	pad := 4
+	maxPanelW := maxInt(96, minInt(240, b.Dx()-8))
+	if maxPanelW <= pad*2 {
+		return
+	}
+	maxTextChars := maxInt(10, (maxPanelW-pad*2)/(6*textScale)-1)
+	labelText := truncateUpper(labelTextBase, maxTextChars)
+	reasonText := truncateUpper(strings.TrimSpace(query.Explain), maxTextChars)
+	if reasonText == "" {
+		reasonText = truncateUpper(strings.ReplaceAll(query.Status, "_", " "), maxTextChars)
+	}
+	labelW := maxInt(1, len(strings.ToUpper(labelText))*6*textScale)
+	reasonW := maxInt(1, len(strings.ToUpper(reasonText))*6*textScale)
+	innerW := maxInt(maxThumbW, maxInt(labelW, reasonW))
+	innerW = minInt(innerW, maxPanelW-pad*2)
+
+	srcW := query.Template.Bounds().Dx()
+	srcH := query.Template.Bounds().Dy()
+	tw, th := fitWithinNoUpscale(innerW, maxThumbH, srcW, srcH)
+	if tw < 1 || th < 1 {
+		return
+	}
+
+	panelW := maxInt(tw+pad*2, labelW+pad*2)
+	panelW = maxInt(panelW, reasonW+pad*2)
+	panelW = minInt(panelW, maxPanelW)
+	panelH := th + (labelH * 2) + pad*3
+
+	x := int(query.Found.GetX()+query.Found.GetW()) + 8
+	y := int(query.Found.GetY()) + slot*16
+	if x+panelW > b.Max.X {
+		x = int(query.Found.GetX()) - panelW - 8
+	}
+	if x < b.Min.X {
+		x = b.Min.X
+	}
+	if y+panelH > b.Max.Y {
+		y = b.Max.Y - panelH
+	}
+	if y < b.Min.Y {
+		y = b.Min.Y
+	}
+	panel := image.Rect(x, y, x+panelW, y+panelH)
+	draw.Draw(canvas, panel, &image.Uniform{C: color.RGBA{R: 12, G: 18, B: 30, A: 224}}, image.Point{}, draw.Over)
+
+	templateImg := resizeNearest(grayToRGBA(query.Template), tw, th)
+	imgRect := image.Rect(x+pad, y+(labelH*2)+pad*2, x+pad+tw, y+(labelH*2)+pad*2+th)
+	draw.Draw(canvas, imgRect, templateImg, image.Point{}, draw.Src)
+
+	drawTinyText(canvas, x+pad, y+pad, labelText, color.RGBA{R: 232, G: 244, B: 255, A: 255}, textScale)
+	drawTinyText(canvas, x+pad, y+pad+labelH, reasonText, color.RGBA{R: 174, G: 219, B: 255, A: 255}, textScale)
+	drawRectOutline(
+		canvas,
+		&pb.Rect{X: int32(panel.Min.X), Y: int32(panel.Min.Y), W: int32(panel.Dx()), H: int32(panel.Dy())},
+		border,
+		2,
+	)
 }
 
 func boolWord(v bool) string {
