@@ -42,6 +42,7 @@ jobs:
           FIND_BENCH_DOCS_REPORT_DIR: "docs/bench/reports"
           FIND_BENCH_DETERMINISTIC_REPORT: "1"
           FIND_BENCH_SEED: "20260304"
+          FIND_BENCH_TEST_TIMEOUT: "120m"
         run: make benchmark
 
       - name: Generate API docs

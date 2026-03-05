@@ -190,6 +190,7 @@ make benchmark
 FIND_BENCH_PATCH_READMES=1 FIND_BENCH_README_PATHS="$PWD/README.md,$PWD/packages/client-node/README.md,$PWD/packages/client-python/README.md" make benchmark
 FIND_BENCH_PATCH_READMES=1 FIND_BENCH_README_INLINE_IMAGES=4 FIND_BENCH_README_SECTION_TITLE="Latest Benchmark Evidence" make benchmark
 FIND_BENCH_PATCH_READMES=0 make benchmark
+FIND_BENCH_TEST_TIMEOUT=120m make benchmark
 ```
 
 By default, the benchmark runs with OpenCV-related tags enabled so `orb` and `hybrid` implementations can be compared.

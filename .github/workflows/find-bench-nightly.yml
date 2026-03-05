@@ -41,6 +41,7 @@ jobs:
           FIND_BENCH_SEED=20260303 \
           FIND_BENCH_OUTPUT_BY_SEED=1 \
           FIND_BENCH_DETERMINISTIC_REPORT=1 \
+          FIND_BENCH_TEST_TIMEOUT=120m \
           ./scripts/clients/benchmark-find-on-screen-e2e.sh
 
       - name: Upload benchmark artifacts

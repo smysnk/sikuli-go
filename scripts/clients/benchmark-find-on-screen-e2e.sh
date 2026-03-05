@@ -24,6 +24,7 @@ BENCH_PHOTO_ASSET="${FIND_BENCH_PHOTO_ASSET:-}"
 DETERMINISTIC_REPORT="${FIND_BENCH_DETERMINISTIC_REPORT:-1}"
 OUTPUT_BY_SEED="${FIND_BENCH_OUTPUT_BY_SEED:-0}"
 GO_TEST_ARGS="${FIND_BENCH_GO_TEST_ARGS:-}"
+GO_TEST_TIMEOUT="${FIND_BENCH_TEST_TIMEOUT:-90m}"
 REPORT_DIR="${FIND_BENCH_REPORT_DIR:-${ROOT_DIR}/.test-results/bench}"
 DOCS_REPORT_DIR="${FIND_BENCH_DOCS_REPORT_DIR:-${ROOT_DIR}/docs/bench/reports}"
 DOCS_PUBLISH="${FIND_BENCH_PUBLISH_DOCS:-1}"
@@ -61,6 +62,7 @@ mkdir -p "${REPORT_DIR}"
 
 echo "[find-bench] package=${API_DIR}/internal/grpcv1"
 echo "[find-bench] bench=${BENCH_NAME} benchtime=${BENCH_TIME} count=${BENCH_COUNT}"
+echo "[find-bench] go_test_timeout=${GO_TEST_TIMEOUT}"
 echo "[find-bench] target=${BENCH_TARGET} filter=${BENCH_FILTER}"
 if [[ -n "${BENCH_TAGS}" ]]; then
   echo "[find-bench] tags=${BENCH_TAGS}"
@@ -124,6 +126,10 @@ cmd=(
   -benchtime "${BENCH_TIME}"
   -count "${BENCH_COUNT}"
 )
+
+if [[ -n "${GO_TEST_TIMEOUT}" ]]; then
+  cmd+=( -timeout "${GO_TEST_TIMEOUT}" )
+fi
 
 if [[ -n "${BENCH_TAGS}" ]]; then
   cmd+=( -tags "${BENCH_TAGS}" )
