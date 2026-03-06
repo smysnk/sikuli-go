@@ -196,12 +196,7 @@ jobs:
       - name: Install OCR/OpenCV native dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew update
-          brew install pkg-config opencv tesseract leptonica
-          BREW_PREFIX="$(brew --prefix)"
-          echo "CGO_CFLAGS=-I${BREW_PREFIX}/opt/leptonica/include -I${BREW_PREFIX}/opt/tesseract/include" >> "$GITHUB_ENV"
-          echo "CGO_CXXFLAGS=-I${BREW_PREFIX}/opt/leptonica/include -I${BREW_PREFIX}/opt/tesseract/include" >> "$GITHUB_ENV"
-          echo "CGO_LDFLAGS=-L${BREW_PREFIX}/opt/leptonica/lib -L${BREW_PREFIX}/opt/tesseract/lib" >> "$GITHUB_ENV"
+          bash ./scripts/ci/setup-macos-ocr-opencv.sh
 
       - name: Set client version from build number
         env:
