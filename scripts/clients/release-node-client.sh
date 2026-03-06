@@ -114,6 +114,25 @@ if [[ "$NODE_PUBLISH_MODE" == "1" ]]; then
     configure_npm_auth_token "${NPM_TOKEN:-}"
     verify_npm_auth
     check_npm_package_visibility "@sikuligo/sikuligo"
+
+    # Ensure all declared optional binary deps exist at the exact pinned version.
+    mapfile -t binary_deps < <(node - <<'JS' "$NODE_PACKAGE_JSON"
+const pkg = require(process.argv[1]);
+const optional = pkg.optionalDependencies || {};
+for (const [name, version] of Object.entries(optional)) {
+  if (name.startsWith("@sikuligo/bin-")) {
+    console.log(`${name}@${version}`);
+  }
+}
+JS
+    )
+    for spec in "${binary_deps[@]}"; do
+      if ! run_npm_no_workspace view "$spec" version >/dev/null 2>&1; then
+        echo "Required Node binary package is missing on npm: $spec" >&2
+        echo "Refusing to publish @sikuligo/sikuligo with unresolved binary dependency." >&2
+        exit 1
+      fi
+    done
   )
 
   step "10/10 Publish @sikuligo/sikuligo"

@@ -33,12 +33,50 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const [nodePkgPath, nodeLockPath, binPkgDir, oldVersion, newVersion] = process.argv.slice(2);
-const binNames = [
+const allBinNames = [
   "@sikuligo/bin-darwin-arm64",
   "@sikuligo/bin-darwin-x64",
   "@sikuligo/bin-linux-x64",
   "@sikuligo/bin-win32-x64"
 ];
+
+const binTargetToName = {
+  "bin-darwin-arm64": "@sikuligo/bin-darwin-arm64",
+  "bin-darwin-x64": "@sikuligo/bin-darwin-x64",
+  "bin-linux-x64": "@sikuligo/bin-linux-x64",
+  "bin-win32-x64": "@sikuligo/bin-win32-x64",
+  "darwin/arm64": "@sikuligo/bin-darwin-arm64",
+  "darwin/amd64": "@sikuligo/bin-darwin-x64",
+  "darwin/x64": "@sikuligo/bin-darwin-x64",
+  "darwin-amd64": "@sikuligo/bin-darwin-x64",
+  "darwin-x64": "@sikuligo/bin-darwin-x64",
+  "linux/amd64": "@sikuligo/bin-linux-x64",
+  "linux/x64": "@sikuligo/bin-linux-x64",
+  "linux-amd64": "@sikuligo/bin-linux-x64",
+  "linux-x64": "@sikuligo/bin-linux-x64",
+  "windows/amd64": "@sikuligo/bin-win32-x64",
+  "windows/x64": "@sikuligo/bin-win32-x64",
+  "windows-amd64": "@sikuligo/bin-win32-x64",
+  "windows-x64": "@sikuligo/bin-win32-x64",
+  "win32/x64": "@sikuligo/bin-win32-x64",
+  "win32-amd64": "@sikuligo/bin-win32-x64",
+  "win32-x64": "@sikuligo/bin-win32-x64"
+};
+
+function resolveSelectedBinNamesFromEnv() {
+  const raw = process.env.NODE_BIN_TARGETS;
+  if (!raw || !raw.trim()) return null;
+  const tokens = raw
+    .split(/[,\s]+/)
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const selected = [];
+  for (const token of tokens) {
+    const name = binTargetToName[token];
+    if (name && !selected.includes(name)) selected.push(name);
+  }
+  return selected.length > 0 ? selected : null;
+}
 
 function writeJson(filePath, obj) {
   fs.writeFileSync(filePath, JSON.stringify(obj, null, 2) + "\n");
@@ -46,13 +84,27 @@ function writeJson(filePath, obj) {
 
 const nodePkg = JSON.parse(fs.readFileSync(nodePkgPath, "utf8"));
 nodePkg.version = newVersion;
-for (const name of binNames) {
-  if (nodePkg.dependencies && name in nodePkg.dependencies) {
-    nodePkg.dependencies[name] = newVersion;
+
+const existingOptionalBinNames = Object.keys(nodePkg.optionalDependencies || {}).filter((name) =>
+  allBinNames.includes(name),
+);
+const selectedBinNames =
+  resolveSelectedBinNamesFromEnv() || (existingOptionalBinNames.length > 0 ? existingOptionalBinNames : allBinNames);
+const selectedBinSet = new Set(selectedBinNames);
+
+if (nodePkg.dependencies) {
+  for (const name of allBinNames) {
+    if (name in nodePkg.dependencies) {
+      if (selectedBinSet.has(name)) nodePkg.dependencies[name] = newVersion;
+      else delete nodePkg.dependencies[name];
+    }
   }
-  if (nodePkg.optionalDependencies && name in nodePkg.optionalDependencies) {
-    nodePkg.optionalDependencies[name] = newVersion;
-  }
+}
+
+if (!nodePkg.optionalDependencies) nodePkg.optionalDependencies = {};
+for (const name of allBinNames) {
+  if (selectedBinSet.has(name)) nodePkg.optionalDependencies[name] = newVersion;
+  else delete nodePkg.optionalDependencies[name];
 }
 writeJson(nodePkgPath, nodePkg);
 
@@ -60,21 +112,31 @@ const lock = JSON.parse(fs.readFileSync(nodeLockPath, "utf8"));
 lock.version = newVersion;
 if (lock.packages && lock.packages[""]) {
   lock.packages[""].version = newVersion;
-  for (const name of binNames) {
+  for (const name of allBinNames) {
     if (lock.packages[""].dependencies && name in lock.packages[""].dependencies) {
-      lock.packages[""].dependencies[name] = newVersion;
+      if (selectedBinSet.has(name)) lock.packages[""].dependencies[name] = newVersion;
+      else delete lock.packages[""].dependencies[name];
     }
-    if (lock.packages[""].optionalDependencies && name in lock.packages[""].optionalDependencies) {
+    if (!lock.packages[""].optionalDependencies) {
+      lock.packages[""].optionalDependencies = {};
+    }
+    if (selectedBinSet.has(name)) {
       lock.packages[""].optionalDependencies[name] = newVersion;
+    } else {
+      delete lock.packages[""].optionalDependencies[name];
     }
   }
 }
-for (const name of binNames) {
+for (const name of allBinNames) {
   const key = `node_modules/${name}`;
   if (lock.packages && lock.packages[key]) {
-    lock.packages[key].version = newVersion;
-    if (typeof lock.packages[key].resolved === "string") {
-      lock.packages[key].resolved = lock.packages[key].resolved.replace(oldVersion, newVersion);
+    if (selectedBinSet.has(name)) {
+      lock.packages[key].version = newVersion;
+      if (typeof lock.packages[key].resolved === "string") {
+        lock.packages[key].resolved = lock.packages[key].resolved.replace(oldVersion, newVersion);
+      }
+    } else {
+      delete lock.packages[key];
     }
   }
 }
