@@ -213,10 +213,42 @@ jobs:
           name: node-binary-checksums-${{ matrix.node_bin_target }}
           path: packages/client-node/packages/checksums.txt
 
+  node-binaries-backfill:
+    needs: client-release-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Set client version from build number
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          VERSION_MAJOR: ${{ vars.CLIENT_VERSION_MAJOR }}
+          VERSION_MINOR: ${{ vars.CLIENT_VERSION_MINOR }}
+          PATCH_MODE: ${{ vars.CLIENT_VERSION_PATCH_MODE }}
+          PATCH_FIXED: ${{ vars.CLIENT_VERSION_PATCH_FIXED }}
+          NODE_BIN_TARGETS: bin-darwin-x64,bin-win32-x64
+        run: ./scripts/clients/set-version-from-build.sh
+
+      - name: Backfill and optionally publish Intel macOS / Windows binary packages
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_PUBLISH: ${{ ((github.event_name == 'push' && github.ref_name == 'release') || inputs.publish_node || inputs.publish_node_binaries) && '1' || '0' }}
+        run: |
+          bash ./scripts/clients/backfill-node-binary-package.sh bin-darwin-x64
+          bash ./scripts/clients/backfill-node-binary-package.sh bin-win32-x64
+
   node-client:
     needs:
       - client-release-smoke
       - node-binaries
+      - node-binaries-backfill
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -242,7 +274,7 @@ jobs:
           VERSION_MINOR: ${{ vars.CLIENT_VERSION_MINOR }}
           PATCH_MODE: ${{ vars.CLIENT_VERSION_PATCH_MODE }}
           PATCH_FIXED: ${{ vars.CLIENT_VERSION_PATCH_FIXED }}
-          NODE_BIN_TARGETS: bin-darwin-arm64,bin-linux-x64
+          NODE_BIN_TARGETS: bin-darwin-arm64,bin-darwin-x64,bin-linux-x64,bin-win32-x64
         run: ./scripts/clients/set-version-from-build.sh
 
       - name: Build and optionally publish Node client
