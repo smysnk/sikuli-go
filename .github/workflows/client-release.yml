@@ -154,7 +154,17 @@ jobs:
 
   node-binaries:
     needs: client-release-smoke
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            node_bin_target: bin-linux-x64
+          - runner: macos-14
+            node_bin_target: bin-darwin-arm64
+          - runner: macos-13
+            node_bin_target: bin-darwin-x64
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -170,7 +180,8 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Install OCR/OpenCV native dependencies
+      - name: Install OCR/OpenCV native dependencies (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -181,6 +192,16 @@ jobs:
             libtesseract-dev \
             libleptonica-dev \
             tesseract-ocr-eng
+
+      - name: Install OCR/OpenCV native dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install pkg-config opencv tesseract leptonica
+          BREW_PREFIX="$(brew --prefix)"
+          echo "CGO_CFLAGS=-I${BREW_PREFIX}/opt/leptonica/include -I${BREW_PREFIX}/opt/tesseract/include" >> "$GITHUB_ENV"
+          echo "CGO_CXXFLAGS=-I${BREW_PREFIX}/opt/leptonica/include -I${BREW_PREFIX}/opt/tesseract/include" >> "$GITHUB_ENV"
+          echo "CGO_LDFLAGS=-L${BREW_PREFIX}/opt/leptonica/lib -L${BREW_PREFIX}/opt/tesseract/lib" >> "$GITHUB_ENV"
 
       - name: Set client version from build number
         env:
@@ -195,13 +216,13 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_PUBLISH: ${{ ((github.event_name == 'push' && github.ref_name == 'release') || inputs.publish_node || inputs.publish_node_binaries) && '1' || '0' }}
-          NODE_BIN_TARGETS: bin-darwin-arm64,bin-darwin-x64,bin-linux-x64,bin-win32-x64
+          NODE_BIN_TARGETS: ${{ matrix.node_bin_target }}
         run: ./scripts/clients/release-node-binaries.sh
 
       - name: Upload Node binary checksums
         uses: actions/upload-artifact@v6
         with:
-          name: node-binary-checksums
+          name: node-binary-checksums-${{ matrix.node_bin_target }}
           path: packages/client-node/packages/checksums.txt
 
   node-client:
