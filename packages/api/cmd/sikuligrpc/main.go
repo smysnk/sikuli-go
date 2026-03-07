@@ -26,7 +26,9 @@ func main() {
 	}
 	runStartupChecks(os.Stderr)
 
-	handled, err := maybeRunUtilityCommands(os.Args[1:])
+	args := normalizeServerFlagArgs(os.Args[1:])
+
+	handled, err := maybeRunUtilityCommands(args)
 	if err != nil {
 		log.Fatalf("command failed: %v", err)
 	}
@@ -39,7 +41,9 @@ func main() {
 	sqlitePath := flag.String("sqlite-path", "sikuligo.db", "sqlite datastore path for API sessions, client sessions, and interactions")
 	authToken := flag.String("auth-token", os.Getenv("SIKULI_GRPC_AUTH_TOKEN"), "shared API token; accepted via metadata x-api-key or Authorization: Bearer <token>")
 	enableReflection := flag.Bool("enable-reflection", true, "enable gRPC reflection")
-	flag.Parse()
+	if err := flag.CommandLine.Parse(args); err != nil {
+		log.Fatal(err)
+	}
 
 	logger := log.Default()
 	metrics := grpcv1.NewMetricsRegistry()

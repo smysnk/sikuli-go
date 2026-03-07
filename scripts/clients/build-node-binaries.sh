@@ -118,22 +118,21 @@ ensure_pkg_scaffold() {
   local readme="$pkg_dir/README.md"
   local manifest="$pkg_dir/package.json"
   local bin_name="sikuligo"
+  local monitor_name="sikuligo-monitor"
   if [[ "$goos" == "windows" ]]; then
     bin_name="sikuligo.exe"
+    monitor_name="sikuligo-monitor.exe"
   fi
 
   mkdir -p "$pkg_dir/bin"
 
-  if [[ ! -f "$readme" ]]; then
-    cat >"$readme" <<EOF
+  cat >"$readme" <<EOF
 # @sikuligo/$pkg
 
 Platform binary package for SikuliGO ($goos/$goarch).
 EOF
-  fi
 
-  if [[ ! -f "$manifest" ]]; then
-    cat >"$manifest" <<EOF
+  cat >"$manifest" <<EOF
 {
   "name": "@sikuligo/$pkg",
   "version": "$NODE_VERSION",
@@ -141,6 +140,7 @@ EOF
   "license": "MIT",
   "files": [
     "bin/$bin_name",
+    "bin/$monitor_name",
     "README.md"
   ],
   "publishConfig": {
@@ -148,7 +148,6 @@ EOF
   }
 }
 EOF
-  fi
 }
 
 built_pkgs=()
@@ -164,10 +163,12 @@ for target in "${TARGETS[@]}"; do
 
   if [[ "$goos" == "windows" ]]; then
     out="$bin_dir/sikuligo.exe"
-    rm -f "$bin_dir/sikuligrpc" "$bin_dir/sikuligrpc.exe" "$bin_dir/sikuligo"
+    out_monitor="$bin_dir/sikuligo-monitor.exe"
+    rm -f "$bin_dir/sikuligrpc" "$bin_dir/sikuligrpc.exe" "$bin_dir/sikuligo" "$bin_dir/sikuligo-monitor"
   else
     out="$bin_dir/sikuligo"
-    rm -f "$bin_dir/sikuligrpc" "$bin_dir/sikuligrpc.exe" "$bin_dir/sikuligo.exe"
+    out_monitor="$bin_dir/sikuligo-monitor"
+    rm -f "$bin_dir/sikuligrpc" "$bin_dir/sikuligrpc.exe" "$bin_dir/sikuligo.exe" "$bin_dir/sikuligo-monitor.exe"
   fi
 
   echo "Building $pkg ($goos/$goarch)"
@@ -177,10 +178,13 @@ for target in "${TARGETS[@]}"; do
     export GOMODCACHE="$GO_MOD_CACHE_DIR"
     GOOS="$goos" GOARCH="$goarch" \
       go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$out" ./cmd/sikuligrpc
+    GOOS="$goos" GOARCH="$goarch" \
+      go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$out_monitor" ./cmd/sikuligo-monitor
   )
 
   if [[ "$goos" != "windows" ]]; then
     chmod +x "$out"
+    chmod +x "$out_monitor"
   fi
   built_pkgs+=("$pkg")
 done
@@ -198,16 +202,20 @@ if command -v sha256sum >/dev/null 2>&1; then
   for pkg in "${built_pkgs[@]}"; do
     if [[ -f "$PACKAGES_DIR/$pkg/bin/sikuligo" ]]; then
       sha256sum "$PACKAGES_DIR/$pkg/bin/sikuligo" >> "$checksum_file"
+      sha256sum "$PACKAGES_DIR/$pkg/bin/sikuligo-monitor" >> "$checksum_file"
     elif [[ -f "$PACKAGES_DIR/$pkg/bin/sikuligo.exe" ]]; then
       sha256sum "$PACKAGES_DIR/$pkg/bin/sikuligo.exe" >> "$checksum_file"
+      sha256sum "$PACKAGES_DIR/$pkg/bin/sikuligo-monitor.exe" >> "$checksum_file"
     fi
   done
 elif command -v shasum >/dev/null 2>&1; then
   for pkg in "${built_pkgs[@]}"; do
     if [[ -f "$PACKAGES_DIR/$pkg/bin/sikuligo" ]]; then
       shasum -a 256 "$PACKAGES_DIR/$pkg/bin/sikuligo" >> "$checksum_file"
+      shasum -a 256 "$PACKAGES_DIR/$pkg/bin/sikuligo-monitor" >> "$checksum_file"
     elif [[ -f "$PACKAGES_DIR/$pkg/bin/sikuligo.exe" ]]; then
       shasum -a 256 "$PACKAGES_DIR/$pkg/bin/sikuligo.exe" >> "$checksum_file"
+      shasum -a 256 "$PACKAGES_DIR/$pkg/bin/sikuligo-monitor.exe" >> "$checksum_file"
     fi
   done
 fi

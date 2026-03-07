@@ -34,13 +34,32 @@ finally:
 ```
 
 ## Web Dashboard
+
+`sikuligo` runs the automation API. Use it when Python code needs to execute automation and you want live admin endpoints from the same process.
+This is the binary your scripts talk to for screen search, OCR, input, and application control.
+
+`sikuligo-monitor` is the HTTP-only session viewer. Use it to inspect the shared `sikuligo.db` store without starting another gRPC automation server.
+It is useful when automation is already running elsewhere and you only want to observe sessions, review interaction history, or leave a lightweight monitor process running beside your Python workflow.
+
 ```bash
-pipx run sikuligo -listen 127.0.0.1:50051 -admin-listen :8080
+pipx run sikuligo -listen
 ```
 
 Open:
 
 - http://127.0.0.1:8080/dashboard
+
+`-listen` by itself starts the gRPC API on `:50051` and the admin/dashboard server on `:8080`.
+
+After installing the binaries on PATH, launch the standalone monitor with:
+
+```bash
+sikuligo-monitor
+```
+
+By default it serves the monitor UI on `:8080` and reads `sikuligo.db` from the current working directory.
+
+![SikuliGO Monitor Demo](../../docs/images/monitor.png)
 
 Additional endpoints:
 

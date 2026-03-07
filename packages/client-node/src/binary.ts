@@ -5,6 +5,9 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 
 const DEFAULT_BINARY_NAME = process.platform === "win32" ? "sikuligo.exe" : "sikuligo";
+const DEFAULT_MONITOR_BINARY_NAME = process.platform === "win32" ? "sikuligo-monitor.exe" : "sikuligo-monitor";
+const LEGACY_BINARY_NAME = process.platform === "win32" ? "sikuligrpc.exe" : "sikuligrpc";
+const RUNTIME_NAMES = [DEFAULT_BINARY_NAME, DEFAULT_MONITOR_BINARY_NAME, LEGACY_BINARY_NAME];
 
 const PLATFORM_BINARY_PACKAGES: Record<string, string[]> = {
   "darwin-arm64": ["@sikuligo/bin-darwin-arm64"],
@@ -34,11 +37,19 @@ function isExecutable(candidatePath: string): boolean {
 }
 
 function candidateBinaryPaths(rootDir: string): string[] {
-  const names = process.platform === "win32" ? [DEFAULT_BINARY_NAME, "sikuligrpc.exe"] : [DEFAULT_BINARY_NAME, "sikuligrpc"];
+  const names = process.platform === "win32" ? [DEFAULT_BINARY_NAME, LEGACY_BINARY_NAME] : [DEFAULT_BINARY_NAME, LEGACY_BINARY_NAME];
   return [
     ...names.map((name) => path.join(rootDir, name)),
     ...names.map((name) => path.join(rootDir, "bin", name)),
     ...names.map((name) => path.join(rootDir, "dist", name))
+  ];
+}
+
+function candidateRuntimePaths(rootDir: string): string[] {
+  return [
+    ...RUNTIME_NAMES.map((name) => path.join(rootDir, name)),
+    ...RUNTIME_NAMES.map((name) => path.join(rootDir, "bin", name)),
+    ...RUNTIME_NAMES.map((name) => path.join(rootDir, "dist", name))
   ];
 }
 
@@ -49,41 +60,102 @@ function isVirtualZipPath(candidatePath: string): boolean {
   return candidatePath.includes(".zip/") || candidatePath.includes(".zip\\") || candidatePath.startsWith("zip:");
 }
 
+function isRuntimeFile(candidatePath: string): boolean {
+  try {
+    return fs.statSync(candidatePath).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function canonicalRuntimeName(name: string): string | undefined {
+  const ext = path.extname(name);
+  const stem = name.slice(0, name.length - ext.length).toLowerCase();
+  if (/^sikul(?:igo|igrpc)(?:-[0-9a-f]{8,})?$/.test(stem)) {
+    return `${DEFAULT_BINARY_NAME.slice(0, DEFAULT_BINARY_NAME.length - ext.length)}${ext}`;
+  }
+  if (/^sikul(?:igo|igrpc)-monitor(?:-[0-9a-f]{8,})?$/.test(stem)) {
+    return `${DEFAULT_MONITOR_BINARY_NAME.slice(0, DEFAULT_MONITOR_BINARY_NAME.length - ext.length)}${ext}`;
+  }
+  return undefined;
+}
+
+function runtimeSourceRank(name: string): number {
+  const ext = path.extname(name);
+  const stem = name.slice(0, name.length - ext.length).toLowerCase();
+  switch (stem) {
+    case "sikuligo":
+    case "sikuligo-monitor":
+      return 0;
+    case "sikuligrpc":
+    case "sikuligrpc-monitor":
+      return 1;
+    default:
+      if (stem.startsWith("sikuligo-monitor-") || stem.startsWith("sikuligo-")) {
+        return 2;
+      }
+      if (stem.startsWith("sikuligrpc-monitor-") || stem.startsWith("sikuligrpc-")) {
+        return 3;
+      }
+      return 4;
+  }
+}
+
+function resolveMaterializedRuntimeSources(candidatePath: string): Map<string, string> {
+  const sources = new Map<string, { rank: number; source: string }>();
+  for (const sibling of [candidatePath, ...candidateRuntimePaths(path.dirname(candidatePath))]) {
+    if (!isRuntimeFile(sibling)) {
+      continue;
+    }
+    const canonicalName = canonicalRuntimeName(path.basename(sibling));
+    if (!canonicalName) {
+      continue;
+    }
+    const rank = runtimeSourceRank(path.basename(sibling));
+    const current = sources.get(canonicalName);
+    if (!current || rank < current.rank || (rank === current.rank && sibling < current.source)) {
+      sources.set(canonicalName, { rank, source: sibling });
+    }
+  }
+  return new Map(Array.from(sources.entries(), ([name, value]) => [name, value.source]));
+}
+
 function materializeSpawnableBinary(candidatePath: string): string {
   if (!isVirtualZipPath(candidatePath)) {
     return candidatePath;
   }
 
-  const ext = path.extname(candidatePath);
-  const base = path.basename(candidatePath, ext);
+  const canonicalBinaryName = canonicalRuntimeName(path.basename(candidatePath)) ?? DEFAULT_BINARY_NAME;
   const key = createHash("sha256").update(candidatePath).digest("hex").slice(0, 16);
-  const cacheDir = path.join(os.tmpdir(), "sikuligo-node-binaries");
-  const outputPath = path.join(cacheDir, `${base}-${key}${ext}`);
-  if (isExecutable(outputPath)) {
-    return outputPath;
-  }
-
+  const cacheDir = path.join(os.tmpdir(), "sikuligo-node-binaries", key);
   fs.mkdirSync(cacheDir, { recursive: true });
-  const tmpPath = `${outputPath}.tmp-${process.pid}-${Date.now()}`;
-  const binaryData = fs.readFileSync(candidatePath);
-  try {
-    fs.writeFileSync(tmpPath, binaryData, {
-      mode: process.platform === "win32" ? 0o666 : 0o755
-    });
-    if (process.platform !== "win32") {
-      fs.chmodSync(tmpPath, 0o755);
+
+  for (const [runtimeName, sourcePath] of resolveMaterializedRuntimeSources(candidatePath)) {
+    const outputPath = path.join(cacheDir, runtimeName);
+    if (isExecutable(outputPath)) {
+      continue;
     }
-    fs.renameSync(tmpPath, outputPath);
-  } catch (err) {
+    const tmpPath = `${outputPath}.tmp-${process.pid}-${Date.now()}`;
+    const binaryData = fs.readFileSync(sourcePath);
     try {
-      fs.rmSync(tmpPath, { force: true });
-    } catch {
-      // Ignore cleanup errors.
+      fs.writeFileSync(tmpPath, binaryData, {
+        mode: process.platform === "win32" ? 0o666 : 0o755
+      });
+      if (process.platform !== "win32") {
+        fs.chmodSync(tmpPath, 0o755);
+      }
+      fs.renameSync(tmpPath, outputPath);
+    } catch (err) {
+      try {
+        fs.rmSync(tmpPath, { force: true });
+      } catch {
+        // Ignore cleanup errors.
+      }
+      throw err;
     }
-    throw err;
   }
 
-  return outputPath;
+  return path.join(cacheDir, canonicalBinaryName);
 }
 
 function resolvePackagedBinary(): string | undefined {

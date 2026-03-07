@@ -61,7 +61,31 @@ finally:
 
 ## API Dashboard
 
+`sikuligo` is the automation runtime. It starts the gRPC API and, when admin endpoints are enabled, serves the live dashboard for the same process.
+Use it when clients need to execute automation, OCR, image matching, clicks, typing, or app control.
+
+`sikuligo-monitor` is the HTTP-only monitor. It reads the shared `sikuligo.db` session store and serves the dashboard/session viewer without starting another automation server.
+Use it when you only want operational visibility: review API sessions, inspect client interactions, or watch a shared session store from another terminal or machine without binding a second gRPC server.
+
+Launch the API and dashboard locally:
+
+```bash
+yarn dlx @sikuligo/sikuligo -listen
+```
+
+`-listen` by itself starts the gRPC API on `:50051` and the admin/dashboard server on `:8080`.
+
 ![SikuliGO Dashboard Demo](docs/images/dashboard.png)
+
+Launch the standalone monitor after installing the binaries on PATH:
+
+```bash
+sikuligo-monitor
+```
+
+By default it serves the monitor UI on `:8080` and reads `sikuligo.db` from the current working directory.
+
+![SikuliGO Monitor Demo](docs/images/monitor.png)
 
 ## Install API Binary On PATH
 

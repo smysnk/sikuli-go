@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -51,9 +52,9 @@ func printCommandHelp(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "")
 	_, _ = fmt.Fprintln(w, "Server Flags:")
 	_, _ = fmt.Fprintln(w, "  -listen string")
-	_, _ = fmt.Fprintln(w, "        gRPC listen address (default \":50051\")")
+	_, _ = fmt.Fprintln(w, "        gRPC listen address; passing bare -listen starts the API on the default \":50051\"")
 	_, _ = fmt.Fprintln(w, "  -admin-listen string")
-	_, _ = fmt.Fprintln(w, "        admin HTTP listen address for health/metrics/dashboard; empty disables admin server (default \":8080\")")
+	_, _ = fmt.Fprintln(w, "        admin HTTP listen address for health/metrics/dashboard; bare -admin-listen uses default \":8080\"; empty disables admin server")
 	_, _ = fmt.Fprintln(w, "  -sqlite-path string")
 	_, _ = fmt.Fprintln(w, "        sqlite datastore path for API sessions, client sessions, and interactions (default \"sikuligo.db\")")
 	_, _ = fmt.Fprintln(w, "  -auth-token string")
@@ -143,25 +144,31 @@ func runInstallBinary(args []string) error {
 	if err := os.MkdirAll(*targetDir, 0o755); err != nil {
 		return fmt.Errorf("create target dir: %w", err)
 	}
-	var copied []string
+	exemptPaths := make(map[string]struct{}, len(runtimes))
 	for _, src := range runtimes {
-		base := filepath.Base(src)
-		targets := map[string]struct{}{base: {}}
-		if strings.HasPrefix(strings.ToLower(base), "sikuligrpc") {
-			targets[strings.Replace(base, "sikuligrpc", "sikuligo", 1)] = struct{}{}
+		exemptPaths[filepath.Clean(src)] = struct{}{}
+	}
+	if err := cleanupInstalledRuntimeAliases(*targetDir, exemptPaths); err != nil {
+		return fmt.Errorf("cleanup target dir: %w", err)
+	}
+	var copied []string
+	orderedTargets := make([]string, 0, len(runtimes))
+	for targetBase := range runtimes {
+		orderedTargets = append(orderedTargets, targetBase)
+	}
+	sort.Strings(orderedTargets)
+	for _, targetBase := range orderedTargets {
+		src := runtimes[targetBase]
+		dst := filepath.Join(*targetDir, targetBase)
+		if err := copyFile(src, dst); err != nil {
+			return fmt.Errorf("copy %s -> %s: %w", src, dst, err)
 		}
-		for targetBase := range targets {
-			dst := filepath.Join(*targetDir, targetBase)
-			if err := copyFile(src, dst); err != nil {
-				return fmt.Errorf("copy %s -> %s: %w", src, dst, err)
+		if runtime.GOOS != "windows" {
+			if err := os.Chmod(dst, 0o755); err != nil {
+				return fmt.Errorf("chmod %s: %w", dst, err)
 			}
-			if runtime.GOOS != "windows" {
-				if err := os.Chmod(dst, 0o755); err != nil {
-					return fmt.Errorf("chmod %s: %w", dst, err)
-				}
-			}
-			copied = append(copied, dst)
 		}
+		copied = append(copied, dst)
 	}
 	for _, dst := range copied {
 		fmt.Println(dst)
@@ -562,9 +569,11 @@ func copyFile(src, dst string) error {
 	return out.Sync()
 }
 
-var runtimeNamePattern = regexp.MustCompile(`(?i)^sikuli.*(\.exe)?$`)
+var runtimeNamePattern = regexp.MustCompile(`(?i)^sikul(?:igo|igrpc)(?:-monitor)?(?:-[0-9a-f]{8,})?(\.exe)?$`)
+var runtimeNamePrimaryPattern = regexp.MustCompile(`(?i)^sikul(?:igo|igrpc)(?:-[0-9a-f]{8,})?(\.exe)?$`)
+var runtimeNameMonitorPattern = regexp.MustCompile(`(?i)^sikul(?:igo|igrpc)-monitor(?:-[0-9a-f]{8,})?(\.exe)?$`)
 
-func discoverRuntimeSources(primary string) []string {
+func discoverRuntimeSources(primary string) map[string]string {
 	candidates := map[string]struct{}{primary: {}}
 	dir := filepath.Dir(primary)
 	entries, err := os.ReadDir(dir)
@@ -580,13 +589,80 @@ func discoverRuntimeSources(primary string) []string {
 			candidates[filepath.Join(dir, name)] = struct{}{}
 		}
 	}
-	out := make([]string, 0, len(candidates))
+	out := make(map[string]string, len(candidates))
+	ranks := make(map[string]int, len(candidates))
 	for candidate := range candidates {
 		if stat, err := os.Stat(candidate); err == nil && !stat.IsDir() {
-			out = append(out, candidate)
+			canonicalName, ok := runtimeCanonicalName(filepath.Base(candidate))
+			if !ok {
+				continue
+			}
+			rank := runtimeSourceRank(filepath.Base(candidate))
+			existing, exists := out[canonicalName]
+			if !exists || rank < ranks[canonicalName] || (rank == ranks[canonicalName] && candidate < existing) {
+				out[canonicalName] = candidate
+				ranks[canonicalName] = rank
+			}
 		}
 	}
 	return out
+}
+
+func runtimeCanonicalName(name string) (string, bool) {
+	ext := filepath.Ext(name)
+	stem := strings.TrimSuffix(strings.ToLower(name), strings.ToLower(ext))
+	switch {
+	case runtimeNameMonitorPattern.MatchString(stem):
+		return "sikuligo-monitor" + ext, true
+	case runtimeNamePrimaryPattern.MatchString(stem):
+		return "sikuligo" + ext, true
+	default:
+		return "", false
+	}
+}
+
+func runtimeSourceRank(name string) int {
+	ext := filepath.Ext(name)
+	stem := strings.TrimSuffix(strings.ToLower(name), strings.ToLower(ext))
+	switch {
+	case stem == "sikuligo", stem == "sikuligo-monitor":
+		return 0
+	case stem == "sikuligrpc", stem == "sikuligrpc-monitor":
+		return 1
+	case strings.HasPrefix(stem, "sikuligo-monitor-"), strings.HasPrefix(stem, "sikuligo-"):
+		return 2
+	case strings.HasPrefix(stem, "sikuligrpc-monitor-"), strings.HasPrefix(stem, "sikuligrpc-"):
+		return 3
+	default:
+		return 4
+	}
+}
+
+func cleanupInstalledRuntimeAliases(targetDir string, exempt map[string]struct{}) error {
+	entries, err := os.ReadDir(targetDir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		entryPath := filepath.Join(targetDir, entry.Name())
+		if _, ok := exempt[filepath.Clean(entryPath)]; ok {
+			continue
+		}
+		canonicalName, ok := runtimeCanonicalName(entry.Name())
+		if !ok {
+			continue
+		}
+		if entry.Name() == canonicalName {
+			continue
+		}
+		if err := os.Remove(entryPath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func mustAbs(p string) string {

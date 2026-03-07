@@ -140,33 +140,78 @@ def _ensure_path_export(profile: Path, bin_dir: Path) -> bool:
     return True
 
 
-def _discover_runtime_sources(primary: Path) -> list[Path]:
-    runtimes: dict[str, Path] = {primary.name: primary}
+def _runtime_canonical_name(name: str) -> str | None:
+    ext = ".exe" if name.lower().endswith(".exe") else ""
+    stem = name[: -len(ext)] if ext else name
+    stem = stem.lower()
+    if re.fullmatch(r"sikul(?:igo|igrpc)(?:-[0-9a-f]{8,})?", stem):
+        return f"sikuligo{ext}"
+    if re.fullmatch(r"sikul(?:igo|igrpc)-monitor(?:-[0-9a-f]{8,})?", stem):
+        return f"sikuligo-monitor{ext}"
+    return None
+
+
+def _runtime_source_rank(name: str) -> int:
+    ext = ".exe" if name.lower().endswith(".exe") else ""
+    stem = name[: -len(ext)] if ext else name
+    stem = stem.lower()
+    if stem in ("sikuligo", "sikuligo-monitor"):
+        return 0
+    if stem in ("sikuligrpc", "sikuligrpc-monitor"):
+        return 1
+    if stem.startswith("sikuligo-monitor-") or stem.startswith("sikuligo-"):
+        return 2
+    if stem.startswith("sikuligrpc-monitor-") or stem.startswith("sikuligrpc-"):
+        return 3
+    return 4
+
+
+def _discover_runtime_sources(primary: Path) -> dict[str, Path]:
+    runtimes: dict[str, tuple[int, Path]] = {}
+    primary_canonical = _runtime_canonical_name(primary.name)
+    if primary_canonical:
+        runtimes[primary_canonical] = (_runtime_source_rank(primary.name), primary)
     for entry in primary.parent.iterdir():
         if not entry.is_file():
             continue
         if not re.match(r"^sikuli.*(\.exe)?$", entry.name, flags=re.IGNORECASE):
             continue
-        runtimes[entry.name] = entry
-    return list(runtimes.values())
+        canonical = _runtime_canonical_name(entry.name)
+        if not canonical:
+            continue
+        rank = _runtime_source_rank(entry.name)
+        current = runtimes.get(canonical)
+        if current is None or rank < current[0] or (rank == current[0] and str(entry) < str(current[1])):
+            runtimes[canonical] = (rank, entry)
+    return {name: entry for name, (_, entry) in runtimes.items()}
+
+
+def _cleanup_installed_runtime_aliases(target_dir: Path, exempt: set[Path]) -> None:
+    for entry in target_dir.iterdir():
+        if not entry.is_file():
+            continue
+        if entry.resolve() in exempt:
+            continue
+        canonical = _runtime_canonical_name(entry.name)
+        if canonical and entry.name != canonical:
+            entry.unlink()
 
 
 def _run_install_binary(args: argparse.Namespace) -> int:
     target_dir = Path(args.dir).expanduser().resolve() if args.dir else (Path.home() / ".local" / "bin")
     target_dir.mkdir(parents=True, exist_ok=True)
     primary = Path(_resolve_sikuli_binary(None))
+    runtimes = _discover_runtime_sources(primary)
+    _cleanup_installed_runtime_aliases(target_dir, {runtime.resolve() for runtime in runtimes.values()})
     copied: list[Path] = []
-    for runtime in _discover_runtime_sources(primary):
-        target_names = {runtime.name}
-        if re.match(r"^sikuligrpc(\.exe)?$", runtime.name, flags=re.IGNORECASE):
-            target_names.add(re.sub(r"sikuligrpc", "sikuligo", runtime.name, flags=re.IGNORECASE))
-        for target_name in sorted(target_names):
-            target = target_dir / target_name
-            shutil.copy2(runtime, target)
-            if os.name != "nt":
-                target.chmod(0o755)
-            copied.append(target)
-            print(target)
+    for target_name in sorted(runtimes):
+        runtime = runtimes[target_name]
+        target = target_dir / target_name
+        shutil.copy2(runtime, target)
+        if os.name != "nt":
+            target.chmod(0o755)
+        copied.append(target)
+        print(target)
 
     if not args.no_shell_update:
         detected = _detect_shell_profile()
