@@ -58,8 +58,8 @@ import sys
 
 root = Path(sys.argv[1]).resolve()
 prefixes = [
-    "https://smysnk.github.io/SikuliGO/",
-    "http://smysnk.github.io/SikuliGO/",
+    "https://smysnk.github.io/sikuli-go/",
+    "http://smysnk.github.io/sikuli-go/",
 ]
 
 for md in root.rglob("*.md"):
