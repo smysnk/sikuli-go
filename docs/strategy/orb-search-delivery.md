@@ -1,6 +1,6 @@
 # ORB Search Delivery Phases
 
-This document defines the phased delivery plan for adding ORB-based image search as an alternative matcher in SikuliGO.
+This document defines the phased delivery plan for adding ORB-based image search as an alternative matcher in sikuli-go.
 
 ## Goals
 

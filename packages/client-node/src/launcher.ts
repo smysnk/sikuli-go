@@ -118,13 +118,13 @@ function resolveCommandFromPath(cmd: string, pathValue: string): string | undefi
 function startupStatePath(): string {
   const xdg = process.env.XDG_CONFIG_HOME?.trim();
   if (xdg) {
-    return path.join(xdg, "sikuligo", "startup-state.json");
+    return path.join(xdg, "sikuli-go", "startup-state.json");
   }
   const home = process.env.HOME?.trim();
   if (home) {
-    return path.join(home, ".config", "sikuligo", "startup-state.json");
+    return path.join(home, ".config", "sikuli-go", "startup-state.json");
   }
-  return path.resolve(process.cwd(), ".sikuligo-startup-state.json");
+  return path.resolve(process.cwd(), ".sikuli-go-startup-state.json");
 }
 
 function suppressCliclickPromptEnabled(statePath: string): boolean {
@@ -350,7 +350,7 @@ export async function launchSikuli(opts: LaunchOptions = {}): Promise<LaunchResu
 
   const binaryPath = resolveSikuliBinary(opts.binaryPath);
   const token = authToken || randomBytes(24).toString("hex");
-  const sqlitePath = opts.sqlitePath || process.env.SIKULIGO_SQLITE_PATH || "sikuligo.db";
+  const sqlitePath = opts.sqlitePath || process.env.SIKULI_GO_SQLITE_PATH || "sikuli-go.db";
   const serverArgs = [
     "-listen",
     address,

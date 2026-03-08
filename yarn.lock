@@ -2012,9 +2012,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sikuligo-monorepo@workspace:.":
+"sikuli-go-monorepo@workspace:.":
   version: 0.0.0-use.local
-  resolution: "sikuligo-monorepo@workspace:."
+  resolution: "sikuli-go-monorepo@workspace:."
   languageName: unknown
   linkType: soft
 

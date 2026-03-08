@@ -1,4 +1,4 @@
-# SikuliGO Lua Client
+# sikuli-go Lua Client
 
 This directory provides a Lua gRPC method client using `grpcurl` as transport.
 
@@ -7,7 +7,7 @@ This directory provides a Lua gRPC method client using `grpcurl` as transport.
 - Lua 5.3+
 - `grpcurl`
 - `protoc` (for descriptor generation)
-- SikuliGO gRPC server running (default `127.0.0.1:50051`)
+- sikuli-go gRPC server running (default `127.0.0.1:50051`)
 
 ## Setup
 

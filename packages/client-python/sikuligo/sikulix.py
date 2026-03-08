@@ -105,9 +105,9 @@ def _resolve_sikuli_binary(binary_path: str | None = None) -> str:
     if binary_path:
         return resolve_path(binary_path, "configured binary")
 
-    env_path = os.getenv("SIKULIGO_BINARY_PATH", "").strip()
+    env_path = os.getenv("SIKULI_GO_BINARY_PATH", "").strip()
     if env_path:
-        return resolve_path(env_path, "SIKULIGO_BINARY_PATH")
+        return resolve_path(env_path, "SIKULI_GO_BINARY_PATH")
 
     # Try common repo-local locations so examples work without env vars.
     probe_dirs: list[Path] = []
@@ -137,7 +137,7 @@ def _resolve_sikuli_binary(binary_path: str | None = None) -> str:
             return found
 
     raise FileNotFoundError(
-        "Unable to resolve sikuli-go binary. Build it in repo root, install it on PATH, or set SIKULIGO_BINARY_PATH."
+        "Unable to resolve sikuli-go binary. Build it in repo root, install it on PATH, or set SIKULI_GO_BINARY_PATH."
     )
 
 
@@ -363,7 +363,11 @@ class Screen(Region):
         resolved_address = address or os.getenv("SIKULI_GRPC_ADDR") or f"127.0.0.1:{_find_open_port()}"
         token = auth_token or os.getenv("SIKULI_GRPC_AUTH_TOKEN") or secrets.token_hex(24)
         binary = _resolve_sikuli_binary(binary_path)
-        resolved_sqlite_path = sqlite_path or os.getenv("SIKULIGO_SQLITE_PATH", "").strip() or "sikuligo.db"
+        resolved_sqlite_path = (
+            sqlite_path
+            or os.getenv("SIKULI_GO_SQLITE_PATH", "").strip()
+            or "sikuli-go.db"
+        )
         stdout, stderr = _stdio_targets(stdio)
 
         args = [

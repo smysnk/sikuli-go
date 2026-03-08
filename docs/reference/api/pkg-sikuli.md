@@ -909,7 +909,7 @@ Package: `package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"`
 package sikuli // import "github.com/smysnk/sikuligo/pkg/sikuli"
 
 Package sikuli provides the compatibility-facing automation API used by
-SikuliGO.
+sikuli-go.
 
 The surface is intentionally aligned with common SikuliX concepts so existing
 script flows can migrate with minimal rewriting:
@@ -919,7 +919,7 @@ script flows can migrate with minimal rewriting:
   - Input control (click, type, hotkey)
   - OCR and observe events
 
-Java SikuliX and SikuliGO are not byte-for-byte identical, but the exported
+Java SikuliX and sikuli-go are not byte-for-byte identical, but the exported
 contracts in this package are designed to preserve the same mental model.
 
 CONSTANTS

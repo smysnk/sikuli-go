@@ -1,8 +1,8 @@
-# [SikuliGO](https://github.com/smysnk/SikuliGO) Documentation
+# [sikuli-go](https://github.com/smysnk/SikuliGO) Documentation
 
 [![SikuliX Logo](images/logo.png)](https://github.com/smysnk/SikuliGO)
 
-Welcome to the [SikuliGO](https://github.com/smysnk/SikuliGO) documentation site.
+Welcome to the [sikuli-go](https://github.com/smysnk/SikuliGO) documentation site.
 
 API reference pages are generated from source using `go doc` and validated with `./scripts/check-api-docs.sh`.
 

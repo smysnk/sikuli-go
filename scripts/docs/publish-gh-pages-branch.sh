@@ -63,7 +63,7 @@ if [[ -z "${PUSH_URL}" ]]; then
   PUSH_URL="${REMOTE_URL}"
 fi
 
-TMP_DIR="$(mktemp -d /tmp/sikuligo-gh-pages.XXXXXX)"
+TMP_DIR="$(mktemp -d /tmp/sikuli-go-gh-pages.XXXXXX)"
 cleanup() {
   rm -rf "${TMP_DIR}"
 }
@@ -80,8 +80,8 @@ fi
 
 step "Create publish commit for branch ${BRANCH}"
 git -C "${TMP_DIR}" init -q
-git -C "${TMP_DIR}" config user.name "${GIT_AUTHOR_NAME:-sikuligo-pages}"
-git -C "${TMP_DIR}" config user.email "${GIT_AUTHOR_EMAIL:-sikuligo-pages@users.noreply.github.com}"
+git -C "${TMP_DIR}" config user.name "${GIT_AUTHOR_NAME:-sikuli-go-pages}"
+git -C "${TMP_DIR}" config user.email "${GIT_AUTHOR_EMAIL:-sikuli-go-pages@users.noreply.github.com}"
 git -C "${TMP_DIR}" checkout -B "${BRANCH}" >/dev/null
 git -C "${TMP_DIR}" add -A
 git -C "${TMP_DIR}" commit -m "${COMMIT_MESSAGE}" >/dev/null

@@ -27,12 +27,12 @@ step() {
 step "1/2 Build local sikuli-go API binary"
 (
   cd "${API_DIR}"
-  go build -tags "${GO_BUILD_TAGS}" -o "${API_BINARY}" ./cmd/sikuligrpc
+  go build -tags "${GO_BUILD_TAGS}" -o "${API_BINARY}" ./cmd/sikuli-go
 )
 
 step "2/2 Run Python client E2E startup/connect scenarios"
 PY_E2E_CLIENT_PYTHON_DIR="${CLIENT_PYTHON_DIR}" \
-SIKULIGO_BINARY="${API_BINARY}" \
+SIKULI_GO_BINARY="${API_BINARY}" \
 SPAWN_SQLITE="${SPAWN_SQLITE}" \
 CONNECT_SQLITE="${CONNECT_SQLITE}" \
 python3 - <<'PY'
@@ -100,7 +100,7 @@ try:
     connect_token = "python-e2e-token"
     external = subprocess.Popen(
         [
-            os.environ["SIKULIGO_BINARY"],
+            os.environ["SIKULI_GO_BINARY"],
             "-listen",
             connect_address,
             "-admin-listen",
@@ -120,7 +120,7 @@ try:
     connected = Screen(
         address=connect_address,
         auth_token=connect_token,
-        binary_path=os.environ["SIKULIGO_BINARY"],
+        binary_path=os.environ["SIKULI_GO_BINARY"],
         startup_timeout_seconds=1.5,
         timeout_seconds=0.5,
         stdio="ignore",
@@ -137,7 +137,7 @@ try:
     spawn_address = f"127.0.0.1:{spawn_port}"
     spawned = Screen(
         address=spawn_address,
-        binary_path=os.environ["SIKULIGO_BINARY"],
+        binary_path=os.environ["SIKULI_GO_BINARY"],
         sqlite_path=os.environ["SPAWN_SQLITE"],
         startup_timeout_seconds=8.0,
         timeout_seconds=0.5,

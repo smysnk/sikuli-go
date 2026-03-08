@@ -6,7 +6,7 @@ import styles from "./page.module.css";
 const SIDEBAR_MIN = 220;
 const SIDEBAR_MAX = 560;
 const SIDEBAR_DEFAULT = 300;
-const STORAGE_KEY = "sikuligo.editor.workflows.sidebar.width";
+const STORAGE_KEY = "sikuli-go.editor.workflows.sidebar.width";
 
 type Workflow = {
   id: string;
@@ -99,7 +99,7 @@ export default function Home() {
 
       <main className={styles.main}>
         <section className={styles.panel}>
-          <h1>SikuliGO Editor</h1>
+          <h1>sikuli-go Editor</h1>
           <p>
             The workflows sidebar is resizable. Drag the divider or double-click it to reset width.
           </p>

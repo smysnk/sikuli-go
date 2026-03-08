@@ -1,10 +1,10 @@
 # gRPC Strategy
 
-This document defines and tracks the gRPC approach for exposing the SikuliGO API surface across multiple languages.
+This document defines and tracks the gRPC approach for exposing the sikuli-go API surface across multiple languages.
 
 ## Goals
 
-- Provide a versioned network API contract for SikuliGO capabilities.
+- Provide a versioned network API contract for sikuli-go capabilities.
 - Keep protocol behavior aligned with existing `core` contracts and `pkg/sikuli` semantics.
 - Support generated clients for Python, Node.js, and Lua-oriented integrations.
 - Preserve additive evolution (`v1` stable, future changes via `v2`).
@@ -20,7 +20,7 @@ This document defines and tracks the gRPC approach for exposing the SikuliGO API
 - Versioned contract at `proto/sikuli/v1/sikuli.proto`.
 - Generated Go protobuf/gRPC stubs at `internal/grpcv1/pb/`.
 - gRPC service adapter at `internal/grpcv1/server.go`.
-- Runnable gRPC server entrypoint at `cmd/sikuligrpc/main.go`.
+- Runnable gRPC server entrypoint at `cmd/sikuli-go/main.go`.
 - Unary/stream interceptors for auth, logging, and trace IDs in `internal/grpcv1/interceptors.go`.
 - Admin operational endpoints (`/healthz`, `/snapshot`, `/metrics`, `/dashboard`) in `internal/grpcv1/ops.go`.
 - Stub generation/check scripts:
@@ -114,13 +114,13 @@ Generate stubs:
 Run server:
 
 ```bash
-go run ./cmd/sikuligrpc -listen :50051 -admin-listen :8080
+go run ./cmd/sikuli-go -listen :50051 -admin-listen :8080
 ```
 
 Run server with auth:
 
 ```bash
-go run ./cmd/sikuligrpc -listen :50051 -auth-token "$SIKULI_GRPC_AUTH_TOKEN"
+go run ./cmd/sikuli-go -listen :50051 -auth-token "$SIKULI_GRPC_AUTH_TOKEN"
 ```
 
 ## Testing Requirements

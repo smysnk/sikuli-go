@@ -1,6 +1,6 @@
 # OpenCV Integration
 
-SikuliGO includes OpenCV-backed matcher backends for image search.
+sikuli-go includes OpenCV-backed matcher backends for image search.
 
 ## Backend Selection
 

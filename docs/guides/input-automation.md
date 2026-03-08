@@ -1,6 +1,6 @@
 # Input Automation
 
-SikuliGO provides input automation APIs through `InputController`.
+sikuli-go provides input automation APIs through `InputController`.
 
 ## Public API
 

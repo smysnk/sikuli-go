@@ -1,6 +1,6 @@
-# SikuliGO Mission
+# sikuli-go Mission
 
-SikuliGO exists to provide a production-grade GoLang port of SikuliX visual automation semantics.
+sikuli-go exists to provide a production-grade GoLang port of SikuliX visual automation semantics.
 
 ## Why This Port Exists
 

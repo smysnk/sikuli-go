@@ -9,7 +9,7 @@ import (
 
 func TestScreencaptureArgsDefaults(t *testing.T) {
 	t.Setenv("SIKULI_CAPTURE_DISPLAY", "")
-	t.Setenv("SIKULIGO_CAPTURE_DISPLAY", "")
+	t.Setenv("SIKULI_GO_CAPTURE_DISPLAY", "")
 	args := screencaptureArgs("/tmp/capture.png")
 	want := []string{"-x", "-t", "png", "/tmp/capture.png"}
 	if len(args) != len(want) {
@@ -24,7 +24,7 @@ func TestScreencaptureArgsDefaults(t *testing.T) {
 
 func TestScreencaptureArgsUsesPrimaryDisplayEnv(t *testing.T) {
 	t.Setenv("SIKULI_CAPTURE_DISPLAY", "2")
-	t.Setenv("SIKULIGO_CAPTURE_DISPLAY", "")
+	t.Setenv("SIKULI_GO_CAPTURE_DISPLAY", "")
 	args := screencaptureArgs("/tmp/capture.png")
 	want := []string{"-x", "-t", "png", "-D", "2", "/tmp/capture.png"}
 	if len(args) != len(want) {
@@ -37,9 +37,9 @@ func TestScreencaptureArgsUsesPrimaryDisplayEnv(t *testing.T) {
 	}
 }
 
-func TestScreencaptureArgsUsesFallbackDisplayEnv(t *testing.T) {
+func TestScreencaptureArgsUsesSikuliGoDisplayEnv(t *testing.T) {
 	t.Setenv("SIKULI_CAPTURE_DISPLAY", "")
-	t.Setenv("SIKULIGO_CAPTURE_DISPLAY", "5")
+	t.Setenv("SIKULI_GO_CAPTURE_DISPLAY", "5")
 	args := screencaptureArgs("/tmp/capture.png")
 	found := false
 	for i := 0; i+1 < len(args); i++ {
@@ -55,7 +55,7 @@ func TestScreencaptureArgsUsesFallbackDisplayEnv(t *testing.T) {
 
 func TestScreencaptureArgsPrimaryEnvWins(t *testing.T) {
 	t.Setenv("SIKULI_CAPTURE_DISPLAY", "3")
-	t.Setenv("SIKULIGO_CAPTURE_DISPLAY", "7")
+	t.Setenv("SIKULI_GO_CAPTURE_DISPLAY", "7")
 	args := screencaptureArgs("/tmp/capture.png")
 	display := ""
 	for i := 0; i+1 < len(args); i++ {
@@ -71,7 +71,7 @@ func TestScreencaptureArgsPrimaryEnvWins(t *testing.T) {
 
 func TestScreencaptureArgsTrimsWhitespace(t *testing.T) {
 	t.Setenv("SIKULI_CAPTURE_DISPLAY", "  11  ")
-	t.Setenv("SIKULIGO_CAPTURE_DISPLAY", "")
+	t.Setenv("SIKULI_GO_CAPTURE_DISPLAY", "")
 	args := screencaptureArgs("/tmp/capture.png")
 	for i := 0; i+1 < len(args); i++ {
 		if args[i] == "-D" {
@@ -86,5 +86,5 @@ func TestScreencaptureArgsTrimsWhitespace(t *testing.T) {
 
 func TestScreencaptureArgsNoProcessEnvLeakInTest(t *testing.T) {
 	_ = os.Getenv("SIKULI_CAPTURE_DISPLAY")
-	_ = os.Getenv("SIKULIGO_CAPTURE_DISPLAY")
+	_ = os.Getenv("SIKULI_GO_CAPTURE_DISPLAY")
 }

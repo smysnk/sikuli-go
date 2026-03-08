@@ -145,7 +145,7 @@ func TestBuildFindBenchFixtureFromRegionSpecExpectedWithinScenarioBounds(t *test
 	}
 }
 
-func TestBuildFindBenchFixtureFromRegionSpec_PrefersSourceExpectedForNonMultiMonitor(t *testing.T) {
+func TestBuildFindBenchFixtureFromRegionSpec_UsesTransformedExpectedForVectorUIBaseline(t *testing.T) {
 	root := findBenchRepoRoot(".")
 	if root == "" {
 		root = filepath.Clean(filepath.Join("..", "..", ".."))
@@ -191,13 +191,40 @@ func TestBuildFindBenchFixtureFromRegionSpec_PrefersSourceExpectedForNonMultiMon
 	if tertiary.Expected == nil {
 		t.Fatalf("tertiary expected is nil")
 	}
-	// Source target for vector_ui_baseline tertiary projects near y=564 at 1280x720.
-	// Benchmark target projects near y=278, which should be treated as alternate.
-	if tertiary.Expected.GetY() < 500 {
-		t.Fatalf("expected source-aligned tertiary region, got y=%d", tertiary.Expected.GetY())
+	sourceRaw, err := loadGrayFromFile(selected.sourceImagePath)
+	if err != nil {
+		t.Fatalf("load source image: %v", err)
+	}
+	sourceScene, sourceProjected := normalizeSceneAndRegions(sourceRaw, selected.screenW, selected.screenH, selected.sourceTargets)
+	if sourceScene == nil || len(sourceProjected) == 0 {
+		t.Fatalf("normalize source scene failed")
+	}
+	if projected := projectTargetRegionsToScreen(
+		selected.sourceTargets,
+		sourceRaw.Bounds().Dx(),
+		sourceRaw.Bounds().Dy(),
+		selected.screenW,
+		selected.screenH,
+	); len(projected) > 0 {
+		sourceProjected = projected
+	}
+	sourceRegion, ok := findScenarioTargetRegionByID(sourceProjected, "target-03")
+	if !ok {
+		t.Fatalf("missing projected source tertiary region")
+	}
+	derivedRegion, ok := deriveBenchmarkExpectedRegionFromTransform(sourceScene, sourceRegion, *selected)
+	if !ok {
+		t.Fatalf("missing transformed tertiary region")
+	}
+
+	if got, want := rectKey(tertiary.Expected), rectKey(benchRectFromTargetRegion(derivedRegion)); got != want {
+		t.Fatalf("expected tertiary rect to prefer transformed benchmark target, got=%s want=%s", got, want)
 	}
 	if len(tertiary.ExpectedAlternates) == 0 {
-		t.Fatalf("expected alternate benchmark region for tertiary")
+		t.Fatalf("expected alternate source region for tertiary")
+	}
+	if got, want := rectKey(tertiary.ExpectedAlternates[0]), rectKey(benchRectFromTargetRegion(sourceRegion)); got != want {
+		t.Fatalf("expected tertiary alternate rect to preserve source target, got=%s want=%s", got, want)
 	}
 }
 

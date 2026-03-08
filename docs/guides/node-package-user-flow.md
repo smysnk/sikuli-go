@@ -4,7 +4,7 @@ This document defines the target user story for a Node.js-first integration wher
 
 ## User Story
 
-As a Node.js user, I want to install SikuliGO from npm and run desktop automation with a few lines of code, without manually managing gRPC server startup.
+As a Node.js user, I want to install sikuli-go from npm and run desktop automation with a few lines of code, without manually managing gRPC server startup.
 
 ## Target Developer Experience
 

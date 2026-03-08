@@ -1,30 +1,30 @@
-# Behavioral Differences (Java SikuliX vs SikuliGO)
+# Behavioral Differences (Java SikuliX vs sikuli-go)
 
 This page documents intentional, user-visible differences between Java SikuliX behavior and the GoLang port.
 
 ## Runtime and Process Model
 
-- SikuliGO uses an API/server runtime model with gRPC transport; Java SikuliX is traditionally in-process scripting.
+- sikuli-go uses an API/server runtime model with gRPC transport; Java SikuliX is traditionally in-process scripting.
 - Screen capture and input actions are executed by the API process, not by language clients.
 
 ## Matching and Engine Selection
 
-- SikuliGO exposes explicit matcher engine selection (`template`, `orb`, `akaze`, `brisk`, `kaze`, `sift`, `hybrid`).
+- sikuli-go exposes explicit matcher engine selection (`template`, `orb`, `akaze`, `brisk`, `kaze`, `sift`, `hybrid`).
 - Java SikuliX engine behavior is less explicitly surfaced as a transport-level option.
 
 ## OCR Backend Enablement
 
-- OCR in SikuliGO requires builds with OCR backend tags and native dependencies.
+- OCR in sikuli-go requires builds with OCR backend tags and native dependencies.
 - Java SikuliX OCR packaging/runtime defaults differ by distribution.
 
 ## Input Backend Dependencies
 
-- Platform input backends in SikuliGO depend on OS tools/libraries (`cliclick`, `xdotool`, PowerShell path/runtime).
-- SikuliGO now performs startup/runtime dependency checks and surfaces actionable warnings.
+- Platform input backends in sikuli-go depend on OS tools/libraries (`cliclick`, `xdotool`, PowerShell path/runtime).
+- sikuli-go now performs startup/runtime dependency checks and surfaces actionable warnings.
 
 ## Constructor and Session Model
 
-- SikuliGO clients use explicit `auto/connect/spawn` constructor patterns with API session tracking.
+- sikuli-go clients use explicit `auto/connect/spawn` constructor patterns with API session tracking.
 - Java SikuliX often assumes direct scripting session context.
 
 ## Documentation Contract

@@ -1,6 +1,6 @@
 # Parity Gaps
 
-Open Java parity gaps tracked for SikuliGO.
+Open Java parity gaps tracked for sikuli-go.
 
 ## API-Level Gaps
 

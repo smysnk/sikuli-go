@@ -87,12 +87,12 @@ build-go: build-go-api build-go-monitor build-go-benchmark-helper
 build-go-api:
 	cd "$(API_DIR)" && \
 	$(if $(filter Darwin,$(OS_NAME)),CGO_CXXFLAGS='$(MACOS_CGO_CXXFLAGS)' CGO_LDFLAGS='$(MACOS_CGO_LDFLAGS)',) \
-	$(GO) build -tags "$(GO_OPENCV_TAGS)" -trimpath -ldflags="-s -w" -o "$(ROOT_DIR)/sikuli-go" ./cmd/sikuligrpc
+	$(GO) build -tags "$(GO_OPENCV_TAGS)" -trimpath -ldflags="-s -w" -o "$(ROOT_DIR)/sikuli-go" ./cmd/sikuli-go
 
 build-go-monitor:
 	cd "$(API_DIR)" && \
 	$(if $(filter Darwin,$(OS_NAME)),CGO_CXXFLAGS='$(MACOS_CGO_CXXFLAGS)' CGO_LDFLAGS='$(MACOS_CGO_LDFLAGS)',) \
-	$(GO) build -tags "$(GO_OPENCV_TAGS)" -trimpath -ldflags="-s -w" -o "$(ROOT_DIR)/sikuli-go-monitor" ./cmd/sikuligo-monitor
+	$(GO) build -tags "$(GO_OPENCV_TAGS)" -trimpath -ldflags="-s -w" -o "$(ROOT_DIR)/sikuli-go-monitor" ./cmd/sikuli-go-monitor
 
 build-go-benchmark-helper:
 	cd "$(API_DIR)" && \

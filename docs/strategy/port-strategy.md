@@ -1,6 +1,6 @@
 # GoLang Port Strategy
 
-This document consolidates the project goals, architecture overview, implementation plan, and feature matrix for the SikuliGO port.
+This document consolidates the project goals, architecture overview, implementation plan, and feature matrix for the sikuli-go port.
 
 ## Goals
 

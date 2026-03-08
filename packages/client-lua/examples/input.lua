@@ -5,8 +5,8 @@ end
 
 package.path = package.path .. ";" .. script_dir .. "../?.lua"
 
-local sikuligo = require("sikuligo_client")
-local client = sikuligo.new({
+local sikuli_go = require("sikuli_go_client")
+local client = sikuli_go.new({
   proto_root = script_dir .. "../../proto",
   proto_file = "sikuli/v1/sikuli.proto",
   protoset = script_dir .. "../generated/sikuli.protoset"

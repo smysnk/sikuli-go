@@ -200,7 +200,7 @@ export class Screen extends Region {
     super(session);
   }
 
-  /** Force-launch a new SikuliGO API process and connect. */
+  /** Force-launch a new sikuli-go API process and connect. */
   static async spawn(opts: LaunchOptions = {}): Promise<Screen> {
     const session = await Sikuli.spawn(opts);
     return new Screen(session);

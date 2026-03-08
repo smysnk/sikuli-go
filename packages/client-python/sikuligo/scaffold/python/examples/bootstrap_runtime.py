@@ -12,7 +12,7 @@ def _venv_python_path(project_root: Path) -> Path:
 
 
 def ensure_project_venv_python() -> None:
-    if os.environ.get("SIKULIGO_VENV_REEXEC") == "1":
+    if os.environ.get("SIKULI_GO_VENV_REEXEC") == "1":
         return
 
     script = Path(__file__).resolve()
@@ -22,5 +22,5 @@ def ensure_project_venv_python() -> None:
         return
 
     env = dict(os.environ)
-    env["SIKULIGO_VENV_REEXEC"] = "1"
+    env["SIKULI_GO_VENV_REEXEC"] = "1"
     os.execve(str(venv_python), [str(venv_python), *sys.argv], env)

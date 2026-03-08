@@ -1,6 +1,6 @@
 # OCR
 
-SikuliGO provides OCR APIs in `Finder` and `Region`:
+sikuli-go provides OCR APIs in `Finder` and `Region`:
 
 - `Finder.ReadText(params OCRParams)`
 - `Finder.FindText(query, params OCRParams)`
@@ -11,7 +11,7 @@ By default, OCR is disabled at build time and these APIs return `ErrBackendUnsup
 
 ## Enable gosseract backend
 
-SikuliGO includes an optional OCR backend adapter for:
+sikuli-go includes an optional OCR backend adapter for:
 
 - module path: `github.com/otiai10/gosseract/v2`
 - pinned module version in `go.mod`

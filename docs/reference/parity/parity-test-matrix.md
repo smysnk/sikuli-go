@@ -2,7 +2,7 @@
 
 This matrix links parity expectations to concrete test coverage.
 
-| Area | Java Concept | SikuliGO Surface | Test Location | Status |
+| Area | Java Concept | sikuli-go Surface | Test Location | Status |
 |---|---|---|---|---|
 | Pattern similarity/exact | `Pattern.similar/exact` | `pkg/sikuli.Pattern` + client Pattern | `packages/api/pkg/sikuli/*_test.go` | ✅ |
 | Finder search/wait | `find/exists/wait` | `Finder`, `Region`, gRPC screen RPCs | `packages/api/internal/grpcv1/*_test.go` | ✅ |

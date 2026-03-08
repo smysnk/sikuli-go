@@ -1,6 +1,6 @@
 # Observe Events
 
-SikuliGO provides observe/event APIs through `ObserverController` with a concrete deterministic polling backend.
+sikuli-go provides observe/event APIs through `ObserverController` with a concrete deterministic polling backend.
 
 ## Public API
 

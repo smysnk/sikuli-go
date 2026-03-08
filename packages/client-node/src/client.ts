@@ -311,7 +311,7 @@ export class Sikuli {
       details +=
         `; server does not implement ${methodName}. ` +
         "This usually means the sikuli-go binary is older than this client. " +
-        "Build/update sikuli-go or set SIKULIGO_BINARY_PATH to a current binary.";
+        "Build/update sikuli-go or set SIKULI_GO_BINARY_PATH to a current binary.";
     }
     if (code === grpc.status.DEADLINE_EXCEEDED) {
       details +=

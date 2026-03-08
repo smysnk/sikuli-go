@@ -1,4 +1,4 @@
-# SikuliGO [![GoLang Tests](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml/badge.svg)](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml) [![Testing Gate](https://img.shields.io/github/actions/workflow/status/smysnk/SikuliGO/go-test.yml?branch=master&label=testing%20gate)](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml) [![PyPI version](https://img.shields.io/pypi/v/sikuli-go)](https://pypi.org/project/sikuli-go/) [![npm version](https://img.shields.io/npm/v/%40sikuligo%2Fsikuli-go)](https://www.npmjs.com/package/@sikuligo/sikuli-go)
+# sikuli-go [![GoLang Tests](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml/badge.svg)](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml) [![Testing Gate](https://img.shields.io/github/actions/workflow/status/smysnk/SikuliGO/go-test.yml?branch=master&label=testing%20gate)](https://github.com/smysnk/SikuliGO/actions/workflows/go-test.yml) [![PyPI version](https://img.shields.io/pypi/v/sikuli-go)](https://pypi.org/project/sikuli-go/) [![npm version](https://img.shields.io/npm/v/%40sikuligo%2Fsikuli-go)](https://www.npmjs.com/package/@sikuligo/sikuli-go)
 
 ![SikuliX Logo](docs/images/logo.png)
 
@@ -65,7 +65,7 @@ finally:
 `sikuli-go` is the automation runtime. It starts the gRPC API and, when admin endpoints are enabled, serves the live dashboard for the same process.
 Use it when clients need to execute automation, OCR, image matching, clicks, typing, or app control.
 
-`sikuli-go-monitor` is the HTTP-only monitor. It reads the shared `sikuligo.db` session store and serves the dashboard/session viewer without starting another automation server.
+`sikuli-go-monitor` is the HTTP-only monitor. It reads the shared `sikuli-go.db` session store and serves the dashboard/session viewer without starting another automation server.
 Use it when you only want operational visibility: review API sessions, inspect client interactions, or watch a shared session store from another terminal or machine without binding a second gRPC server.
 
 Launch the API and dashboard locally:
@@ -76,7 +76,7 @@ yarn dlx @sikuligo/sikuli-go -listen
 
 `-listen` by itself starts the gRPC API on `:50051` and the admin/dashboard server on `:8080`.
 
-![SikuliGO Dashboard Demo](docs/images/dashboard.png)
+![sikuli-go Dashboard Demo](docs/images/dashboard.png)
 
 Launch the standalone monitor after installing the binaries on PATH:
 
@@ -84,9 +84,9 @@ Launch the standalone monitor after installing the binaries on PATH:
 sikuli-go-monitor
 ```
 
-By default it serves the monitor UI on `:8080` and reads `sikuligo.db` from the current working directory.
+By default it serves the monitor UI on `:8080` and reads `sikuli-go.db` from the current working directory.
 
-![SikuliGO Monitor Demo](docs/images/monitor.png)
+![sikuli-go Monitor Demo](docs/images/monitor.png)
 
 ## Install API Binary On PATH
 
@@ -189,7 +189,7 @@ The GoLang port in this repository began in **2026**. It stands on the work of t
 <!-- BEGIN: FIND_ON_SCREEN_BENCH_AUTOGEN -->
 ## FindOnScreen Benchmark Test Results
 
-Generated: `2026-03-07T21:21:55.208615+00:00`
+Generated: `2026-03-07T23:32:15.506029+00:00`
 
 ### Reports
 
@@ -211,13 +211,13 @@ _Cases/OK metrics are query-level counts (regions x scenarios x resolutions), no
 
 | Engine | Cases | OK | Partial | Not Found | Unsupported | Error | Overlap Miss | Avg ms/op | Median ms/op |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| akaze | 120 | 39 | 0 | 78 | 0 | 0 | 3 | 209.021 | 173.061 |
-| brisk | 120 | 47 | 0 | 63 | 0 | 0 | 10 | 326.143 | 119.279 |
-| hybrid | 120 | 69 | 0 | 45 | 0 | 0 | 6 | 167.515 | 134.524 |
-| kaze | 120 | 63 | 0 | 50 | 0 | 0 | 7 | 752.177 | 637.129 |
-| orb | 120 | 13 | 0 | 96 | 0 | 0 | 11 | 68.743 | 47.694 |
-| sift | 120 | 56 | 0 | 55 | 0 | 0 | 9 | 250.684 | 198.269 |
-| template | 120 | 64 | 0 | 56 | 0 | 0 | 0 | 162.561 | 128.652 |
+| akaze | 120 | 39 | 0 | 78 | 0 | 0 | 3 | 172.121 | 147.695 |
+| brisk | 120 | 47 | 0 | 63 | 0 | 0 | 10 | 388.483 | 123.118 |
+| hybrid | 120 | 69 | 0 | 45 | 0 | 0 | 6 | 171.017 | 134.411 |
+| kaze | 120 | 63 | 0 | 50 | 0 | 0 | 7 | 824.898 | 640.512 |
+| orb | 120 | 13 | 0 | 96 | 0 | 0 | 11 | 56.443 | 44.794 |
+| sift | 120 | 56 | 0 | 55 | 0 | 0 | 9 | 256.756 | 198.264 |
+| template | 120 | 64 | 0 | 56 | 0 | 0 | 0 | 154.257 | 114.466 |
 
 ### Run Mega Summary
 

@@ -1,6 +1,6 @@
 # Build From Source
 
-This is the single source of truth for building SikuliGO from source.
+This is the single source of truth for building sikuli-go from source.
 
 ## Prerequisites
 
@@ -23,14 +23,14 @@ Build `sikuli-go`:
 
 ```bash
 cd packages/api
-go build -tags "gosseract opencv gocv_specific_modules gocv_features2d gocv_calib3d" -trimpath -ldflags="-s -w" -o ../../sikuli-go ./cmd/sikuligrpc
+go build -tags "gosseract opencv gocv_specific_modules gocv_features2d gocv_calib3d" -trimpath -ldflags="-s -w" -o ../../sikuli-go ./cmd/sikuli-go
 ```
 
 Build `sikuli-go-monitor`:
 
 ```bash
 cd packages/api
-go build -tags "gosseract opencv gocv_specific_modules gocv_features2d gocv_calib3d" -trimpath -ldflags="-s -w" -o ../../sikuli-go-monitor ./cmd/sikuligo-monitor
+go build -tags "gosseract opencv gocv_specific_modules gocv_features2d gocv_calib3d" -trimpath -ldflags="-s -w" -o ../../sikuli-go-monitor ./cmd/sikuli-go-monitor
 ```
 
 ## Build Protocol Artifacts
@@ -145,7 +145,7 @@ Notes:
 - Builds `sikuli-go` with OCR/OpenCV tags, opens a fixture page, then validates:
   - `FindOnScreen` against a visible image
   - OCR (`ReadText` + `FindText`) from a live `/snapshot`
-- `REAL_DESKTOP_E2E_DISPLAY` maps to `SIKULI_CAPTURE_DISPLAY`/`SIKULIGO_CAPTURE_DISPLAY` for `screencapture -D <display>`.
+- `REAL_DESKTOP_E2E_DISPLAY` maps to `SIKULI_CAPTURE_DISPLAY`/`SIKULI_GO_CAPTURE_DISPLAY` for `screencapture -D <display>`.
 
 ## Find Benchmark E2E
 

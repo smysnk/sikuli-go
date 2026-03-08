@@ -107,11 +107,11 @@ func startupStatePath() string {
 	if strings.TrimSpace(dir) == "" {
 		home, err := os.UserHomeDir()
 		if err != nil || strings.TrimSpace(home) == "" {
-			return ".sikuligo-startup-state.json"
+			return ".sikuli-go-startup-state.json"
 		}
 		dir = filepath.Join(home, ".config")
 	}
-	return filepath.Join(dir, "sikuligo", "startup-state.json")
+	return filepath.Join(dir, "sikuli-go", "startup-state.json")
 }
 
 func loadStartupState(path string) (startupState, error) {

@@ -47,7 +47,7 @@ export interface LaunchResultMeta {
 
 /**
  * Sikuli is the transport-level API client.
- * It maps high-level SikuliX-style actions to gRPC calls against the SikuliGO API.
+ * It maps high-level SikuliX-style actions to gRPC calls against the sikuli-go API.
  */
 export class Sikuli {
   private readonly transport: SikuliTransport;

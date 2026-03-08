@@ -42,7 +42,7 @@ func debugLogf(format string, args ...any) {
 	if !debugEnabled {
 		return
 	}
-	log.Printf("[sikuligo-debug] "+format, args...)
+	log.Printf("[sikuli-go-debug] "+format, args...)
 }
 
 var captureScreenFn = captureScreenImage

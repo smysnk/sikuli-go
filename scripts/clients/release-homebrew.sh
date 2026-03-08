@@ -12,7 +12,7 @@ FORMULA_PATH="Formula/${FORMULA_NAME}.rb"
 ARM_ARCHIVE="$DIST_DIR/${FORMULA_NAME}-darwin-arm64.tar.gz"
 AMD_ARCHIVE="$DIST_DIR/${FORMULA_NAME}-darwin-amd64.tar.gz"
 PKG_JSON="$NODE_PACKAGE_JSON"
-GO_BUILD_TAGS="${GO_BUILD_TAGS:-$SIKULIGO_GO_BUILD_TAGS}"
+GO_BUILD_TAGS="${GO_BUILD_TAGS:-$SIKULI_GO_BUILD_TAGS}"
 
 mkdir -p "$DIST_DIR"
 cd "$ROOT_DIR"
@@ -57,15 +57,15 @@ build_archive() {
   (
     cd "$API_DIR"
     GOOS=darwin GOARCH="$arch" \
-      go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$stage_dir/sikuli-go" ./cmd/sikuligrpc
+      go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$stage_dir/sikuli-go" ./cmd/sikuli-go
   )
 
-  if [[ -d "$API_DIR/cmd/sikuligo-monitor" ]]; then
+  if [[ -d "$API_DIR/cmd/sikuli-go-monitor" ]]; then
     echo "Building sikuli-go-monitor darwin/${arch}"
     (
       cd "$API_DIR"
       GOOS=darwin GOARCH="$arch" \
-        go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$stage_dir/sikuli-go-monitor" ./cmd/sikuligo-monitor
+        go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$stage_dir/sikuli-go-monitor" ./cmd/sikuli-go-monitor
     )
     files+=("sikuli-go-monitor")
   fi
@@ -96,7 +96,7 @@ AMD_SHA="$(sha256_file "$AMD_ARCHIVE")"
 FORMULA_FILE="$DIST_DIR/${FORMULA_NAME}.rb"
 cat >"$FORMULA_FILE" <<EOF
 class SikuliGo < Formula
-  desc "SikuliGO desktop automation API server"
+  desc "sikuli-go desktop automation API server"
   homepage "https://github.com/${OWNER_REPO}"
   license "MIT"
   version "${VERSION}"
@@ -148,7 +148,7 @@ echo "Publishing release assets to ${OWNER_REPO} tag ${TAG}"
 if ! gh release view "$TAG" --repo "$OWNER_REPO" >/dev/null 2>&1; then
   gh release create "$TAG" \
     --repo "$OWNER_REPO" \
-    --title "SikuliGO ${TAG}" \
+    --title "sikuli-go ${TAG}" \
     --notes "Automated release artifacts for Homebrew."
 fi
 

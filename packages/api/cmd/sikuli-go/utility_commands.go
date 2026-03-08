@@ -56,7 +56,7 @@ func printCommandHelp(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "  -admin-listen string")
 	_, _ = fmt.Fprintln(w, "        admin HTTP listen address for health/metrics/dashboard; bare -admin-listen uses default \":8080\"; empty disables admin server")
 	_, _ = fmt.Fprintln(w, "  -sqlite-path string")
-	_, _ = fmt.Fprintln(w, "        sqlite datastore path for API sessions, client sessions, and interactions (default \"sikuligo.db\")")
+	_, _ = fmt.Fprintln(w, "        sqlite datastore path for API sessions, client sessions, and interactions (default \"sikuli-go.db\")")
 	_, _ = fmt.Fprintln(w, "  -auth-token string")
 	_, _ = fmt.Fprintln(w, "        shared API token; accepted via metadata x-api-key or Authorization: Bearer <token>")
 	_, _ = fmt.Fprintln(w, "  -enable-reflection")
@@ -246,7 +246,7 @@ func runInitJSExamples(args []string) error {
 	if err := runInitExamples([]string{"--lang", "node", "--dir", projectDir, "--force"}); err != nil {
 		return err
 	}
-	fmt.Printf("Initialized SikuliGO project in: %s\n", projectDir)
+	fmt.Printf("Initialized sikuli-go project in: %s\n", projectDir)
 	fmt.Printf("Examples copied to: %s\n", filepath.Join(projectDir, "examples"))
 	return nil
 }
@@ -290,7 +290,7 @@ func runInitPyExamples(args []string) error {
 	if err := runInitExamples([]string{"--lang", "python", "--dir", projectDir, "--force"}); err != nil {
 		return err
 	}
-	fmt.Printf("Initialized SikuliGO project in: %s\n", projectDir)
+	fmt.Printf("Initialized sikuli-go project in: %s\n", projectDir)
 	fmt.Printf("Examples copied to: %s\n", filepath.Join(projectDir, "examples"))
 	return nil
 }
@@ -395,7 +395,7 @@ func ensureNodePackageJSON(projectDir string) error {
 	if deps == nil {
 		deps = map[string]any{}
 	}
-	version := strings.TrimSpace(os.Getenv("SIKULIGO_NODE_PACKAGE_VERSION"))
+	version := strings.TrimSpace(os.Getenv("SIKULI_GO_NODE_PACKAGE_VERSION"))
 	if version == "" {
 		version = "latest"
 	}
@@ -414,7 +414,7 @@ func ensureNodePackageJSON(projectDir string) error {
 
 func ensurePythonRequirements(projectDir string) error {
 	requirementsPath := filepath.Join(projectDir, "requirements.txt")
-	packageVersion := strings.TrimSpace(os.Getenv("SIKULIGO_PY_PACKAGE_VERSION"))
+	packageVersion := strings.TrimSpace(os.Getenv("SIKULI_GO_PY_PACKAGE_VERSION"))
 	requirement := "sikuli-go"
 	if packageVersion != "" && packageVersion != "latest" {
 		requirement = fmt.Sprintf("sikuli-go==%s", packageVersion)

@@ -22,7 +22,7 @@ func main() {
 	}
 
 	listenAddr := flag.String("listen", ":8080", "HTTP listen address for monitor dashboard/session viewer")
-	sqlitePath := flag.String("sqlite-path", "sikuligo.db", "sqlite datastore path shared with sikuli-go")
+	sqlitePath := flag.String("sqlite-path", "sikuli-go.db", "sqlite datastore path shared with sikuli-go")
 	flag.Parse()
 
 	logger := log.Default()

@@ -85,7 +85,7 @@ if (runUrl) {
 }
 
 const payload = {
-  username: "SikuliGO CI",
+  username: "sikuli-go CI",
   embeds: [
     {
       title: "Workspace Test Results",

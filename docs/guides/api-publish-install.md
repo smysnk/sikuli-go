@@ -18,15 +18,15 @@ cd packages/api
 
 GOOS=linux GOARCH=amd64 \
   go build -tags "gosseract opencv gocv_specific_modules gocv_features2d gocv_calib3d" \
-  -trimpath -ldflags="-s -w" -o ../../.release/linux-amd64/sikuli-go ./cmd/sikuligrpc
+  -trimpath -ldflags="-s -w" -o ../../.release/linux-amd64/sikuli-go ./cmd/sikuli-go
 
 GOOS=linux GOARCH=arm64 \
   go build -tags "gosseract opencv gocv_specific_modules gocv_features2d gocv_calib3d" \
-  -trimpath -ldflags="-s -w" -o ../../.release/linux-arm64/sikuli-go ./cmd/sikuligrpc
+  -trimpath -ldflags="-s -w" -o ../../.release/linux-arm64/sikuli-go ./cmd/sikuli-go
 
 GOOS=windows GOARCH=amd64 \
   go build -tags "gosseract opencv gocv_specific_modules gocv_features2d gocv_calib3d" \
-  -trimpath -ldflags="-s -w" -o ../../.release/windows-amd64/sikuli-go.exe ./cmd/sikuligrpc
+  -trimpath -ldflags="-s -w" -o ../../.release/windows-amd64/sikuli-go.exe ./cmd/sikuli-go
 ```
 
 Package artifacts:
@@ -48,7 +48,7 @@ gh release create "$TAG" \
   .release/sikuli-go-windows-amd64.zip \
   --repo smysnk/SikuliGO \
   --title "$TAG" \
-  --notes "SikuliGO API binaries for Linux/Windows."
+  --notes "sikuli-go API binaries for Linux/Windows."
 ```
 
 For existing tags, replace `gh release create` with `gh release upload`.

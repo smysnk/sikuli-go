@@ -38,7 +38,7 @@ func main() {
 
 	listenAddr := flag.String("listen", ":50051", "gRPC listen address")
 	adminListenAddr := flag.String("admin-listen", ":8080", "admin HTTP listen address for health/metrics/dashboard; empty disables admin server")
-	sqlitePath := flag.String("sqlite-path", "sikuligo.db", "sqlite datastore path for API sessions, client sessions, and interactions")
+	sqlitePath := flag.String("sqlite-path", "sikuli-go.db", "sqlite datastore path for API sessions, client sessions, and interactions")
 	authToken := flag.String("auth-token", os.Getenv("SIKULI_GRPC_AUTH_TOKEN"), "shared API token; accepted via metadata x-api-key or Authorization: Bearer <token>")
 	enableReflection := flag.Bool("enable-reflection", true, "enable gRPC reflection")
 	if err := flag.CommandLine.Parse(args); err != nil {

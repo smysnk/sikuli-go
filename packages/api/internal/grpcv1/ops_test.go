@@ -66,10 +66,10 @@ func TestAdminMuxHealthSnapshotAndMetrics(t *testing.T) {
 		t.Fatalf("metrics status mismatch: %d", metricsRes.Code)
 	}
 	body := metricsRes.Body.String()
-	if !strings.Contains(body, "sikuligrpc_requests_total 2") {
+	if !strings.Contains(body, "sikuli_go_grpc_requests_total 2") {
 		t.Fatalf("metrics missing total request counter")
 	}
-	if !strings.Contains(body, "sikuligrpc_auth_failures_total 1") {
+	if !strings.Contains(body, "sikuli_go_grpc_auth_failures_total 1") {
 		t.Fatalf("metrics missing auth failure counter")
 	}
 	if !strings.Contains(body, "method=\"/sikuli.v1.SikuliService/Find\"") {

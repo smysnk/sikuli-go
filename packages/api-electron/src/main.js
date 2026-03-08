@@ -3,16 +3,15 @@ const { spawn } = require('child_process');
 const http = require('http');
 const path = require('path');
 
-const API_LISTEN = process.env.SIKULIGO_API_LISTEN || '127.0.0.1:50051';
-const ADMIN_LISTEN = process.env.SIKULIGO_ADMIN_LISTEN || '127.0.0.1:8080';
-const ADMIN_HEALTH_URL = process.env.SIKULIGO_ADMIN_HEALTH_URL || `http://${ADMIN_LISTEN}/healthz`;
-const DASHBOARD_URL = process.env.SIKULIGO_DASHBOARD_URL || `http://${ADMIN_LISTEN}/dashboard`;
-const SESSION_URL = process.env.SIKULIGO_SESSION_VIEW_URL || `${DASHBOARD_URL}?view=session-viewer`;
+const API_LISTEN = process.env.SIKULI_GO_API_LISTEN || '127.0.0.1:50051';
+const ADMIN_LISTEN = process.env.SIKULI_GO_ADMIN_LISTEN || '127.0.0.1:8080';
+const ADMIN_HEALTH_URL = process.env.SIKULI_GO_ADMIN_HEALTH_URL || `http://${ADMIN_LISTEN}/healthz`;
+const DASHBOARD_URL = process.env.SIKULI_GO_DASHBOARD_URL || `http://${ADMIN_LISTEN}/dashboard`;
+const SESSION_URL = process.env.SIKULI_GO_SESSION_VIEW_URL || `${DASHBOARD_URL}?view=session-viewer`;
 const API_BINARY_PATH =
-  process.env.SIKULIGO_BINARY_PATH ||
-  path.resolve(__dirname, '../../../sikuli-go');
-const API_AUTO_START = process.env.SIKULIGO_API_AUTO_START !== '0';
-const API_STARTUP_TIMEOUT_MS = Number(process.env.SIKULIGO_API_STARTUP_TIMEOUT_MS || '8000');
+  process.env.SIKULI_GO_BINARY_PATH || path.resolve(__dirname, '../../../sikuli-go');
+const API_AUTO_START = process.env.SIKULI_GO_API_AUTO_START !== '0';
+const API_STARTUP_TIMEOUT_MS = Number(process.env.SIKULI_GO_API_STARTUP_TIMEOUT_MS || '8000');
 
 let mainWindow = null;
 let managedApiProcess = null;
@@ -87,7 +86,7 @@ async function createWindow() {
   const win = new BrowserWindow({
     width: 1440,
     height: 900,
-    title: 'SikuliGO Dashboard',
+    title: 'sikuli-go Dashboard',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
@@ -144,8 +143,8 @@ async function createWindow() {
     const started = await startApi();
     if (!started.ok) {
       console.error(
-        `Unable to reach SikuliGO admin health endpoint: ${ADMIN_HEALTH_URL}. ` +
-          `Set SIKULIGO_BINARY_PATH or start SikuliGO manually.`
+        `Unable to reach sikuli-go admin health endpoint: ${ADMIN_HEALTH_URL}. ` +
+          `Set SIKULI_GO_BINARY_PATH or start sikuli-go manually.`
       );
     }
   }

@@ -230,12 +230,12 @@ function errorWithResolutionHelp(detail: string): Error {
   return new Error(
     `${detail}\n` +
       "Install @sikuligo/sikuli-go to auto-resolve the packaged platform binary, " +
-      "or set SIKULIGO_BINARY_PATH, or place sikuli-go in PATH."
+      "or set SIKULI_GO_BINARY_PATH, or place sikuli-go in PATH."
   );
 }
 
 export function resolveSikuliBinary(explicitPath?: string): string {
-  const manual = explicitPath || process.env.SIKULIGO_BINARY_PATH || "";
+  const manual = explicitPath || process.env.SIKULI_GO_BINARY_PATH || "";
   if (manual) {
     if (!isExecutable(manual)) {
       throw errorWithResolutionHelp(`Configured binary path is not executable: ${manual}`);

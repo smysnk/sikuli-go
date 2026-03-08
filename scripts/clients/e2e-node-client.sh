@@ -27,7 +27,7 @@ step() {
 step "1/3 Build local sikuli-go API binary"
 (
   cd "${API_DIR}"
-  go build -tags "${GO_BUILD_TAGS}" -o "${API_BINARY}" ./cmd/sikuligrpc
+  go build -tags "${GO_BUILD_TAGS}" -o "${API_BINARY}" ./cmd/sikuli-go
 )
 
 step "2/3 Build local Node client artifacts"
@@ -39,7 +39,7 @@ step "2/3 Build local Node client artifacts"
 step "3/3 Run Node client E2E startup/connect scenarios"
 NODE_CLIENT_INDEX="${CLIENT_NODE_DIR}/dist/src/index.js" \
 NODE_CLIENT_TRANSPORT="${CLIENT_NODE_DIR}/dist/src/client.js" \
-SIKULIGO_BINARY="${API_BINARY}" \
+SIKULI_GO_BINARY="${API_BINARY}" \
 SPAWN_SQLITE="${SPAWN_SQLITE}" \
 CONNECT_SQLITE="${CONNECT_SQLITE}" \
 node - <<'NODE'
@@ -121,7 +121,7 @@ async function main() {
     const connectAddress = `127.0.0.1:${connectPort}`;
     const connectToken = "node-e2e-token";
     external = spawn(
-      process.env.SIKULIGO_BINARY,
+      process.env.SIKULI_GO_BINARY,
       [
         "-listen",
         connectAddress,
@@ -146,7 +146,7 @@ async function main() {
     const connected = await Sikuli({
       address: connectAddress,
       authToken: connectToken,
-      binaryPath: process.env.SIKULIGO_BINARY,
+      binaryPath: process.env.SIKULI_GO_BINARY,
       startupTimeoutMs: 1500,
       timeoutMs: 500
     });
@@ -163,7 +163,7 @@ async function main() {
     const spawnAddress = `127.0.0.1:${spawnPort}`;
     const spawned = await Sikuli({
       address: spawnAddress,
-      binaryPath: process.env.SIKULIGO_BINARY,
+      binaryPath: process.env.SIKULI_GO_BINARY,
       sqlitePath: process.env.SPAWN_SQLITE,
       startupTimeoutMs: 8000,
       timeoutMs: 500,

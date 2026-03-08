@@ -1,6 +1,6 @@
 # App Control
 
-SikuliGO provides app/window/process APIs through `AppController`.
+sikuli-go provides app/window/process APIs through `AppController`.
 
 ## Public API
 

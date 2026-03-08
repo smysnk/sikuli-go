@@ -69,7 +69,7 @@ export function runInitExamples(argv: string[] = process.argv.slice(2)): string 
 if (require.main === module) {
   try {
     const outputDir = runInitExamples();
-    console.log(`Initialized SikuliGO examples in: ${outputDir}`);
+    console.log(`Initialized sikuli-go examples in: ${outputDir}`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(msg);

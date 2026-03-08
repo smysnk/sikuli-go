@@ -11,9 +11,9 @@ if [[ "${REAL_DESKTOP_E2E:-0}" != "1" ]]; then
   exit 0
 fi
 
-TMP_ROOT="$(mktemp -d /tmp/sikuligo-real-desktop-e2e.XXXXXX)"
+TMP_ROOT="$(mktemp -d /tmp/sikuli-go-real-desktop-e2e.XXXXXX)"
 API_BINARY="${TMP_ROOT}/sikuli-go"
-SQLITE_PATH="${TMP_ROOT}/sikuligo-real-desktop-e2e.db"
+SQLITE_PATH="${TMP_ROOT}/sikuli-go-real-desktop-e2e.db"
 SNAPSHOT_PATH="${TMP_ROOT}/snapshot.png"
 FIXTURE_HTML="${TMP_ROOT}/fixture.html"
 KEEP_TMP="${KEEP_TMP:-0}"
@@ -78,7 +78,7 @@ fi
 step "1/7 Build sikuli-go with OCR/OpenCV tags"
 (
   cd "${API_DIR}"
-  go build -tags "${GO_TAGS}" -o "${API_BINARY}" ./cmd/sikuligrpc
+  go build -tags "${GO_TAGS}" -o "${API_BINARY}" ./cmd/sikuli-go
 )
 
 step "2/7 Build Node client artifacts"
@@ -111,7 +111,7 @@ if [[ -n "${DISPLAY_SELECTION}" ]]; then
   echo "[real-desktop-e2e] capture display selector=${DISPLAY_SELECTION}"
 fi
 SIKULI_CAPTURE_DISPLAY="${DISPLAY_SELECTION}" \
-SIKULIGO_CAPTURE_DISPLAY="${DISPLAY_SELECTION}" \
+SIKULI_GO_CAPTURE_DISPLAY="${DISPLAY_SELECTION}" \
 "${API_BINARY}" \
   -listen "${GRPC_ADDR}" \
   -admin-listen "${ADMIN_ADDR}" \
@@ -153,7 +153,7 @@ cat >"${FIXTURE_HTML}" <<HTML
 <html>
 <head>
 <meta charset="utf-8" />
-<title>SikuliGO Real Desktop E2E Fixture</title>
+<title>sikuli-go Real Desktop E2E Fixture</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; margin: 24px; }
   h1 { font-size: 48px; margin: 0 0 16px; }

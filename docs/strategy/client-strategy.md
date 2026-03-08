@@ -1,6 +1,6 @@
 # Client Strategy
 
-This document defines the client delivery strategy for SikuliGO gRPC APIs across Python, Node.js, and Lua.
+This document defines the client delivery strategy for sikuli-go gRPC APIs across Python, Node.js, and Lua.
 
 ## Shared Client Rules
 
@@ -25,7 +25,7 @@ This document defines the client delivery strategy for SikuliGO gRPC APIs across
 - Node client wrapper: `packages/client-node/src/client.ts`
 - Node examples: `packages/client-node/examples/`
 - Node generator: `scripts/clients/generate-node-stubs.sh`
-- Lua client wrapper: `packages/client-lua/sikuligo_client.lua`
+- Lua client wrapper: `packages/client-lua/sikuli_go_client.lua`
 - Lua examples: `packages/client-lua/examples/`
 - Lua descriptor generator: `scripts/clients/generate-lua-descriptor.sh`
 
@@ -97,7 +97,7 @@ Status: ✅ Implemented (baseline wrapper and examples)
 - Generate Python stubs into `packages/client-python/generated/`.
 - Add wrapper in `packages/client-python/sikuligo/` for deadlines, metadata/auth, and error mapping.
 - Add runnable examples in `packages/client-python/examples/` (`find.py`, `ocr.py`, `input.py`, `app.py`).
-- Add CI smoke tests against local `cmd/sikuligrpc` (next step).
+- Add CI smoke tests against local `cmd/sikuli-go` (next step).
 
 ### Phase 3: Node.js client
 
@@ -106,7 +106,7 @@ Status: ✅ Implemented (baseline wrapper and examples)
 - Generate JS/TS stubs into `packages/client-node/generated/`.
 - Add Promise-based wrapper in `packages/client-node/src/`.
 - Add runnable examples in `packages/client-node/examples/` (`find.mjs`, `ocr.mjs`, `input.mjs`, `app.mjs`).
-- Add CI smoke tests against local `cmd/sikuligrpc` (next step).
+- Add CI smoke tests against local `cmd/sikuli-go` (next step).
 
 ### Phase 4: Lua client path
 

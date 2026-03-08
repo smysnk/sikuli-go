@@ -383,7 +383,7 @@ func TestFindIgnoresLegacyMatcherHeader(t *testing.T) {
 			Exact: boolPtr(true),
 		},
 	}
-	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs("x-sikuligo-engine", "not-a-valid-engine"))
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs("x-sikuli-go-engine", "not-a-valid-engine"))
 	res, err := srv.Find(ctx, req)
 	if err != nil {
 		t.Fatalf("find failed: %v", err)

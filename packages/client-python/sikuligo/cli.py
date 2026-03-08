@@ -105,7 +105,7 @@ def _run_init_py_examples(args: argparse.Namespace) -> int:
     if not args.skip_install:
         _install_requirements(project_dir, python_bin, requirements_path)
 
-    print(f"Initialized SikuliGO Python project in: {project_dir}")
+    print(f"Initialized sikuli-go Python project in: {project_dir}")
     print(f"Virtual environment: {project_dir / '.venv'}")
     print(f"Examples copied to: {project_dir / 'examples'}")
     return 0

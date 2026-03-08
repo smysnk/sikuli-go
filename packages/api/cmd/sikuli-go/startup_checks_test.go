@@ -59,7 +59,7 @@ func TestStartupStatePathUsesXDGConfigHome(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", tmp)
 	got := startupStatePath()
-	want := filepath.Join(tmp, "sikuligo", "startup-state.json")
+	want := filepath.Join(tmp, "sikuli-go", "startup-state.json")
 	if got != want {
 		t.Fatalf("startupStatePath=%q want=%q", got, want)
 	}

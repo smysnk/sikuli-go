@@ -24,12 +24,14 @@ native/
 .test-results/
 **/packages/bin*
 *.db
-/sikuligo
 /sikuli-go
+/sikuligo
+/sikuligrpc
 !packages/client-python/sikuligo/
 !packages/client-python/sikuligo/**
-/sikuligo-monitor
 /sikuli-go-monitor
+/sikuligo-monitor
+/sikuligrpc-monitor
 node_modules/
 **/node_modules/
 packages/editor/.next/
@@ -37,5 +39,4 @@ packages/dashboard-electron/dist/
 .yarn/install-state.gz
 yarn-error.log
 /benchmark-helper
-/sikuligrpc
 docs/bench

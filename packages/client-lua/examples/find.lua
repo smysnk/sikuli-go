@@ -5,7 +5,7 @@ end
 
 package.path = package.path .. ";" .. script_dir .. "../?.lua"
 
-local sikuligo = require("sikuligo_client")
+local sikuli_go = require("sikuli_go_client")
 
 local function gray_image(name, rows)
   local pix = {}
@@ -22,7 +22,7 @@ local function gray_image(name, rows)
   }
 end
 
-local client = sikuligo.new({
+local client = sikuli_go.new({
   proto_root = script_dir .. "../../proto",
   proto_file = "sikuli/v1/sikuli.proto",
   protoset = script_dir .. "../generated/sikuli.protoset"

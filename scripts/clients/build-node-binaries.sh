@@ -8,7 +8,7 @@ PACKAGES_DIR="$NODE_BIN_PACKAGES_DIR"
 NODE_CLIENT_PKG="$NODE_PACKAGE_JSON"
 GO_CACHE_DIR="${GOCACHE:-$ROOT_DIR/.test-results/go-build}"
 GO_MOD_CACHE_DIR="${GOMODCACHE:-$ROOT_DIR/.test-results/go-mod}"
-GO_BUILD_TAGS="${GO_BUILD_TAGS:-$SIKULIGO_GO_BUILD_TAGS}"
+GO_BUILD_TAGS="${GO_BUILD_TAGS:-$SIKULI_GO_BUILD_TAGS}"
 TARGETS=(
   "darwin arm64 bin-darwin-arm64"
   "darwin amd64 bin-darwin-x64"
@@ -129,7 +129,7 @@ ensure_pkg_scaffold() {
   cat >"$readme" <<EOF
 # @sikuligo/$pkg
 
-Platform binary package for SikuliGO ($goos/$goarch).
+Platform binary package for sikuli-go ($goos/$goarch).
 EOF
 
   cat >"$manifest" <<EOF
@@ -177,9 +177,9 @@ for target in "${TARGETS[@]}"; do
     export GOCACHE="$GO_CACHE_DIR"
     export GOMODCACHE="$GO_MOD_CACHE_DIR"
     GOOS="$goos" GOARCH="$goarch" \
-      go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$out" ./cmd/sikuligrpc
+      go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$out" ./cmd/sikuli-go
     GOOS="$goos" GOARCH="$goarch" \
-      go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$out_monitor" ./cmd/sikuligo-monitor
+      go build -tags "$GO_BUILD_TAGS" -trimpath -ldflags="-s -w" -o "$out_monitor" ./cmd/sikuli-go-monitor
   )
 
   if [[ "$goos" != "windows" ]]; then

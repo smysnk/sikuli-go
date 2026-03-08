@@ -4,7 +4,7 @@ set -euo pipefail
 THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${THIS_DIR}/paths.sh"
 
-TMP_ROOT="$(mktemp -d /tmp/sikuligo-local-verify.XXXXXX)"
+TMP_ROOT="$(mktemp -d /tmp/sikuli-go-local-verify.XXXXXX)"
 PROJECT_DIR="${TMP_ROOT}/project"
 LOG_FILE="${TMP_ROOT}/smoke.log"
 KEEP_TMP="${KEEP_TMP:-0}"
@@ -42,7 +42,7 @@ assert_dir() {
 step "1/8 Build local sikuli-go binary"
 (
   cd "${API_DIR}"
-  go build -tags "${GO_BUILD_TAGS}" -o "${API_DIR}/sikuli-go" ./cmd/sikuligrpc
+  go build -tags "${GO_BUILD_TAGS}" -o "${API_DIR}/sikuli-go" ./cmd/sikuli-go
 )
 assert_file "${API_DIR}/sikuli-go"
 
@@ -81,7 +81,7 @@ fi
 run_cli() {
   (
     cd "${PROJECT_DIR}"
-    SIKULIGO_BINARY_PATH="${API_DIR}/sikuli-go" "${CLI_RUNNER[@]}" "$@"
+    SIKULI_GO_BINARY_PATH="${API_DIR}/sikuli-go" "${CLI_RUNNER[@]}" "$@"
   )
 }
 
@@ -100,7 +100,7 @@ echo "${HELP_OUT}" | rg -q "init:py-examples" || fail "help output missing init:
 step "6/8 Verify init:js-examples output (.mjs only)"
 (
   cd "${PROJECT_DIR}"
-  printf '\n' | SIKULIGO_BINARY_PATH="${API_DIR}/sikuli-go" "${CLI_RUNNER[@]}" init:js-examples --skip-install >/dev/null
+  printf '\n' | SIKULI_GO_BINARY_PATH="${API_DIR}/sikuli-go" "${CLI_RUNNER[@]}" init:js-examples --skip-install >/dev/null
 )
 assert_dir "${PROJECT_DIR}/sikuli-go-demo/examples"
 assert_file "${PROJECT_DIR}/sikuli-go-demo/examples/click.mjs"
@@ -111,7 +111,7 @@ fi
 step "7/8 Verify init:py-examples output and requirements"
 (
   cd "${PROJECT_DIR}"
-  SIKULIGO_BINARY_PATH="${API_DIR}/sikuli-go" "${CLI_RUNNER[@]}" init:py-examples --dir py-demo --skip-install >/dev/null
+  SIKULI_GO_BINARY_PATH="${API_DIR}/sikuli-go" "${CLI_RUNNER[@]}" init:py-examples --dir py-demo --skip-install >/dev/null
 )
 assert_dir "${PROJECT_DIR}/py-demo/examples"
 assert_file "${PROJECT_DIR}/py-demo/examples/click.py"
@@ -123,7 +123,7 @@ if [[ "${VERIFY_PACKED_INSTALL}" == "1" ]]; then
   set +e
   (
     cd "${PROJECT_DIR}/sikuli-go-demo"
-    SIKULI_DEBUG=1 SIKULIGO_BINARY_PATH="${API_DIR}/sikuli-go" yarn -s node examples/click.mjs
+    SIKULI_DEBUG=1 SIKULI_GO_BINARY_PATH="${API_DIR}/sikuli-go" yarn -s node examples/click.mjs
   ) >"${LOG_FILE}" 2>&1
   SMOKE_RC=$?
   set -e
@@ -131,7 +131,7 @@ else
   set +e
   (
     cd "${PROJECT_DIR}"
-    SIKULI_DEBUG=1 SIKULIGO_BINARY_PATH="${API_DIR}/sikuli-go" CLIENT_NODE_DIR="${CLIENT_NODE_DIR}" node - <<'NODE'
+    SIKULI_DEBUG=1 SIKULI_GO_BINARY_PATH="${API_DIR}/sikuli-go" CLIENT_NODE_DIR="${CLIENT_NODE_DIR}" node - <<'NODE'
 const { Sikuli } = require(`${process.env.CLIENT_NODE_DIR}/dist/src/index.js`);
 async function main() {
   const client = await Sikuli.connect({ address: "127.0.0.1:50051", startupTimeoutMs: 50, timeoutMs: 200 });

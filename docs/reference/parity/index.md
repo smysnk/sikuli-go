@@ -1,6 +1,6 @@
 # Parity Reference
 
-Java/SikuliX parity documentation for SikuliGO.
+Java/SikuliX parity documentation for sikuli-go.
 
 - [Java to Go API Mapping](./java-to-go-mapping)
 - [Behavioral Differences](./behavioral-differences)

@@ -21,7 +21,7 @@ func screencaptureArgs(tmpPath string) []string {
 	args := []string{"-x", "-t", "png"}
 	display := strings.TrimSpace(os.Getenv("SIKULI_CAPTURE_DISPLAY"))
 	if display == "" {
-		display = strings.TrimSpace(os.Getenv("SIKULIGO_CAPTURE_DISPLAY"))
+		display = strings.TrimSpace(os.Getenv("SIKULI_GO_CAPTURE_DISPLAY"))
 	}
 	if display != "" {
 		args = append(args, "-D", display)
@@ -34,7 +34,7 @@ func captureScreenImage(ctx context.Context, name string) (*sikuli.Image, error)
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	tmp, err := os.CreateTemp("", "sikuligrpc-screen-*.png")
+	tmp, err := os.CreateTemp("", "sikuli-go-screen-*.png")
 	if err != nil {
 		return nil, err
 	}

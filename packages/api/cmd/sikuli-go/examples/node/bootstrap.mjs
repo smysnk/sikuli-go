@@ -28,12 +28,12 @@ export function ensureSikuliGoOnPath() {
   const binaryName = process.platform === "win32" ? "sikuli-go.exe" : "sikuli-go";
   const existing = resolveOnPath(binaryName);
   if (existing) {
-    process.env.SIKULIGO_BINARY_PATH = existing;
+    process.env.SIKULI_GO_BINARY_PATH = existing;
     return existing;
   }
 
   const sourceBinary = resolveSikuliBinary();
-  const installDir = path.resolve(process.cwd(), ".sikuligo", "bin");
+  const installDir = path.resolve(process.cwd(), ".sikuli-go", "bin");
   const targetBinary = path.join(installDir, binaryName);
   fs.mkdirSync(installDir, { recursive: true });
 
@@ -51,6 +51,6 @@ export function ensureSikuliGoOnPath() {
   }
 
   ensureLocalInstallDirOnPath(installDir);
-  process.env.SIKULIGO_BINARY_PATH = targetBinary;
+  process.env.SIKULI_GO_BINARY_PATH = targetBinary;
   return targetBinary;
 }
