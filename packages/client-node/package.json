@@ -119,6 +119,7 @@
     "build:binaries": "bash ../../scripts/clients/build-node-binaries.sh",
     "build": "bash ../../scripts/clients/generate-node-stubs.sh && tsc -p tsconfig.json",
     "prepack": "npm run clean && npm run build",
+    "test": "npm run build && node --test test/*.test.mjs",
     "doctor": "node dist/src/doctor.js",
     "examples:init": "node dist/src/init-examples.js",
     "example:workflow:auto": "node examples/workflow-auto-launch.mjs",

@@ -1,21 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { resolveSikuliBinary } from "@sikuligo/sikuli-go";
-
-function resolveOnPath(binaryName) {
-  const cmd = process.platform === "win32" ? "where" : "which";
-  const out = spawnSync(cmd, [binaryName], { encoding: "utf8" });
-  if (out.status !== 0) {
-    return "";
-  }
-  const first = String(out.stdout || "")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .find((line) => line.length > 0);
-  return first || "";
-}
 
 function ensureLocalInstallDirOnPath(installDir) {
   const current = process.env.PATH || "";
@@ -27,12 +13,6 @@ function ensureLocalInstallDirOnPath(installDir) {
 
 export function ensureSikuliGoOnPath() {
   const binaryName = process.platform === "win32" ? "sikuli-go.exe" : "sikuli-go";
-  const existing = resolveOnPath(binaryName);
-  if (existing) {
-    process.env.SIKULI_GO_BINARY_PATH = existing;
-    return existing;
-  }
-
   const sourceBinary = resolveSikuliBinary();
   const installDir = path.resolve(process.cwd(), ".sikuli-go", "bin");
   const targetBinary = path.join(installDir, binaryName);

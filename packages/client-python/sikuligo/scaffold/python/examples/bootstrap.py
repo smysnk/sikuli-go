@@ -9,11 +9,6 @@ from sikuligo.sikulix import _resolve_sikuli_binary
 
 
 def ensure_sikuli_go_on_path() -> str:
-    existing = shutil.which("sikuli-go") or shutil.which("sikuligo")
-    if existing:
-        os.environ["SIKULI_GO_BINARY_PATH"] = existing
-        return existing
-
     source = Path(_resolve_sikuli_binary(None))
     install_dir = Path.cwd() / ".sikuli-go" / "bin"
     install_dir.mkdir(parents=True, exist_ok=True)

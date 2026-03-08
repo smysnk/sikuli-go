@@ -25,6 +25,14 @@ export interface LaunchResult {
   spawnedServer: boolean;
 }
 
+export interface LaunchServerArgsInput {
+  address: string;
+  adminListen?: string;
+  authToken: string;
+  sqlitePath: string;
+  serverArgs?: string[];
+}
+
 const DEFAULT_STARTUP_TIMEOUT_MS = 10_000;
 const DEBUG_ENABLED = /^(1|true|yes|on)$/i.test(process.env.SIKULI_DEBUG ?? "");
 
@@ -299,6 +307,20 @@ async function findOpenPort(): Promise<number> {
   });
 }
 
+export function buildServerArgs(input: LaunchServerArgsInput): string[] {
+  return [
+    "-listen",
+    input.address,
+    `-admin-listen=${input.adminListen ?? ""}`,
+    "-auth-token",
+    input.authToken,
+    "-enable-reflection=false",
+    "-sqlite-path",
+    input.sqlitePath,
+    ...(input.serverArgs ?? [])
+  ];
+}
+
 function wireShutdown(child: ChildProcess): Array<() => void> {
   const onExit = () => {
     if (child.exitCode === null && !child.killed) {
@@ -425,18 +447,13 @@ export async function launchSikuli(opts: LaunchOptions = {}): Promise<LaunchResu
   const binaryPath = resolveSikuliBinary(opts.binaryPath);
   const token = authToken || randomBytes(24).toString("hex");
   const sqlitePath = opts.sqlitePath || process.env.SIKULI_GO_SQLITE_PATH || "sikuli-go.db";
-  const serverArgs = [
-    "-listen",
+  const serverArgs = buildServerArgs({
     address,
-    "-admin-listen",
-    opts.adminListen ?? "",
-    "-auth-token",
-    token,
-    "-enable-reflection=false",
-    "-sqlite-path",
+    adminListen: opts.adminListen,
+    authToken: token,
     sqlitePath,
-    ...(opts.serverArgs ?? [])
-  ];
+    serverArgs: opts.serverArgs
+  });
   infoLog("launcher.spawn.start", {
     binary: binaryPath,
     binary_source: binarySource(opts),
@@ -456,7 +473,9 @@ export async function launchSikuli(opts: LaunchOptions = {}): Promise<LaunchResu
     path_added: mergedPath.added.join(",")
   });
   debugLog("launcher.spawn.args", {
-    args: ["-listen", address, "-admin-listen", opts.adminListen ?? "", "-enable-reflection=false", "-sqlite-path", sqlitePath].join(" ")
+    args: serverArgs
+      .map((value, idx) => (idx > 0 && serverArgs[idx - 1] === "-auth-token" ? "<redacted>" : value))
+      .join(" ")
   });
 
   const child = spawn(binaryPath, serverArgs, {

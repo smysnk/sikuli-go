@@ -54,6 +54,48 @@ function isExecutable(candidatePath: string): boolean {
   }
 }
 
+function readFileHeader(candidatePath: string, length = 64): Buffer | undefined {
+  try {
+    const fd = fs.openSync(candidatePath, "r");
+    try {
+      const header = Buffer.alloc(length);
+      const bytesRead = fs.readSync(fd, header, 0, length, 0);
+      return header.subarray(0, bytesRead);
+    } finally {
+      fs.closeSync(fd);
+    }
+  } catch {
+    return undefined;
+  }
+}
+
+function isNativeRuntimeBinary(candidatePath: string): boolean {
+  const header = readFileHeader(candidatePath);
+  if (!header || header.length < 2) {
+    return false;
+  }
+  if (header[0] === 0x4d && header[1] === 0x5a) {
+    return true;
+  }
+  if (header.length >= 4) {
+    if (header[0] === 0x7f && header[1] === 0x45 && header[2] === 0x4c && header[3] === 0x46) {
+      return true;
+    }
+    const magics = [
+      [0xcf, 0xfa, 0xed, 0xfe],
+      [0xfe, 0xed, 0xfa, 0xcf],
+      [0xce, 0xfa, 0xed, 0xfe],
+      [0xfe, 0xed, 0xfa, 0xce],
+      [0xca, 0xfe, 0xba, 0xbe],
+      [0xbe, 0xba, 0xfe, 0xca]
+    ];
+    if (magics.some((magic) => magic.every((value, idx) => header[idx] === value))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function candidateBinaryPaths(rootDir: string): string[] {
   const names = [DEFAULT_BINARY_NAME, ...LEGACY_BINARY_NAMES];
   return [
@@ -228,14 +270,16 @@ function resolveFromPath(): string | undefined {
   if (result.status !== 0) {
     return undefined;
   }
-  const first = result.stdout
+  const candidates = result.stdout
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .find((line) => line.length > 0);
-  if (!first) {
-    return undefined;
+    .filter((line) => line.length > 0);
+  for (const candidate of candidates) {
+    if (isExecutable(candidate) && isNativeRuntimeBinary(candidate)) {
+      return candidate;
+    }
   }
-  return isExecutable(first) ? first : undefined;
+  return undefined;
 }
 
 function resolveLocalRepoFallback(): string | undefined {
@@ -265,6 +309,11 @@ export function resolveSikuliBinary(explicitPath?: string): string {
   if (manual) {
     if (!isExecutable(manual)) {
       throw errorWithResolutionHelp(`Configured binary path is not executable: ${manual}`);
+    }
+    if (!isNativeRuntimeBinary(manual)) {
+      throw errorWithResolutionHelp(
+        `Configured binary path does not point to a native sikuli-go runtime binary: ${manual}`
+      );
     }
     return materializeSpawnableBinary(manual);
   }
