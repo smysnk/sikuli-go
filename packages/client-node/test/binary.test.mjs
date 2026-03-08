@@ -41,3 +41,24 @@ test("resolveSikuliBinary accepts explicit native-looking runtime binaries", () 
     assert.equal(resolveSikuliBinary(binary), binary);
   });
 });
+
+test("resolveSikuliBinary ignores non-native env wrapper paths and falls back", () => {
+  withTempDir((dir) => {
+    const prevEnv = process.env.SIKULI_GO_BINARY_PATH;
+    try {
+      const wrapper = path.join(dir, "sikuli-go-wrapper");
+      writeExecutable(wrapper, "#!/usr/bin/env node\nconsole.log('wrapper');\n");
+      process.env.SIKULI_GO_BINARY_PATH = wrapper;
+
+      const resolved = resolveSikuliBinary();
+      assert.notEqual(resolved, wrapper);
+      assert.match(path.basename(resolved), /^sikuli-go(?:\.exe)?$/);
+    } finally {
+      if (prevEnv === undefined) {
+        delete process.env.SIKULI_GO_BINARY_PATH;
+      } else {
+        process.env.SIKULI_GO_BINARY_PATH = prevEnv;
+      }
+    }
+  });
+});

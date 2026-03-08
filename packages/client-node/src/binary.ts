@@ -305,7 +305,7 @@ function errorWithResolutionHelp(detail: string): Error {
 }
 
 export function resolveSikuliBinary(explicitPath?: string): string {
-  const manual = explicitPath || process.env.SIKULI_GO_BINARY_PATH || "";
+  const manual = explicitPath || "";
   if (manual) {
     if (!isExecutable(manual)) {
       throw errorWithResolutionHelp(`Configured binary path is not executable: ${manual}`);
@@ -316,6 +316,13 @@ export function resolveSikuliBinary(explicitPath?: string): string {
       );
     }
     return materializeSpawnableBinary(manual);
+  }
+
+  const envBinary = process.env.SIKULI_GO_BINARY_PATH || "";
+  if (envBinary) {
+    if (isExecutable(envBinary) && isNativeRuntimeBinary(envBinary)) {
+      return materializeSpawnableBinary(envBinary);
+    }
   }
 
   const workspacePackagedBinary = resolveWorkspacePackagedBinary();
