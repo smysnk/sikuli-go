@@ -1,4 +1,10 @@
-# FindOnScreen Scenario Schema (v1)
+---
+layout: guide
+title: FindOnScreen Scenario Schema
+nav_key: benchmarks
+kicker: Benchmarks
+lead: Manifest structure, region-selection workflow, and validation inputs behind the benchmark scenario corpus.
+---
 
 This schema defines a concrete manifest for generating benchmark scenarios across all scenario kinds:
 
@@ -15,16 +21,16 @@ This schema defines a concrete manifest for generating benchmark scenarios acros
 
 ## Files
 
-- Schema: `/Users/josh/play/SikuliX1/docs/bench/find-on-screen-scenario.schema.json`
-- Example manifest: `/Users/josh/play/SikuliX1/docs/bench/find-on-screen-scenarios.example.json`
-- Region spec: `/Users/josh/play/SikuliX1/packages/api/internal/grpcv1/testdata/find-bench-assets/regions.json`
+- Schema: [find-on-screen-scenario.schema.json]({{ '/bench/find-on-screen-scenario.schema.json' | relative_url }})
+- Example manifest: [find-on-screen-scenarios.example.json]({{ '/bench/find-on-screen-scenarios.example.json' | relative_url }})
+- Region spec: `packages/api/internal/grpcv1/testdata/find-bench-assets/regions.json`
 
 ## Region Selection Workflow
 
 Use the benchmark helper to define per-scenario image targets in real time:
 
 ```bash
-cd /Users/josh/play/SikuliX1/packages/api
+cd packages/api
 go run ./cmd/benchmark-helper -listen :8091
 ```
 
@@ -45,12 +51,12 @@ Benchmarks consume this file automatically (or override path with `FIND_BENCH_RE
 To regenerate scenario-specific image assets used by non-photo scenarios:
 
 ```bash
-/Users/josh/play/SikuliX1/scripts/clients/generate-bench-scenario-assets.py
+./scripts/clients/generate-bench-scenario-assets.py
 ```
 
 Output folder:
 
-- `/Users/josh/play/SikuliX1/packages/api/internal/grpcv1/testdata/find-bench-assets/scenario`
+- `packages/api/internal/grpcv1/testdata/find-bench-assets/scenario`
 
 ## Core sections
 
@@ -66,7 +72,7 @@ Output folder:
 
 This manifest maps directly to existing benchmark concepts in:
 
-- `/Users/josh/play/SikuliX1/packages/api/internal/grpcv1/find_on_screen_benchmark_test.go`
+- `packages/api/internal/grpcv1/find_on_screen_benchmark_test.go`
 
 Field mapping (current -> schema):
 
@@ -84,17 +90,17 @@ Field mapping (current -> schema):
 Quick local validation:
 
 ```bash
-jq empty /Users/josh/play/SikuliX1/docs/bench/find-on-screen-scenario.schema.json
-jq empty /Users/josh/play/SikuliX1/docs/bench/find-on-screen-scenarios.example.json
+jq empty docs/bench/find-on-screen-scenario.schema.json
+jq empty docs/bench/find-on-screen-scenarios.example.json
 ```
 
 At runtime, benchmark loading now performs strict JSON Schema validation before materializing scenarios:
 
 - manifest path env: `FIND_BENCH_SCENARIO_MANIFEST`
 - optional schema override env: `FIND_BENCH_SCENARIO_SCHEMA`
-  - default schema path: `/Users/josh/play/SikuliX1/docs/bench/find-on-screen-scenario.schema.json`
+  - default schema path: `docs/bench/find-on-screen-scenario.schema.json`
 - optional region spec env: `FIND_BENCH_REGION_SPEC`
-  - default region spec path: `/Users/josh/play/SikuliX1/packages/api/internal/grpcv1/testdata/find-bench-assets/regions.json`
+  - default region spec path: `packages/api/internal/grpcv1/testdata/find-bench-assets/regions.json`
 
 ## Next wiring slice
 

@@ -1,7 +1,13 @@
-# FindOnScreen Benchmark Scenario Intent
+---
+layout: guide
+title: FindOnScreen Scenario Intent
+nav_key: benchmarks
+kicker: Benchmarks
+lead: What each benchmark scenario is intended to validate, which failure modes it stresses, and what healthy matcher behavior should look like.
+---
 
 This document explains what each benchmark scenario is intended to validate.
-Source manifest: `/Users/josh/play/SikuliX1/docs/bench/find-on-screen-scenarios.example.json`.
+Source manifest: [find-on-screen-scenarios.example.json]({{ '/bench/find-on-screen-scenarios.example.json' | relative_url }}).
 
 ## How to read this
 
@@ -74,7 +80,7 @@ Source manifest: `/Users/josh/play/SikuliX1/docs/bench/find-on-screen-scenarios.
 ## Default Fallback Pack (when no manifest is provided)
 
 Fallback scenarios are generated in `resolutionScenarioPack(...)` inside:
-`/Users/josh/play/SikuliX1/packages/api/internal/grpcv1/find_on_screen_benchmark_test.go`.
+`packages/api/internal/grpcv1/find_on_screen_benchmark_test.go`.
 
 Per resolution, six scenarios are generated:
 
@@ -86,4 +92,3 @@ Per resolution, six scenarios are generated:
 - `mix_rotate_<deg>_<res>`: Rotation robustness with partial-acceptance behavior.
 
 These fallback cases are intentionally simpler than manifest-driven scenarios and mainly serve as a deterministic baseline set.
-

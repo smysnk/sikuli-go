@@ -1,6 +1,8 @@
 # Build From Source
 
-This is the single source of truth for building sikuli-go from source.
+> Start with [Downloads]({{ '/downloads/' | relative_url }}), [Getting Started: Installation]({{ '/getting-started/installation' | relative_url }}), [Golang API: Installation]({{ '/golang-api/installation' | relative_url }}), or [Contribution: Development Setup]({{ '/contribution/development-setup' | relative_url }}) if you want the task-first entry points. This page remains the deeper build and publish reference.
+
+This is the current build reference for building sikuli-go from source.
 
 ## Prerequisites
 
@@ -13,7 +15,7 @@ This is the single source of truth for building sikuli-go from source.
 ## Install Workspace Dependencies
 
 ```bash
-cd /path/to/SikuliX1
+cd /path/to/sikuli-go
 yarn install
 ```
 
@@ -168,6 +170,10 @@ Output artifacts (default):
 - `.test-results/bench/find-on-screen-e2e.txt` (raw `go test` benchmark output)
 - `.test-results/bench/find-on-screen-e2e.json` (machine-readable report)
 - `.test-results/bench/find-on-screen-e2e.md` (human-readable summary)
+- `docs/bench/index.md` (guide-style benchmark overview at `/bench/`)
+- `docs/bench/reports/index.md` (guide-style reports hub at `/bench/reports/`)
+- `docs/bench/reports/find-on-screen-e2e.md` (guide-style detailed benchmark report)
+- `docs/bench/reports/find-on-screen-scenario-strategy.md` (guide-style scenario strategy report)
 - `.test-results/bench/find-on-screen-performance.svg` (engine-level latency chart)
 - `.test-results/bench/find-on-screen-accuracy.svg` (engine-level success vs false-positive chart)
 - `.test-results/bench/find-on-screen-resolution-time.svg` (resolution-grouped latency chart by engine)
@@ -207,6 +213,8 @@ README patch controls:
 - `FIND_BENCH_README_PATHS` comma-separated paths (absolute or repo-root relative)
 - `FIND_BENCH_README_SECTION_TITLE` section heading text
 - `FIND_BENCH_README_INLINE_IMAGES` number of scenario images embedded inline per README
+- `FIND_BENCH_README_LINK_MODE` link style for README artifacts; default `relative` uses repo-local `docs/bench/...` paths, `pages` emits published Pages URLs
+- `FIND_BENCH_README_BASE_URL` Pages base URL used when `FIND_BENCH_README_LINK_MODE=pages`
 
 ## Optional OCR-Tagged Tests
 

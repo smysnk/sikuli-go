@@ -48,10 +48,10 @@ VISUAL_DIR="${FIND_BENCH_VISUAL_DIR:-${REPORT_DIR}/visuals}"
 VISUAL_MAX_ATTEMPTS="${FIND_BENCH_VISUAL_MAX_ATTEMPTS:-2}"
 VISUAL_TIMEOUT="${FIND_BENCH_VISUAL_TIMEOUT:-5s}"
 PATCH_READMES="1"
-README_PATHS="${FIND_BENCH_README_PATHS:-${ROOT_DIR}/README.md,${ROOT_DIR}/packages/client-node/README.md,${ROOT_DIR}/packages/client-python/README.md}"
+README_PATHS="${FIND_BENCH_README_PATHS:-${ROOT_DIR}/README.md}"
 README_SECTION_TITLE="${FIND_BENCH_README_SECTION_TITLE:-FindOnScreen Benchmark Test Results}"
 README_INLINE_IMAGES="${FIND_BENCH_README_INLINE_IMAGES:-6}"
-README_LINK_MODE="${FIND_BENCH_README_LINK_MODE:-pages}"
+README_LINK_MODE="${FIND_BENCH_README_LINK_MODE:-relative}"
 README_BASE_URL="${FIND_BENCH_README_BASE_URL:-https://smysnk.github.io/sikuli-go}"
 CONSOLE_MODE="${FIND_BENCH_CONSOLE_MODE:-pretty}"
 CONSOLE_HEARTBEAT_SEC="${FIND_BENCH_CONSOLE_HEARTBEAT_SEC:-20}"
@@ -265,7 +265,7 @@ patch_readmes = os.environ.get("PATCH_READMES", "")
 readme_paths = os.environ.get("README_PATHS", "")
 readme_section_title = os.environ.get("README_SECTION_TITLE", "FindOnScreen Benchmark Test Results")
 readme_inline_images = int(os.environ.get("README_INLINE_IMAGES", "6"))
-readme_link_mode = os.environ.get("README_LINK_MODE", "pages").strip().lower()
+readme_link_mode = os.environ.get("README_LINK_MODE", "relative").strip().lower()
 readme_base_url = os.environ.get("README_BASE_URL", "https://smysnk.github.io/sikuli-go").strip().rstrip("/")
 root_dir = Path(os.environ.get("PROJECT_ROOT", "")).resolve()
 report_dir = Path(os.environ.get("REPORT_DIR", "")).resolve()
@@ -1002,7 +1002,7 @@ lines.append(f"- Ultra Resolution Scenarios: `{ultra_res}`")
 lines.append(f"- Platform: `{meta['goos']}/{meta['goarch']}`")
 lines.append(f"- CPU: `{meta['cpu']}`")
 lines.append(f"- Visuals Enabled: `{visual_enable}`")
-lines.append(f"- Visual Output: `{visual_dir}`")
+lines.append(f"- Visual Output: `{display_path(Path(visual_dir))}`")
 lines.append(f"- Visual Max Attempts: `{visual_max_attempts}`")
 lines.append(f"- Visual Timeout: `{visual_timeout}`")
 lines.append("")
@@ -1121,8 +1121,8 @@ if metrics_chart_rows:
     )
     write_svg(perf_svg_path, perf_svg)
     write_svg(accuracy_svg_path, acc_svg)
-    rel_perf_md = os.path.relpath(perf_svg_path, md_path.parent).replace(os.sep, "/")
-    rel_acc_md = os.path.relpath(accuracy_svg_path, md_path.parent).replace(os.sep, "/")
+    rel_perf_md = to_doc_markdown_link(published_path(md_path), published_path(perf_svg_path))
+    rel_acc_md = to_doc_markdown_link(published_path(md_path), published_path(accuracy_svg_path))
 
     lines.append("")
     lines.append("## Static Graphs (SVG)")
@@ -1196,10 +1196,10 @@ if resolution_rows and engine_names:
         ),
     )
 
-    rel_time_md = os.path.relpath(resolution_time_svg_path, md_path.parent).replace(os.sep, "/")
-    rel_match_md = os.path.relpath(resolution_matches_svg_path, md_path.parent).replace(os.sep, "/")
-    rel_miss_md = os.path.relpath(resolution_misses_svg_path, md_path.parent).replace(os.sep, "/")
-    rel_fp_md = os.path.relpath(resolution_false_pos_svg_path, md_path.parent).replace(os.sep, "/")
+    rel_time_md = to_doc_markdown_link(published_path(md_path), published_path(resolution_time_svg_path))
+    rel_match_md = to_doc_markdown_link(published_path(md_path), published_path(resolution_matches_svg_path))
+    rel_miss_md = to_doc_markdown_link(published_path(md_path), published_path(resolution_misses_svg_path))
+    rel_fp_md = to_doc_markdown_link(published_path(md_path), published_path(resolution_false_pos_svg_path))
 
     lines.append("")
     lines.append("## Resolution Group Graphs (SVG)")
@@ -1251,8 +1251,8 @@ if kind_rows and engine_names:
         ),
     )
 
-    rel_kind_time_md = os.path.relpath(kind_time_svg_path, md_path.parent).replace(os.sep, "/")
-    rel_kind_success_md = os.path.relpath(kind_success_svg_path, md_path.parent).replace(os.sep, "/")
+    rel_kind_time_md = to_doc_markdown_link(published_path(md_path), published_path(kind_time_svg_path))
+    rel_kind_success_md = to_doc_markdown_link(published_path(md_path), published_path(kind_success_svg_path))
 
     lines.append("")
     lines.append("## Scenario Kind Graphs (SVG)")
@@ -1367,6 +1367,25 @@ def to_rel_link(base_dir: Path, target: Path) -> str:
     except ValueError:
         rel = str(target)
     return rel.replace(os.sep, "/")
+
+def to_docs_site_link(target: Path) -> str | None:
+    try:
+        rel = target.resolve().relative_to(docs_root)
+    except Exception:
+        return None
+    return f"/{rel.as_posix()}"
+
+def to_doc_markdown_link(base_doc: Path, target: Path) -> str:
+    docs_link = to_docs_site_link(target)
+    if docs_link is not None:
+        return docs_link
+    return to_rel_link(base_doc.parent, target)
+
+def display_path(target: Path) -> str:
+    try:
+        return target.resolve().relative_to(root_dir).as_posix()
+    except Exception:
+        return str(target)
 
 def to_readme_link(base_dir: Path, target: Path) -> str:
     if readme_link_mode == "pages" and readme_base_url:
@@ -1762,9 +1781,13 @@ if env_true(patch_readmes):
             section.append("")
             section.append("### Artifact Directories")
             section.append("")
-            section.append(f"- [Visual Root]({to_readme_link(readme.parent, root_visual / 'index.html')})")
-            section.append(f"- [Scenario Summaries]({to_readme_link(readme.parent, root_visual / 'summaries' / 'index.html')})")
-            section.append(f"- [Attempt Images]({to_readme_link(readme.parent, root_visual / 'attempts' / 'index.html')})")
+            if readme_link_mode == "pages":
+                section.append(f"- [Visual Root]({to_readme_link(readme.parent, root_visual / 'index.html')})")
+                section.append(f"- [Scenario Summaries]({to_readme_link(readme.parent, root_visual / 'summaries' / 'index.html')})")
+                section.append(f"- [Attempt Images]({to_readme_link(readme.parent, root_visual / 'attempts' / 'index.html')})")
+            else:
+                section.append(f"- [Visual Root]({to_readme_link(readme.parent, root_visual)})")
+                section.append(f"- [Scenario Summaries]({to_readme_link(readme.parent, root_visual / 'summaries')})")
 
         if scenario_summaries:
             section.append("")
@@ -1809,3 +1832,20 @@ FIND_BENCH_STRATEGY_JSON_OUT="${STRATEGY_JSON_OUT}" \
 FIND_BENCH_STRATEGY_MD_OUT="${STRATEGY_MD_OUT}" \
 FIND_BENCH_STRATEGY_BENCH_JSON="${JSON_OUT}" \
 "${THIS_DIR}/report-find-on-screen-scenario-strategy.sh"
+
+python3 "${ROOT_DIR}/scripts/generate-benchmark-docs.py" \
+  --project-root "${ROOT_DIR}" \
+  --report-dir "${REPORT_DIR}" \
+  --published-report-dir "${DOCS_REPORT_DIR}" \
+  --overview-output "${ROOT_DIR}/docs/bench/index.md"
+
+if [[ "${DOCS_PUBLISH}" =~ ^(1|true|yes|on)$ ]]; then
+  docs_publish_dir="${DOCS_REPORT_DIR}"
+  if [[ -n "${docs_publish_dir}" ]]; then
+    if [[ "${docs_publish_dir}" != "${REPORT_DIR}" ]]; then
+      mkdir -p "${docs_publish_dir}"
+      rsync -a --delete --exclude '.DS_Store' --exclude '.tmp*' "${REPORT_DIR}/" "${docs_publish_dir}/"
+      echo "[find-bench] synced styled docs artifacts to ${docs_publish_dir}"
+    fi
+  fi
+fi
