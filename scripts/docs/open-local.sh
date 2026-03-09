@@ -12,5 +12,12 @@ echo "[docs-open] generating API docs"
 echo "[docs-open] generating parity docs"
 ./scripts/generate-parity-docs.sh
 
+echo "[docs-open] generating benchmark docs"
+python3 ./scripts/generate-benchmark-docs.py \
+  --project-root "${ROOT_DIR}" \
+  --report-dir "${ROOT_DIR}/.test-results/bench" \
+  --published-report-dir "${ROOT_DIR}/docs/bench/reports" \
+  --overview-output "${ROOT_DIR}/docs/bench/index.md"
+
 echo "[docs-open] starting local docs preview"
 ./scripts/docs/publish-pages-local.sh

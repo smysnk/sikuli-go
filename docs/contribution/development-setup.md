@@ -83,6 +83,7 @@ make docs
 ```
 
 The local preview server serves staged markdown through the guide shell when Jekyll is not available, so the browser view stays close to the published Pages layout.
+When `.test-results/bench` exists, `make docs` also regenerates the benchmark guide pages under `/bench/` and `/bench/reports/` before serving them.
 
 For a non-interactive local check without opening a browser or keeping the server running:
 

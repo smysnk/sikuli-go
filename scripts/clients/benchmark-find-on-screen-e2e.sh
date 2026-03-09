@@ -1828,3 +1828,20 @@ FIND_BENCH_STRATEGY_JSON_OUT="${STRATEGY_JSON_OUT}" \
 FIND_BENCH_STRATEGY_MD_OUT="${STRATEGY_MD_OUT}" \
 FIND_BENCH_STRATEGY_BENCH_JSON="${JSON_OUT}" \
 "${THIS_DIR}/report-find-on-screen-scenario-strategy.sh"
+
+python3 "${ROOT_DIR}/scripts/generate-benchmark-docs.py" \
+  --project-root "${ROOT_DIR}" \
+  --report-dir "${REPORT_DIR}" \
+  --published-report-dir "${DOCS_REPORT_DIR}" \
+  --overview-output "${ROOT_DIR}/docs/bench/index.md"
+
+if [[ "${DOCS_PUBLISH}" =~ ^(1|true|yes|on)$ ]]; then
+  docs_publish_dir="${DOCS_REPORT_DIR}"
+  if [[ -n "${docs_publish_dir}" ]]; then
+    if [[ "${docs_publish_dir}" != "${REPORT_DIR}" ]]; then
+      mkdir -p "${docs_publish_dir}"
+      rsync -a --delete --exclude '.DS_Store' --exclude '.tmp*' "${REPORT_DIR}/" "${docs_publish_dir}/"
+      echo "[find-bench] synced styled docs artifacts to ${docs_publish_dir}"
+    fi
+  fi
+fi
