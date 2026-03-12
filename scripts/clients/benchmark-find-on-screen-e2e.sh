@@ -51,7 +51,7 @@ PATCH_READMES="1"
 README_PATHS="${FIND_BENCH_README_PATHS:-${ROOT_DIR}/README.md,${ROOT_DIR}/packages/client-node/README.md,${ROOT_DIR}/packages/client-python/README.md}"
 README_SECTION_TITLE="${FIND_BENCH_README_SECTION_TITLE:-FindOnScreen Benchmark Test Results}"
 README_INLINE_IMAGES="${FIND_BENCH_README_INLINE_IMAGES:-6}"
-README_LINK_MODE="${FIND_BENCH_README_LINK_MODE:-relative}"
+README_LINK_MODE="${FIND_BENCH_README_LINK_MODE:-auto}"
 README_BASE_URL="${FIND_BENCH_README_BASE_URL:-https://smysnk.github.io/sikuli-go}"
 CONSOLE_MODE="${FIND_BENCH_CONSOLE_MODE:-pretty}"
 CONSOLE_HEARTBEAT_SEC="${FIND_BENCH_CONSOLE_HEARTBEAT_SEC:-20}"
@@ -265,7 +265,7 @@ patch_readmes = os.environ.get("PATCH_READMES", "")
 readme_paths = os.environ.get("README_PATHS", "")
 readme_section_title = os.environ.get("README_SECTION_TITLE", "FindOnScreen Benchmark Test Results")
 readme_inline_images = int(os.environ.get("README_INLINE_IMAGES", "6"))
-readme_link_mode = os.environ.get("README_LINK_MODE", "relative").strip().lower()
+readme_link_mode = os.environ.get("README_LINK_MODE", "auto").strip().lower()
 readme_base_url = os.environ.get("README_BASE_URL", "https://smysnk.github.io/sikuli-go").strip().rstrip("/")
 root_dir = Path(os.environ.get("PROJECT_ROOT", "")).resolve()
 report_dir = Path(os.environ.get("REPORT_DIR", "")).resolve()
@@ -1375,6 +1375,24 @@ def to_docs_site_link(target: Path) -> str | None:
         return None
     return f"/{rel.as_posix()}"
 
+def to_docs_publish_link(target: Path) -> str | None:
+    if not readme_base_url:
+        return None
+    try:
+        rel = target.resolve().relative_to(docs_root)
+    except Exception:
+        return None
+
+    if rel.name in {"index.md", "index.html"}:
+        rel = rel.parent
+    elif rel.suffix == ".md":
+        rel = rel.with_suffix("")
+
+    path = rel.as_posix().strip("/")
+    if not path:
+        return readme_base_url
+    return f"{readme_base_url}/{path}"
+
 def to_doc_markdown_link(base_doc: Path, target: Path) -> str:
     docs_link = to_docs_site_link(target)
     if docs_link is not None:
@@ -1388,12 +1406,13 @@ def display_path(target: Path) -> str:
         return str(target)
 
 def to_readme_link(base_dir: Path, target: Path) -> str:
-    if readme_link_mode == "pages" and readme_base_url:
-        try:
-            rel = target.resolve().relative_to(docs_root)
-            return f"{readme_base_url}/{rel.as_posix()}"
-        except Exception:
-            pass
+    effective_mode = readme_link_mode
+    if effective_mode == "auto":
+        effective_mode = "relative" if base_dir.resolve() == root_dir else "pages"
+    if effective_mode == "pages":
+        publish_link = to_docs_publish_link(target)
+        if publish_link is not None:
+            return publish_link
     return to_rel_link(base_dir, target)
 
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".bmp", ".avif"}
