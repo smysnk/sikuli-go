@@ -979,6 +979,78 @@ report = {
 }
 json_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
+def display_path(target: Path) -> str:
+    try:
+        return target.resolve().relative_to(root_dir).as_posix()
+    except Exception:
+        return str(target)
+
+docs_report_dir: Path | None = None
+published_report_dir = report_dir
+if docs_publish and docs_report_dir_raw:
+    docs_report_dir = Path(docs_report_dir_raw)
+    if not docs_report_dir.is_absolute():
+        docs_report_dir = (root_dir / docs_report_dir).resolve()
+    published_report_dir = docs_report_dir
+
+def env_true(raw: str) -> bool:
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+def published_path(path: Path) -> Path:
+    try:
+        rel = path.resolve().relative_to(report_dir)
+    except Exception:
+        return path
+    return published_report_dir / rel
+
+def to_rel_link(base_dir: Path, target: Path) -> str:
+    try:
+        rel = os.path.relpath(target, base_dir)
+    except ValueError:
+        rel = str(target)
+    return rel.replace(os.sep, "/")
+
+def to_docs_site_link(target: Path) -> str | None:
+    try:
+        rel = target.resolve().relative_to(docs_root)
+    except Exception:
+        return None
+    return f"/{rel.as_posix()}"
+
+def to_docs_publish_link(target: Path) -> str | None:
+    if not readme_base_url:
+        return None
+    try:
+        rel = target.resolve().relative_to(docs_root)
+    except Exception:
+        return None
+
+    if rel.name in {"index.md", "index.html"}:
+        rel = rel.parent
+    elif rel.suffix == ".md":
+        rel = rel.with_suffix("")
+
+    path = rel.as_posix().strip("/")
+    if not path:
+        return readme_base_url
+    return f"{readme_base_url}/{path}"
+
+def to_doc_markdown_link(base_doc: Path, target: Path) -> str:
+    docs_link = to_docs_site_link(target)
+    if docs_link is not None:
+        return docs_link
+    return to_rel_link(base_doc.parent, target)
+
+def to_readme_link(base_dir: Path, target: Path) -> str:
+    effective_mode = readme_link_mode
+    if effective_mode == "auto":
+        effective_mode = "relative" if base_dir.resolve() == root_dir else "pages"
+    if effective_mode == "pages":
+        publish_link = to_docs_publish_link(target)
+        if publish_link is not None:
+            return publish_link
+    return to_rel_link(base_dir, target)
+
 lines: list[str] = []
 lines.append("# FindOnScreen Benchmark Report")
 lines.append("")
@@ -1338,82 +1410,13 @@ for engine in sorted(engines.keys()):
 
 md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-def env_true(raw: str) -> bool:
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-published_report_dir = report_dir
-if docs_publish and docs_report_dir_raw and report_dir.exists():
-    docs_report_dir = Path(docs_report_dir_raw)
-    if not docs_report_dir.is_absolute():
-        docs_report_dir = (root_dir / docs_report_dir).resolve()
+if docs_publish and docs_report_dir is not None and report_dir.exists():
     if docs_report_dir != report_dir:
         if docs_report_dir.exists():
             shutil.rmtree(docs_report_dir)
         docs_report_dir.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(report_dir, docs_report_dir)
-    published_report_dir = docs_report_dir
     print(f"[find-bench] published docs report dir: {published_report_dir}")
-
-def published_path(path: Path) -> Path:
-    try:
-        rel = path.resolve().relative_to(report_dir)
-    except Exception:
-        return path
-    return published_report_dir / rel
-
-def to_rel_link(base_dir: Path, target: Path) -> str:
-    try:
-        rel = os.path.relpath(target, base_dir)
-    except ValueError:
-        rel = str(target)
-    return rel.replace(os.sep, "/")
-
-def to_docs_site_link(target: Path) -> str | None:
-    try:
-        rel = target.resolve().relative_to(docs_root)
-    except Exception:
-        return None
-    return f"/{rel.as_posix()}"
-
-def to_docs_publish_link(target: Path) -> str | None:
-    if not readme_base_url:
-        return None
-    try:
-        rel = target.resolve().relative_to(docs_root)
-    except Exception:
-        return None
-
-    if rel.name in {"index.md", "index.html"}:
-        rel = rel.parent
-    elif rel.suffix == ".md":
-        rel = rel.with_suffix("")
-
-    path = rel.as_posix().strip("/")
-    if not path:
-        return readme_base_url
-    return f"{readme_base_url}/{path}"
-
-def to_doc_markdown_link(base_doc: Path, target: Path) -> str:
-    docs_link = to_docs_site_link(target)
-    if docs_link is not None:
-        return docs_link
-    return to_rel_link(base_doc.parent, target)
-
-def display_path(target: Path) -> str:
-    try:
-        return target.resolve().relative_to(root_dir).as_posix()
-    except Exception:
-        return str(target)
-
-def to_readme_link(base_dir: Path, target: Path) -> str:
-    effective_mode = readme_link_mode
-    if effective_mode == "auto":
-        effective_mode = "relative" if base_dir.resolve() == root_dir else "pages"
-    if effective_mode == "pages":
-        publish_link = to_docs_publish_link(target)
-        if publish_link is not None:
-            return publish_link
-    return to_rel_link(base_dir, target)
 
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".bmp", ".avif"}
 
