@@ -11,8 +11,12 @@ async function main() {
   const endpoint = process.env.TEST_STATION_INGEST_ENDPOINT || "https://test-station.smysnk.com/api/ingest";
   const projectKey = process.env.TEST_STATION_INGEST_PROJECT_KEY || "sikuli-go";
   const sharedKey = process.env.TEST_STATION_INGEST_SHARED_KEY || "";
+  const requireSharedKey = isTruthy(process.env.TEST_STATION_INGEST_REQUIRE_SHARED_KEY || "");
 
   if (!sharedKey.trim()) {
+    if (requireSharedKey) {
+      throw new Error("TEST_STATION_INGEST_SHARED_KEY is required for this run but is not configured.");
+    }
     process.stdout.write("Skipping test-station ingest: no shared key provided.\n");
     return;
   }
@@ -40,6 +44,13 @@ async function main() {
   if (response?.runId) {
     process.stdout.write(`runId=${response.runId}\n`);
   }
+}
+
+function isTruthy(value) {
+  return String(value || "").trim().toLowerCase() === "1"
+    || String(value || "").trim().toLowerCase() === "true"
+    || String(value || "").trim().toLowerCase() === "yes"
+    || String(value || "").trim().toLowerCase() === "on";
 }
 
 main().catch((error) => {

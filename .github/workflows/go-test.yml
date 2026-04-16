@@ -167,12 +167,26 @@ jobs:
           console.log(`- Line coverage: ${Number.isFinite(coveragePct) ? `${coveragePct}%` : "n/a"}`);
           EOF
 
+      - name: Validate test-station ingest config
+        if: always() && hashFiles('.test-results/test-station/report.json') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        env:
+          TEST_STATION_INGEST_ENDPOINT: https://test-station.smysnk.com/api/ingest
+          TEST_STATION_INGEST_PROJECT_KEY: sikuli-go
+          TEST_STATION_INGEST_SHARED_KEY: ${{ secrets.TEST_STATION_INGEST_SHARED_KEY }}
+        run: |
+          if [ -z "${TEST_STATION_INGEST_SHARED_KEY}" ]; then
+            echo "TEST_STATION_INGEST_SHARED_KEY is not configured for this repository." >&2
+            exit 1
+          fi
+          echo "test-station ingest configured for ${TEST_STATION_INGEST_PROJECT_KEY} -> ${TEST_STATION_INGEST_ENDPOINT}"
+
       - name: Publish test-station ingest
         if: always() && hashFiles('.test-results/test-station/report.json') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
         env:
           TEST_STATION_INGEST_ENDPOINT: https://test-station.smysnk.com/api/ingest
           TEST_STATION_INGEST_PROJECT_KEY: sikuli-go
           TEST_STATION_INGEST_SHARED_KEY: ${{ secrets.TEST_STATION_INGEST_SHARED_KEY }}
+          TEST_STATION_INGEST_REQUIRE_SHARED_KEY: "1"
         run: |
           completed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           export TEST_STATION_BUILD_COMPLETED_AT="$completed_at"
