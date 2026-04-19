@@ -5,12 +5,27 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
+def normalize_site_path(path: str) -> str:
+    raw = str(path).strip()
+    if not raw:
+        return ""
+    posix = PurePosixPath(raw.replace("\\", "/"))
+    parts = [part for part in posix.parts if part not in ("", ".")]
+    if parts and parts[0] == "/":
+        parts = parts[1:]
+    if parts and parts[0] == "docs":
+        parts = parts[1:]
+    normalized = PurePosixPath(*parts).as_posix()
+    return "" if normalized == "." else normalized
+
+
 def liquid_url(path: str) -> str:
-    normalized = "/" + path.strip("/")
+    normalized_path = normalize_site_path(path)
+    normalized = "/" + normalized_path.strip("/")
     return f"{{{{ '{normalized}' | relative_url }}}}"
 
 
@@ -850,9 +865,11 @@ def main() -> int:
     strategy = load_json(strategy_json_path) if strategy_json_path.is_file() else None
     docs_root = (root / "docs").resolve()
     try:
-        published_report_dir_rel = published_report_dir.resolve().relative_to(docs_root).as_posix()
+        published_report_dir_rel = normalize_site_path(published_report_dir.resolve().relative_to(docs_root).as_posix())
     except Exception:
-        published_report_dir_rel = display_path(root, report_dir, published_report_dir, published_report_dir)
+        published_report_dir_rel = normalize_site_path(
+            display_path(root, report_dir, published_report_dir, published_report_dir)
+        )
 
     overview_path.parent.mkdir(parents=True, exist_ok=True)
     build_overview_page(root, report_dir, published_report_dir, overview_path, published_report_dir_rel, report, strategy)
