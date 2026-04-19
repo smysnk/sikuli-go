@@ -86,7 +86,7 @@ lead: Task-first documentation for downloads, first-run setup, the Node.js clien
 
 Use these external references for project background and upstream history:
 
-- [SikuliX Official Site](https://sikulix.github.io/)
+- [Original Sikuli Site](http://sikuli.org/)
 - [Wikipedia](https://de.wikipedia.org/wiki/Sikuli_(Software))
 - [Original Sikuli Github](https://github.com/sikuli/sikuli)
 - [Sikuli Framework](https://github.com/smysnk/sikuli-framework)

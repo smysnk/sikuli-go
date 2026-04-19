@@ -14,7 +14,7 @@ Latest test report: [test-station.smysnk.com/projects/sikuli-go](https://test-st
 
 ## Project Intent
 
-- Build a feature-complete GoLang port of the core [Sikuli](https://sikulix.github.io/) concepts.
+- Build a feature-complete GoLang port of the core [Sikuli](http://sikuli.org/) concepts.
 - Preserve behavioral parity (image matching, regions, patterns, finder semantics).
 - Provide a modern, testable architecture with explicit contracts and deterministic matching behavior.
 - Establish a maintainable foundation for cross-platform automation features.
@@ -169,7 +169,7 @@ The GoLang port in this repository began in **2026**. It stands on the work of t
 
 ## Sikuli References
 
-- [SikuliX Official Site](https://sikulix.github.io/)
+- [Original Sikuli Site](http://sikuli.org/)
 - [Wikipedia](https://de.wikipedia.org/wiki/Sikuli_(Software))
 - [Original Sikuli Github](https://github.com/sikuli/sikuli)
 - [Sikuli Framework](https://github.com/smysnk/sikuli-framework) = Sikuli + Robot Framework

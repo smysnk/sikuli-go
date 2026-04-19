@@ -153,6 +153,23 @@ def guide_grid(cards: list[list[str]]) -> list[str]:
     return lines
 
 
+def strategy_or_schema_card(published_report_dir_rel: str, strategy_available: bool) -> list[str]:
+    if strategy_available:
+        return guide_card(
+            f"{published_report_dir_rel}/find-on-screen-scenario-strategy",
+            "Strategy",
+            "Scenario Strategy",
+            "Review the scenario set and visual examples.",
+        )
+    return guide_card(
+        "bench/FIND_ON_SCREEN_SCENARIO_SCHEMA",
+        "Scenario Docs",
+        "Scenario Schema",
+        "Use the schema and manifest notes when the generated strategy report is unavailable.",
+        subtle=True,
+    )
+
+
 def guide_meta(items: list[tuple[str, str]]) -> list[str]:
     lines = ["<div class=\"guide-meta\">"]
     for label, value in items:
@@ -288,7 +305,7 @@ def build_overview_page(
         guide_grid(
             [
                 guide_card(f"{published_report_dir_rel}/find-on-screen-e2e", "Detailed Report", "Engine Breakdown", "Inspect engine latency, success, and resolution breakdowns."),
-                guide_card(f"{published_report_dir_rel}/find-on-screen-scenario-strategy", "Scenario Strategy", "Corpus Design", "Review the scenario matrix, visual examples, and engine-selection rationale."),
+                strategy_or_schema_card(published_report_dir_rel, strategy_available),
                 guide_card(f"{published_report_dir_rel}/visuals/", "Artifacts", "Visual Gallery", "Open the generated screenshot gallery and summary images."),
                 guide_card("bench/FIND_ON_SCREEN_SCENARIO_INTENT", "Scenario Docs", "Scenario Intent", "See what each benchmark scenario is trying to prove.", subtle=True),
             ]
@@ -387,7 +404,7 @@ def build_reports_index_page(
             [
                 guide_card("bench/", "Overview", "Benchmarks", "Return to the benchmark overview at the section root."),
                 guide_card(f"{published_report_dir_rel}/find-on-screen-e2e", "Detailed Report", "FindOnScreen E2E", "Open the full benchmark breakdown page."),
-                guide_card(f"{published_report_dir_rel}/find-on-screen-scenario-strategy", "Strategy", "Scenario Strategy", "Review the scenario set and visual examples.", subtle=not strategy_available),
+                strategy_or_schema_card(published_report_dir_rel, strategy_available),
                 guide_card(f"{published_report_dir_rel}/visuals/", "Artifacts", "Visual Gallery", "Open the generated image gallery and summaries."),
             ]
         )
@@ -419,6 +436,7 @@ def build_e2e_page(
     e2e_md_path: Path,
     published_report_dir_rel: str,
     report: dict[str, Any],
+    strategy_available: bool,
 ) -> None:
     meta = report.get("metadata") or {}
     summary = report.get("summary") or {}
@@ -436,7 +454,7 @@ def build_e2e_page(
             [
                 guide_card("bench/", "Overview", "Benchmark Overview", "Return to the section summary and latest charts."),
                 guide_card(f"{published_report_dir_rel}/", "Reports Hub", "Artifact Index", "Browse the raw outputs and related benchmark pages."),
-                guide_card(f"{published_report_dir_rel}/find-on-screen-scenario-strategy", "Strategy", "Scenario Strategy", "Inspect the scenario corpus and visual examples."),
+                strategy_or_schema_card(published_report_dir_rel, strategy_available),
                 guide_card(f"{published_report_dir_rel}/visuals/", "Artifacts", "Visual Gallery", "Open generated images and summary boards.", subtle=True),
             ]
         )
@@ -795,7 +813,7 @@ def build_visuals_index_page(
             [
                 guide_card("bench/", "Overview", "Benchmark Overview", "Return to the benchmark summary."),
                 guide_card(f"{published_report_dir_rel}/find-on-screen-e2e", "Detailed Report", "E2E Report", "Inspect the full metric breakdown."),
-                guide_card(f"{published_report_dir_rel}/find-on-screen-scenario-strategy", "Strategy", "Scenario Strategy", "Compare the visuals to the scenario design."),
+                strategy_or_schema_card(published_report_dir_rel, strategy is not None),
                 guide_card(f"{published_report_dir_rel}/find-on-screen-e2e.json", "Raw Data", "Benchmark JSON", "Open the machine-readable benchmark summary.", subtle=True),
             ]
         )
@@ -874,7 +892,7 @@ def main() -> int:
     overview_path.parent.mkdir(parents=True, exist_ok=True)
     build_overview_page(root, report_dir, published_report_dir, overview_path, published_report_dir_rel, report, strategy)
     build_reports_index_page(root, report_dir, published_report_dir, report_dir / "index.md", published_report_dir_rel, report, strategy)
-    build_e2e_page(root, report_dir, published_report_dir, report_dir / "find-on-screen-e2e.md", published_report_dir_rel, report)
+    build_e2e_page(root, report_dir, published_report_dir, report_dir / "find-on-screen-e2e.md", published_report_dir_rel, report, strategy is not None)
     if strategy is not None:
         build_strategy_page(root, report_dir, published_report_dir, report_dir / "find-on-screen-scenario-strategy.md", published_report_dir_rel, strategy)
     build_visuals_index_page(root, report_dir, published_report_dir, report_dir / "visuals" / "index.md", published_report_dir_rel, strategy)

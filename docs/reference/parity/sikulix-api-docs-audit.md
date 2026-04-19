@@ -3,7 +3,7 @@
 This audit compares the documented behavior in the official SikuliX API docs with the current Go port implementation in `packages/api/pkg/sikuli` and `packages/api/internal/grpcv1`.
 
 Scope:
-- Official docs reviewed: [API index](https://sikulix.github.io/docs/api/), [Region](https://sikulix.github.io/docs/api/region/), [Screen](https://sikulix.github.io/docs/api/screen/), [Finder](https://sikulix.github.io/docs/api/finder/), [Pattern](https://sikulix.github.io/docs/api/pattern/), [Match](https://sikulix.github.io/docs/api/match/), [App](https://sikulix.github.io/docs/api/appclass/), [Text and OCR](https://sikulix.github.io/docs/api/textandocr/), [Keys](https://sikulix.github.io/docs/api/keys/).
+- Official docs reviewed: API index, Region, Screen, Finder, Pattern, Match, App, Text and OCR, and Keys pages from the archived legacy documentation set.
 - Go surfaces reviewed: `packages/api/pkg/sikuli/*.go`, `packages/api/proto/sikuli/v1/sikuli.proto`, `packages/api/internal/grpcv1/server.go`.
 - This document compares SikuliX docs to the Go port itself. Node and Python client wrappers intentionally are not treated as the source of truth when they add convenience methods on top of the API.
 

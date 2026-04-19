@@ -18,6 +18,11 @@ docs_dir = Path(sys.argv[1]).resolve()
 TEXT_SUFFIXES = {".md", ".html", ".yml", ".yaml"}
 PAGE_SUFFIXES = {".md", ".html"}
 EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "tel:", "data:", "javascript:")
+GENERATED_BENCH_TARGETS = {
+    "/bench/reports",
+    "/bench/reports/find-on-screen-scenario-strategy",
+    "/bench/reports/find-on-screen-scenario-strategy.json",
+}
 GENERATED_BENCH_PREFIXES = ("/bench/reports/visuals",)
 GENERATED_BENCH_PATTERNS = (re.compile(r"^/bench/reports/strategy-visuals-[^/]+(?:/|$)"),)
 LIQUID_RELATIVE_URL_RE = re.compile(r"""\{\{\s*['"]([^'"]+)['"]\s*\|\s*relative_url\s*\}\}""")
@@ -109,14 +114,18 @@ def published_candidate_for_source_path(path: str) -> str | None:
 
 
 def is_generated_bench_target(path: str) -> bool:
+    normalized = path.rstrip("/") or "/"
+    if normalized in GENERATED_BENCH_TARGETS:
+        return True
     if any(path == prefix or path.startswith(f"{prefix}/") for prefix in GENERATED_BENCH_PREFIXES):
         return True
     return any(pattern.match(path) for pattern in GENERATED_BENCH_PATTERNS)
 
 
 def is_known_target(path: str) -> bool:
-    # Benchmark visuals are generated publish artifacts and intentionally omitted
-    # from clean source checkouts, so CI should not require them to exist on disk.
+    # Some benchmark report pages and supporting visual directories are generated
+    # publish artifacts and may be intentionally omitted from source-only
+    # checkouts, so CI should not require them to exist on disk.
     if is_generated_bench_target(path):
         return True
     if path in published_urls:
