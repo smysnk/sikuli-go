@@ -186,8 +186,16 @@ function resolveMaterializedRuntimeSources(candidatePath: string): Map<string, s
   return new Map(Array.from(sources.entries(), ([name, value]) => [name, value.source]));
 }
 
+function shouldMaterializeRuntime(candidatePath: string): boolean {
+  if (isVirtualZipPath(candidatePath)) {
+    return true;
+  }
+  const canonicalName = canonicalRuntimeName(path.basename(candidatePath));
+  return canonicalName !== undefined && path.basename(candidatePath) !== canonicalName;
+}
+
 function materializeSpawnableBinary(candidatePath: string): string {
-  if (!isVirtualZipPath(candidatePath)) {
+  if (!shouldMaterializeRuntime(candidatePath)) {
     return candidatePath;
   }
 
