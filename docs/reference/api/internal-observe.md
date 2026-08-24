@@ -1,3 +1,10 @@
+---
+layout: guide
+title: API Reference - internal/observe
+nav_key: reference
+kicker: Generated Reference
+---
+
 # API: `internal/observe`
 
 [Back to API Index](./)

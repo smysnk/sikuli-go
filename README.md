@@ -9,7 +9,7 @@
 
 Sikuli is an open-source tool for automating anything visible on a computer screen using image recognition. Instead of relying on internal source code or object IDs, it identifies and interacts with graphical user interface (GUI) components (buttons, text boxes, etc.) by using screenshots. **This repo houses a GoLang port of the original concept.**
 
-Docs: [smysnk.github.io/sikuli-go](https://smysnk.github.io/sikuli-go/)
+Docs: [smysnk.com/projects/sikuli-go/docs](https://smysnk.com/projects/sikuli-go/docs/)
 Latest test report: [test-station.smysnk.com/projects/sikuli-go](https://test-station.smysnk.com/projects/sikuli-go)
 
 ## Project Intent
@@ -139,7 +139,7 @@ If PATH is updated, reload with `source ~/.zshrc` or `source ~/.bash_profile`.
 | Cross-platform backend hardening | Platform integration hardening and backend portability | 🟡 |
 
 # Docs
-- [Docs Home](https://smysnk.github.io/sikuli-go/)
+- [Docs Home](https://smysnk.com/projects/sikuli-go/docs/)
 
 ## Repository Layout
 

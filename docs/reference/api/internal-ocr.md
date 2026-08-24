@@ -1,3 +1,10 @@
+---
+layout: guide
+title: API Reference - internal/ocr
+nav_key: reference
+kicker: Generated Reference
+---
+
 # API: `internal/ocr`
 
 [Back to API Index](./)

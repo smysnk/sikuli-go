@@ -1,0 +1,62 @@
+name: Publish Legacy Docs Redirect
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  redirect:
+    environment:
+      name: github-pages
+      url: https://smysnk.github.io/sikuli-go/
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build redirect-only site
+        run: |
+          mkdir -p redirect-site
+          python3 - <<'PY'
+          from pathlib import Path
+
+          html = '''<!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <meta name="robots" content="noindex,follow">
+              <link rel="canonical" href="https://smysnk.com/projects/sikuli-go/docs/">
+              <meta http-equiv="refresh" content="0;url=https://smysnk.com/projects/sikuli-go/docs/">
+              <title>sikuli-go documentation moved</title>
+            </head>
+            <body>
+              <p>The sikuli-go documentation moved to <a href="https://smysnk.com/projects/sikuli-go/docs/">smysnk.com</a>.</p>
+              <script>
+                const legacyPrefix = '/sikuli-go';
+                const targetPrefix = 'https://smysnk.com/projects/sikuli-go/docs';
+                const suffix = window.location.pathname.startsWith(legacyPrefix)
+                  ? window.location.pathname.slice(legacyPrefix.length)
+                  : '/';
+                window.location.replace(`${targetPrefix}${suffix || '/'}${window.location.search}${window.location.hash}`);
+              </script>
+            </body>
+          </html>
+          '''
+          output = Path('redirect-site')
+          (output / 'index.html').write_text(html, encoding='utf-8')
+          (output / '404.html').write_text(html, encoding='utf-8')
+          PY
+
+      - name: Upload redirect artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: redirect-site
+
+      - name: Deploy redirect
+        uses: actions/deploy-pages@v4

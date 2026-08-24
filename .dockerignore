@@ -1,0 +1,15 @@
+.git
+.github
+.playwright-mcp
+.sikuli-go
+.test-results/*
+!.test-results/docs-public-source/
+!.test-results/docs-public-source/**
+artifacts
+node_modules
+**/node_modules
+packages/client-node/artifacts
+docs/bench/reports/**/attempts
+docs/bench/reports/strategy-visuals-*
+references
+runtime

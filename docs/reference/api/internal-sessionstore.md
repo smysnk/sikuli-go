@@ -1,3 +1,10 @@
+---
+layout: guide
+title: API Reference - internal/sessionstore
+nav_key: reference
+kicker: Generated Reference
+---
+
 # API: `internal/sessionstore`
 
 [Back to API Index](./)

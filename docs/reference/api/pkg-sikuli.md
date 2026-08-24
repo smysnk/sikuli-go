@@ -1,3 +1,10 @@
+---
+layout: guide
+title: API Reference - pkg/sikuli
+nav_key: reference
+kicker: Generated Reference
+---
+
 # API: `pkg/sikuli`
 
 [Back to API Index](./)

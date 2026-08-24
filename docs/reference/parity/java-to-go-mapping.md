@@ -1,3 +1,10 @@
+---
+layout: guide
+title: Java to Go API Mapping
+nav_key: reference
+kicker: Generated Reference
+---
+
 # Java to Go API Mapping
 
 This document is generated from `docs/reference/parity/java-to-go-seed.tsv` and source surfaces in `packages/api/pkg/sikuli/signatures.go` and `packages/api/proto/sikuli/v1/sikuli.proto`.

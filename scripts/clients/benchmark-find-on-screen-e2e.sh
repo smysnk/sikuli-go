@@ -52,7 +52,8 @@ README_PATHS="${FIND_BENCH_README_PATHS:-${ROOT_DIR}/README.md,${ROOT_DIR}/packa
 README_SECTION_TITLE="${FIND_BENCH_README_SECTION_TITLE:-FindOnScreen Benchmark Test Results}"
 README_INLINE_IMAGES="${FIND_BENCH_README_INLINE_IMAGES:-6}"
 README_LINK_MODE="${FIND_BENCH_README_LINK_MODE:-auto}"
-README_BASE_URL="${FIND_BENCH_README_BASE_URL:-https://smysnk.github.io/sikuli-go}"
+DOCS_PUBLIC_BASE_URL="${DOCS_PUBLIC_BASE_URL:-https://smysnk.com/projects/sikuli-go/docs}"
+README_BASE_URL="${FIND_BENCH_README_BASE_URL:-${DOCS_PUBLIC_BASE_URL}}"
 CONSOLE_MODE="${FIND_BENCH_CONSOLE_MODE:-pretty}"
 CONSOLE_HEARTBEAT_SEC="${FIND_BENCH_CONSOLE_HEARTBEAT_SEC:-20}"
 CONSOLE_TAIL_LINES="${FIND_BENCH_CONSOLE_TAIL_LINES:-120}"
@@ -266,7 +267,10 @@ readme_paths = os.environ.get("README_PATHS", "")
 readme_section_title = os.environ.get("README_SECTION_TITLE", "FindOnScreen Benchmark Test Results")
 readme_inline_images = int(os.environ.get("README_INLINE_IMAGES", "6"))
 readme_link_mode = os.environ.get("README_LINK_MODE", "auto").strip().lower()
-readme_base_url = os.environ.get("README_BASE_URL", "https://smysnk.github.io/sikuli-go").strip().rstrip("/")
+readme_base_url = os.environ.get(
+    "README_BASE_URL",
+    "https://smysnk.com/projects/sikuli-go/docs",
+).strip().rstrip("/")
 root_dir = Path(os.environ.get("PROJECT_ROOT", "")).resolve()
 report_dir = Path(os.environ.get("REPORT_DIR", "")).resolve()
 docs_report_dir_raw = os.environ.get("DOCS_REPORT_DIR", "").strip()

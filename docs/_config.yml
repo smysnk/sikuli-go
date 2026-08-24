@@ -1,5 +1,7 @@
 title: sikuli-go Documentation
 description: Task-first documentation for downloads, getting started, clients, and the Go API.
+url: https://smysnk.com
+baseurl: /projects/sikuli-go/docs
 markdown: kramdown
 permalink: pretty
 theme: null

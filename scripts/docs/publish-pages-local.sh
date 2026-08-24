@@ -9,6 +9,8 @@ BENCH_SOURCE_DIR="${DOCS_LOCAL_BENCH_SOURCE:-${ROOT_DIR}/.test-results/bench}"
 STAGE_DIR="${DOCS_LOCAL_STAGE_DIR:-${ROOT_DIR}/.test-results/docs-pages-local}"
 SOURCE_DIR="${STAGE_DIR}/source"
 SITE_DIR="${STAGE_DIR}/site"
+SERVE_ROOT="${STAGE_DIR}/serve-root"
+MOUNT_DIR="${SERVE_ROOT}/projects/sikuli-go/docs"
 
 HOST="${DOCS_LOCAL_HOST:-127.0.0.1}"
 PORT="${DOCS_LOCAL_PORT:-4000}"
@@ -36,40 +38,32 @@ if [[ ! -d "${DOCS_SOURCE_DIR}" ]]; then
   exit 1
 fi
 
-rm -rf "${SOURCE_DIR}" "${SITE_DIR}"
+rm -rf "${SOURCE_DIR}" "${SITE_DIR}" "${SERVE_ROOT}"
 mkdir -p "${SOURCE_DIR}" "${SITE_DIR}"
 
-rsync -a --delete --exclude '.DS_Store' "${DOCS_SOURCE_DIR}/" "${SOURCE_DIR}/"
+rsync -a --delete \
+  --exclude '.DS_Store' \
+  --exclude '.tmp-*' \
+  --exclude 'go-test.log' \
+  --exclude 'attempts/' \
+  --exclude 'strategy-visuals-*/' \
+  "${DOCS_SOURCE_DIR}/" "${SOURCE_DIR}/"
 
 if is_true "${INCLUDE_BENCH}"; then
   if [[ -d "${BENCH_SOURCE_DIR}" ]]; then
     mkdir -p "${SOURCE_DIR}/bench/reports"
-    rsync -a --delete --exclude '.DS_Store' --exclude '.tmp*' "${BENCH_SOURCE_DIR}/" "${SOURCE_DIR}/bench/reports/"
+    rsync -a --delete \
+      --exclude '.DS_Store' \
+      --exclude '.tmp*' \
+      --exclude 'go-test.log' \
+      --exclude 'attempts/' \
+      --exclude 'strategy-visuals-*/' \
+      "${BENCH_SOURCE_DIR}/" "${SOURCE_DIR}/bench/reports/"
     echo "[docs-local] copied benchmark artifacts into /bench/reports"
   else
     echo "[docs-local] benchmark source not found, skipping copy: ${BENCH_SOURCE_DIR}"
   fi
 fi
-
-# Convert hard-coded GitHub Pages absolute links to local-root links in staged markdown.
-python3 - "${SOURCE_DIR}" <<'PY'
-from pathlib import Path
-import sys
-
-root = Path(sys.argv[1]).resolve()
-prefixes = [
-    "https://smysnk.github.io/sikuli-go/",
-    "http://smysnk.github.io/sikuli-go/",
-]
-
-for md in root.rglob("*.md"):
-    text = md.read_text(encoding="utf-8")
-    updated = text
-    for prefix in prefixes:
-        updated = updated.replace(prefix, "/")
-    if updated != text:
-        md.write_text(updated, encoding="utf-8")
-PY
 
 build_copy() {
   rsync -a --delete --exclude '.DS_Store' "${SOURCE_DIR}/" "${SITE_DIR}/"
@@ -127,8 +121,12 @@ case "${BUILD_MODE}" in
     ;;
 esac
 
-url="http://${HOST}:${PORT}"
+mkdir -p "${MOUNT_DIR}"
+rsync -a --delete "${SITE_DIR}/" "${MOUNT_DIR}/"
+
+url="http://${HOST}:${PORT}/projects/sikuli-go/docs/"
 echo "[docs-local] site_dir=${SITE_DIR}"
+echo "[docs-local] serve_root=${SERVE_ROOT}"
 echo "[docs-local] url=${url}"
 
 if is_true "${OPEN_BROWSER}"; then
@@ -145,18 +143,5 @@ if is_true "${OPEN_BROWSER}"; then
 fi
 
 if is_true "${SERVE}"; then
-  if python3 - <<'PY' >/dev/null 2>&1
-import markdown
-import yaml
-PY
-  then
-    exec python3 "${ROOT_DIR}/scripts/docs/serve-local.py" \
-      --host "${HOST}" \
-      --port "${PORT}" \
-      --site-root "${SITE_DIR}" \
-      --source-root "${SOURCE_DIR}"
-  fi
-
-  echo "[docs-local] python markdown/yaml modules not available; falling back to static file server"
-  exec python3 -m http.server "${PORT}" --bind "${HOST}" --directory "${SITE_DIR}"
+  exec python3 -m http.server "${PORT}" --bind "${HOST}" --directory "${SERVE_ROOT}"
 fi

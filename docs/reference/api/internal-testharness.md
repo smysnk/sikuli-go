@@ -1,3 +1,10 @@
+---
+layout: guide
+title: API Reference - internal/testharness
+nav_key: reference
+kicker: Generated Reference
+---
+
 # API: `internal/testharness`
 
 [Back to API Index](./)

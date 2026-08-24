@@ -1,3 +1,10 @@
+---
+layout: guide
+title: API Reference - internal/core
+nav_key: reference
+kicker: Generated Reference
+---
+
 # API: `internal/core`
 
 [Back to API Index](./)

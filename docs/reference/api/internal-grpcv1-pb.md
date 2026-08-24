@@ -1,3 +1,10 @@
+---
+layout: guide
+title: API Reference - internal/grpcv1/pb
+nav_key: reference
+kicker: Generated Reference
+---
+
 # API: `internal/grpcv1/pb`
 
 [Back to API Index](./)

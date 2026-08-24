@@ -9,12 +9,12 @@ This directory contains the Python client for sikuli-go with Sikuli-style `Scree
 
 Long-form Python docs now live in the published guide:
 
-- [Python Client](https://smysnk.github.io/sikuli-go/python-client/)
-- [Installation](https://smysnk.github.io/sikuli-go/python-client/installation)
-- [First Script](https://smysnk.github.io/sikuli-go/python-client/first-script)
-- [Runtime](https://smysnk.github.io/sikuli-go/python-client/runtime)
-- [Troubleshooting](https://smysnk.github.io/sikuli-go/python-client/troubleshooting)
-- [Getting Help](https://smysnk.github.io/sikuli-go/getting-help/)
+- [Python Client](https://smysnk.com/projects/sikuli-go/docs/python-client/)
+- [Installation](https://smysnk.com/projects/sikuli-go/docs/python-client/installation)
+- [First Script](https://smysnk.com/projects/sikuli-go/docs/python-client/first-script)
+- [Runtime](https://smysnk.com/projects/sikuli-go/docs/python-client/runtime)
+- [Troubleshooting](https://smysnk.com/projects/sikuli-go/docs/python-client/troubleshooting)
+- [Getting Help](https://smysnk.com/projects/sikuli-go/docs/getting-help/)
 
 ## Quickstart
 
@@ -84,11 +84,11 @@ By default it serves the monitor UI on `:8080` and reads `sikuli-go.db` from the
 
 The local runtime exposes both the dashboard and the standalone monitor workflow described in the guide:
 
-- [Dashboard Guide](https://smysnk.github.io/sikuli-go/getting-started/dashboard)
+- [Dashboard Guide](https://smysnk.com/projects/sikuli-go/docs/getting-started/dashboard)
 
-![Dashboard Screenshot](https://smysnk.github.io/sikuli-go/images/dashboard.png)
+![Dashboard Screenshot](https://smysnk.com/projects/sikuli-go/docs/images/dashboard.png)
 
-![Monitor Screenshot](https://smysnk.github.io/sikuli-go/images/monitor.png)
+![Monitor Screenshot](https://smysnk.com/projects/sikuli-go/docs/images/monitor.png)
 
 ## Common Package Entry Points
 
@@ -106,17 +106,17 @@ Generated: `2026-03-07T23:32:15.506029+00:00`
 
 ### Reports
 
-- [Markdown Summary](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-e2e)
-- [JSON Report](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-e2e.json)
-- [Raw go test Output](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-e2e.txt)
-- [Performance SVG](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-performance.svg)
-- [Accuracy SVG](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-accuracy.svg)
-- [Scenario Kind Match Time SVG](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-kind-time.svg)
-- [Scenario Kind Success SVG](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-kind-success.svg)
-- [Resolution Match Time SVG](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-time.svg)
-- [Resolution Matches SVG](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-matches.svg)
-- [Resolution Misses SVG](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-misses.svg)
-- [Resolution False Positives SVG](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-false-positives.svg)
+- [Markdown Summary](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-e2e)
+- [JSON Report](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-e2e.json)
+- [Raw go test Output](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-e2e.txt)
+- [Performance SVG](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-performance.svg)
+- [Accuracy SVG](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-accuracy.svg)
+- [Scenario Kind Match Time SVG](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-kind-time.svg)
+- [Scenario Kind Success SVG](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-kind-success.svg)
+- [Resolution Match Time SVG](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-time.svg)
+- [Resolution Matches SVG](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-matches.svg)
+- [Resolution Misses SVG](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-misses.svg)
+- [Resolution False Positives SVG](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-false-positives.svg)
 
 ### Engine Summary
 
@@ -134,113 +134,113 @@ _Cases/OK metrics are query-level counts (regions x scenarios x resolutions), no
 
 ### Run Mega Summary
 
-![Run Mega Summary](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-run-mega.jpg)
+![Run Mega Summary](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-run-mega.jpg)
 
-- [Open run mega summary image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-run-mega.jpg)
+- [Open run mega summary image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-run-mega.jpg)
 
 ### Benchmark Graphs
 
-![Performance Graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-performance.svg)
+![Performance Graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-performance.svg)
 
-- [Open performance graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-performance.svg)
+- [Open performance graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-performance.svg)
 
-![Accuracy Graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-accuracy.svg)
+![Accuracy Graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-accuracy.svg)
 
-- [Open accuracy graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-accuracy.svg)
+- [Open accuracy graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-accuracy.svg)
 
 ### Scenario Kind Graphs
 
-![Scenario Kind Match Time](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-kind-time.svg)
+![Scenario Kind Match Time](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-kind-time.svg)
 
-- [Open scenario kind match time graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-kind-time.svg)
+- [Open scenario kind match time graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-kind-time.svg)
 
-![Scenario Kind Success](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-kind-success.svg)
+![Scenario Kind Success](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-kind-success.svg)
 
-- [Open scenario kind success graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-kind-success.svg)
+- [Open scenario kind success graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-kind-success.svg)
 
 ### Resolution Group Graphs
 
-![Resolution Match Time](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-time.svg)
+![Resolution Match Time](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-time.svg)
 
-- [Open resolution match time graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-time.svg)
+- [Open resolution match time graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-time.svg)
 
-![Resolution Matches](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-matches.svg)
+![Resolution Matches](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-matches.svg)
 
-- [Open resolution matches graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-matches.svg)
+- [Open resolution matches graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-matches.svg)
 
-![Resolution Misses](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-misses.svg)
+![Resolution Misses](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-misses.svg)
 
-- [Open resolution misses graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-misses.svg)
+- [Open resolution misses graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-misses.svg)
 
-![Resolution False Positives](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-false-positives.svg)
+![Resolution False Positives](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-false-positives.svg)
 
-- [Open resolution false positives graph](https://smysnk.github.io/sikuli-go/bench/reports/find-on-screen-resolution-false-positives.svg)
+- [Open resolution false positives graph](https://smysnk.com/projects/sikuli-go/docs/bench/reports/find-on-screen-resolution-false-positives.svg)
 
 ### Artifact Directories
 
-- [Visual Root](https://smysnk.github.io/sikuli-go/bench/reports/visuals/)
-- [Scenario Summaries](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/)
+- [Visual Root](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/)
+- [Scenario Summaries](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/)
 
 ### Scenario Summary Images (10)
 
 #### `hybrid_gate_conflicts_1920x1080_i09`
 
-![hybrid_gate_conflicts_1920x1080_i09](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-hybrid_gate_conflicts_1920x1080_i09.png)
+![hybrid_gate_conflicts_1920x1080_i09](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-hybrid_gate_conflicts_1920x1080_i09.png)
 
-- [Open `hybrid_gate_conflicts_1920x1080_i09` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-hybrid_gate_conflicts_1920x1080_i09.png)
+- [Open `hybrid_gate_conflicts_1920x1080_i09` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-hybrid_gate_conflicts_1920x1080_i09.png)
 
 #### `multi_monitor_dpi_shift_1920x1080_i10`
 
-![multi_monitor_dpi_shift_1920x1080_i10](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-multi_monitor_dpi_shift_1920x1080_i10.png)
+![multi_monitor_dpi_shift_1920x1080_i10](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-multi_monitor_dpi_shift_1920x1080_i10.png)
 
-- [Open `multi_monitor_dpi_shift_1920x1080_i10` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-multi_monitor_dpi_shift_1920x1080_i10.png)
+- [Open `multi_monitor_dpi_shift_1920x1080_i10` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-multi_monitor_dpi_shift_1920x1080_i10.png)
 
 #### `noise_stress_random_1920x1080_i04`
 
-![noise_stress_random_1920x1080_i04](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-noise_stress_random_1920x1080_i04.png)
+![noise_stress_random_1920x1080_i04](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-noise_stress_random_1920x1080_i04.png)
 
-- [Open `noise_stress_random_1920x1080_i04` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-noise_stress_random_1920x1080_i04.png)
+- [Open `noise_stress_random_1920x1080_i04` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-noise_stress_random_1920x1080_i04.png)
 
 #### `orb_feature_rich_1920x1080_i07`
 
-![orb_feature_rich_1920x1080_i07](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-orb_feature_rich_1920x1080_i07.png)
+![orb_feature_rich_1920x1080_i07](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-orb_feature_rich_1920x1080_i07.png)
 
-- [Open `orb_feature_rich_1920x1080_i07` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-orb_feature_rich_1920x1080_i07.png)
+- [Open `orb_feature_rich_1920x1080_i07` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-orb_feature_rich_1920x1080_i07.png)
 
 #### `perspective_skew_sweep_1920x1080_i06`
 
-![perspective_skew_sweep_1920x1080_i06](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-perspective_skew_sweep_1920x1080_i06.png)
+![perspective_skew_sweep_1920x1080_i06](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-perspective_skew_sweep_1920x1080_i06.png)
 
-- [Open `perspective_skew_sweep_1920x1080_i06` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-perspective_skew_sweep_1920x1080_i06.png)
+- [Open `perspective_skew_sweep_1920x1080_i06` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-perspective_skew_sweep_1920x1080_i06.png)
 
 #### `photo_clutter_1920x1080_i02`
 
-![photo_clutter_1920x1080_i02](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-photo_clutter_1920x1080_i02.png)
+![photo_clutter_1920x1080_i02](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-photo_clutter_1920x1080_i02.png)
 
-- [Open `photo_clutter_1920x1080_i02` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-photo_clutter_1920x1080_i02.png)
+- [Open `photo_clutter_1920x1080_i02` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-photo_clutter_1920x1080_i02.png)
 
 #### `repetitive_grid_camouflage_1920x1080_i03`
 
-![repetitive_grid_camouflage_1920x1080_i03](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-repetitive_grid_camouflage_1920x1080_i03.png)
+![repetitive_grid_camouflage_1920x1080_i03](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-repetitive_grid_camouflage_1920x1080_i03.png)
 
-- [Open `repetitive_grid_camouflage_1920x1080_i03` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-repetitive_grid_camouflage_1920x1080_i03.png)
+- [Open `repetitive_grid_camouflage_1920x1080_i03` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-repetitive_grid_camouflage_1920x1080_i03.png)
 
 #### `scale_rotate_sweep_1920x1080_i05`
 
-![scale_rotate_sweep_1920x1080_i05](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-scale_rotate_sweep_1920x1080_i05.png)
+![scale_rotate_sweep_1920x1080_i05](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-scale_rotate_sweep_1920x1080_i05.png)
 
-- [Open `scale_rotate_sweep_1920x1080_i05` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-scale_rotate_sweep_1920x1080_i05.png)
+- [Open `scale_rotate_sweep_1920x1080_i05` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-scale_rotate_sweep_1920x1080_i05.png)
 
 #### `template_control_exact_1920x1080_i08`
 
-![template_control_exact_1920x1080_i08](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-template_control_exact_1920x1080_i08.png)
+![template_control_exact_1920x1080_i08](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-template_control_exact_1920x1080_i08.png)
 
-- [Open `template_control_exact_1920x1080_i08` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-template_control_exact_1920x1080_i08.png)
+- [Open `template_control_exact_1920x1080_i08` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-template_control_exact_1920x1080_i08.png)
 
 #### `vector_ui_baseline_1920x1080_i01`
 
-![vector_ui_baseline_1920x1080_i01](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-vector_ui_baseline_1920x1080_i01.png)
+![vector_ui_baseline_1920x1080_i01](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-vector_ui_baseline_1920x1080_i01.png)
 
-- [Open `vector_ui_baseline_1920x1080_i01` image](https://smysnk.github.io/sikuli-go/bench/reports/visuals/summaries/summary-vector_ui_baseline_1920x1080_i01.png)
+- [Open `vector_ui_baseline_1920x1080_i01` image](https://smysnk.com/projects/sikuli-go/docs/bench/reports/visuals/summaries/summary-vector_ui_baseline_1920x1080_i01.png)
 
 <!-- END: FIND_ON_SCREEN_BENCH_AUTOGEN -->

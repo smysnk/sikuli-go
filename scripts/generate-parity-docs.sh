@@ -22,6 +22,13 @@ fi
 mkdir -p "$OUT_DIR"
 
 {
+  echo "---"
+  echo "layout: guide"
+  echo "title: Java to Go API Mapping"
+  echo "nav_key: reference"
+  echo "kicker: Generated Reference"
+  echo "---"
+  echo
   echo "# Java to Go API Mapping"
   echo
   echo "This document is generated from \`docs/reference/parity/java-to-go-seed.tsv\` and source surfaces in \`packages/api/pkg/sikuli/signatures.go\` and \`packages/api/proto/sikuli/v1/sikuli.proto\`."
@@ -99,6 +106,13 @@ mkdir -p "$OUT_DIR"
 } > "$OUT_FILE"
 
 {
+  echo "---"
+  echo "layout: guide"
+  echo "title: API Parity Status"
+  echo "nav_key: reference"
+  echo "kicker: Generated Reference"
+  echo "---"
+  echo
   echo "# API Parity Status"
   echo
   echo "This document is generated from \`docs/reference/parity/api-parity-status.tsv\`. It tracks API-level implementation maturity independently from client wrapper maturity."
@@ -113,7 +127,7 @@ mkdir -p "$OUT_DIR"
     gsub(/\|/, "\\|", testname);
     gsub(/\|/, "\\|", anchor);
     gsub(/\|/, "\\|", notes);
-    printf("| %s | `%s` | `%s` | `%s` | [Examples](%s) | %s |\n", area, status, testloc, testname, anchor, notes);
+    printf("| %s | `%s` | `%s` | `%s` | [Examples]({{ \047%s\047 | relative_url }}) | %s |\n", area, status, testloc, testname, anchor, notes);
   }' "$STATUS_SEED_FILE"
   echo
   echo "## Status Summary"

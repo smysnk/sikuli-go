@@ -1,3 +1,10 @@
+---
+layout: guide
+title: API Reference
+nav_key: reference
+kicker: Generated Reference
+---
+
 # API Reference
 
 This API reference is generated from package comments and exported symbols using `go doc -all`.

@@ -18,6 +18,13 @@ rm -f "$OUT_ROOT"/*.md
 MODULE_PATH="$(cd "$API_DIR" && go list -m)"
 
 {
+  echo "---"
+  echo "layout: guide"
+  echo "title: API Reference"
+  echo "nav_key: reference"
+  echo "kicker: Generated Reference"
+  echo "---"
+  echo
   echo "# API Reference"
   echo
   echo "This API reference is generated from package comments and exported symbols using \`go doc -all\`."
@@ -44,7 +51,16 @@ for pkg in $(cd "$API_DIR" && go list ./pkg/... ./internal/... | sort); do
   tmp_doc="$(mktemp)"
 
   (cd "$API_DIR" && go doc -all "$pkg") > "$tmp_doc"
-  awk -v rel="$rel" -f "$RENDERER" "$tmp_doc" > "$out_file"
+  {
+    echo "---"
+    echo "layout: guide"
+    echo "title: API Reference - ${rel}"
+    echo "nav_key: reference"
+    echo "kicker: Generated Reference"
+    echo "---"
+    echo
+    awk -v rel="$rel" -f "$RENDERER" "$tmp_doc"
+  } > "$out_file"
   rm -f "$tmp_doc"
 
   echo "- [\`$rel\`](./$slug)" >> "$INDEX_FILE"
