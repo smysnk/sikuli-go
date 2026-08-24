@@ -35,9 +35,9 @@ def main() -> int:
 
     required_parity_pages = (
         "reference/parity/index.html",
-        "reference/parity/behavioral-differences.html",
-        "reference/parity/parity-gaps.html",
-        "reference/parity/parity-test-matrix.html",
+        "reference/parity/behavioral-differences/index.html",
+        "reference/parity/parity-gaps/index.html",
+        "reference/parity/parity-test-matrix/index.html",
     )
     for relative_path in required_parity_pages:
         if not (site_dir / relative_path).is_file():
