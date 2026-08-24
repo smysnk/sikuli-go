@@ -1428,6 +1428,10 @@ def write_gallery_index_js(target_dir: Path, title: str, recursive: bool) -> Non
     target_dir.mkdir(parents=True, exist_ok=True)
     index_js = target_dir / "index.js"
     index_html = target_dir / "index.html"
+    target_parts = target_dir.resolve().parts
+    bench_index = target_parts.index("bench")
+    canonical_path = "/".join(target_parts[bench_index:])
+    canonical_url = f"{os.environ['README_BASE_URL'].rstrip('/')}/{canonical_path}/"
 
     def is_gallery_support_file(p: Path) -> bool:
         return p.name in {"index.js", "index.html"}
@@ -1513,6 +1517,7 @@ def write_gallery_index_js(target_dir: Path, title: str, recursive: bool) -> Non
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Benchmark Visual Gallery</title>
+  <link rel="canonical" href="__GALLERY_CANONICAL_URL__" />
   <style>
     :root { color-scheme: light dark; }
     body {
@@ -1589,7 +1594,7 @@ def write_gallery_index_js(target_dir: Path, title: str, recursive: bool) -> Non
   <script src="./index.js"></script>
 </body>
 </html>
-""",
+""".replace("__GALLERY_CANONICAL_URL__", canonical_url),
         encoding="utf-8",
     )
 
