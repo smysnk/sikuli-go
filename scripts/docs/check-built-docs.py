@@ -33,6 +33,16 @@ def main() -> int:
         if metadata.get("basePath") != BASE_PATH:
             errors.append("build metadata has the wrong base path")
 
+    required_parity_pages = (
+        "reference/parity/index.html",
+        "reference/parity/behavioral-differences.html",
+        "reference/parity/parity-gaps.html",
+        "reference/parity/parity-test-matrix.html",
+    )
+    for relative_path in required_parity_pages:
+        if not (site_dir / relative_path).is_file():
+            errors.append(f"missing rendered parity page: {relative_path}")
+
     for html_path in site_dir.rglob("*.html"):
         text = html_path.read_text(encoding="utf-8", errors="replace")
         if LEGACY_HOST in text:
